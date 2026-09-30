@@ -100,6 +100,7 @@ export default function FirstRunWizard() {
 
               <h4>Recommended starting point</h4>
               <small>Android {readiness.recommendedAndroidVersion}</small>
+              <small>Renderer: {readiness.recommendedRenderer}</small>
               <small>{readiness.recommendedCpuCores} vCPU</small>
               <small>{Math.round(readiness.recommendedRamMb / 1024)} GB guest RAM</small>
             </div>
