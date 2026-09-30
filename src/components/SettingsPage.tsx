@@ -10,7 +10,8 @@ const defaults: AppSettings = {
   confirmDangerousActions: true,
   apiEnabled: false,
   apiPort: 37891,
-  apiToken: ""
+  apiToken: "",
+  firstRunCompleted: false
 };
 
 export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }) {
