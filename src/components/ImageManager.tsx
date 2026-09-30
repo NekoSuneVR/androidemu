@@ -24,6 +24,7 @@ const defaultManifest: AndroidImageManifest = {
 export default function ImageManager({ images, onChanged }: Props) {
   const [manifest, setManifest] = useState(defaultManifest);
   const [sourceDisk, setSourceDisk] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
   const [output, setOutput] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -33,6 +34,23 @@ export default function ImageManager({ images, onChanged }: Props) {
     try {
       await invoke("remove_android_image", { id });
       setOutput(`Removed ${name}.`);
+      await onChanged();
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const download = async () => {
+    if (!downloadUrl.trim()) return;
+    setBusy(true);
+    try {
+      const installed = await invoke<InstalledImage>("download_android_image", {
+        manifest,
+        url: downloadUrl.trim()
+      });
+      setOutput(`Downloaded and installed ${installed.manifest.name} at ${installed.diskPath}`);
       await onChanged();
     } catch (error) {
       setOutput(String(error));
@@ -124,6 +142,13 @@ export default function ImageManager({ images, onChanged }: Props) {
           </div>
           <label>Stored disk filename<input value={manifest.disk} onChange={e => setManifest({...manifest,disk:e.target.value})} /></label>
           <label>Source disk path<input placeholder="C:\\Android\\android16.qcow2" value={sourceDisk} onChange={e => setSourceDisk(e.target.value)} /></label>
+          <label>Image download URL
+            <input
+              placeholder="https://example.com/android16.qcow2"
+              value={downloadUrl}
+              onChange={e => setDownloadUrl(e.target.value)}
+            />
+          </label>
           <label>SHA-256 checksum (optional)
             <input
               placeholder="64 hexadecimal characters"
@@ -131,7 +156,12 @@ export default function ImageManager({ images, onChanged }: Props) {
               onChange={e => setManifest({...manifest,sha256:e.target.value})}
             />
           </label>
-          <button className="primary" disabled={busy || !sourceDisk}>{busy ? "Copying..." : "Register Image"}</button>
+          <div className="button-row">
+            <button className="primary" disabled={busy || !sourceDisk}>{busy ? "Working..." : "Register Local Image"}</button>
+            <button type="button" className="ghost" disabled={busy || !downloadUrl.trim()} onClick={download}>
+              {busy ? "Working..." : "Download & Install"}
+            </button>
+          </div>
           {output && <pre className="inline-output">{output}</pre>}
         </form>
       </div>
