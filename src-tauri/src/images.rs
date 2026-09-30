@@ -195,6 +195,45 @@ pub fn download_image(
     result
 }
 
+
+pub fn import_gsi(data_dir:&Path, source:String, android_version:String, architecture:String)->Result<InstalledImage,String>{
+    ensure_layout(data_dir)?;
+    let source_path=Path::new(&source);
+    if !source_path.is_file(){return Err("GSI image does not exist".into());}
+    let ext=source_path.extension().and_then(|v|v.to_str()).unwrap_or("").to_ascii_lowercase();
+    if !matches!(ext.as_str(),"img"|"raw"|"qcow2"){return Err("GSI must be .img, .raw, or .qcow2".into());}
+    let stamp=SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e|e.to_string())?.as_secs();
+    let id=format!("gsi-{}-{stamp}",android_version.replace('.','-'));
+    let disk_format=if ext=="qcow2"{"qcow2"}else{"raw"};
+    let disk=format!("system.{disk_format}");
+    let manifest=AndroidImageManifest{
+        id:id.clone(),
+        name:format!("Custom GSI Android {android_version}"),
+        android_version,
+        api:0,
+        architecture,
+        image_type:"gsi".into(),
+        disk,
+        disk_format:disk_format.into(),
+        recommended:false,
+        notes:Some("Imported custom Generic System Image. Boot compatibility depends on a matching kernel/vendor/runtime configuration.".into()),
+        sha256:None,
+        source_url:None,
+        gms_provider:"none".into(),
+        certification_status:"unknown".into(),
+        play_store_package:None,
+        secure_image:false,
+        verified_boot_state:"unknown".into(),
+        security_state:"custom GSI".into(),
+        missing_hardware_features:Vec::new(),
+    };
+    register_image(data_dir,manifest,&source)
+}
+
+pub fn supported_android_versions()->Vec<String>{
+    ["9","10","11","12","12L","13","14","15","16"].into_iter().map(str::to_string).collect()
+}
+
 pub fn update_image(data_dir: &Path, id: &str) -> Result<InstalledImage, String> {
     // Image updates use the saved source URL and current manifest/checksum.
     // The replacement happens through the same temporary-file + verification
