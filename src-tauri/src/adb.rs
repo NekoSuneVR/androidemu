@@ -206,6 +206,42 @@ pub fn storage_info(port: u16) -> Result<AdbResult, String> {
     ])
 }
 
+pub fn activities(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(),
+        "dumpsys".into(),
+        "activity".into(),
+        "activities".into(),
+    ])
+}
+
+pub fn services(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(),
+        "service".into(),
+        "list".into(),
+    ])
+}
+
+pub fn network_connections(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(),
+        "sh".into(),
+        "-c".into(),
+        "ss -tunap 2>/dev/null || netstat -tunap 2>/dev/null || cat /proc/net/tcp /proc/net/tcp6 /proc/net/udp /proc/net/udp6".into(),
+    ])
+}
+
+pub fn kernel_log(port: u16, lines: u32) -> Result<AdbResult, String> {
+    let lines = lines.clamp(1, 5000);
+    run_for_device(port, &[
+        "shell".into(),
+        "sh".into(),
+        "-c".into(),
+        format!("dmesg | tail -n {lines}"),
+    ])
+}
+
 fn validate_socket_spec(value: &str, label: &str) -> Result<(), String> {
     let value = value.trim();
     if value.is_empty() {
