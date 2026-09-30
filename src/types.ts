@@ -309,6 +309,7 @@ export interface KeymapProfile {
   id: string;
   name: string;
   packageName: string;
+  instanceId?: string|null;
   overlayVisible: boolean;
   bindings: KeyBinding[];
 }
