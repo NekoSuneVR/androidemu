@@ -488,6 +488,22 @@ fn adb_search_files(port: u16, path: String, query: String) -> Result<AdbResult,
 
 
 
+
+#[tauri::command]
+fn set_accelerometer(port:u16,x:f64,y:f64,z:f64)->Result<AdbResult,String>{sensors::accelerometer(port,x,y,z)}
+#[tauri::command]
+fn set_gyroscope(port:u16,x:f64,y:f64,z:f64)->Result<AdbResult,String>{sensors::gyroscope(port,x,y,z)}
+#[tauri::command]
+fn set_compass(port:u16,heading:f64)->Result<AdbResult,String>{sensors::compass(port,heading)}
+#[tauri::command]
+fn set_light_sensor(port:u16,lux:f64)->Result<AdbResult,String>{sensors::light(port,lux)}
+#[tauri::command]
+fn set_proximity_sensor(port:u16,cm:f64)->Result<AdbResult,String>{sensors::proximity(port,cm)}
+#[tauri::command]
+fn adb_input_multitouch(port:u16,points:Vec<(i32,i32)>,duration_ms:u32)->Result<AdbResult,String>{adb::input_multitouch(port,points,duration_ms)}
+#[tauri::command]
+fn adb_input_pinch(port:u16,cx:i32,cy:i32,from_radius:i32,to_radius:i32,duration_ms:u32)->Result<AdbResult,String>{adb::input_pinch(port,cx,cy,from_radius,to_radius,duration_ms)}
+
 #[tauri::command]
 fn set_battery_simulation(port:u16,level:u8,charging:bool)->Result<AdbResult,String>{sensors::battery(port,level,charging)}
 #[tauri::command]
@@ -1176,6 +1192,13 @@ pub fn run() {
             adb_copy_path,
             adb_file_properties,
             adb_search_files,
+            set_accelerometer,
+            set_gyroscope,
+            set_compass,
+            set_light_sensor,
+            set_proximity_sensor,
+            adb_input_multitouch,
+            adb_input_pinch,
             set_battery_simulation,
             reset_battery_simulation,
             set_gps_location,
