@@ -85,6 +85,21 @@ fn adb_disconnect(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_root(port: u16) -> Result<AdbResult, String> {
+    adb::root(port)
+}
+
+#[tauri::command]
+fn adb_unroot(port: u16) -> Result<AdbResult, String> {
+    adb::unroot(port)
+}
+
+#[tauri::command]
+fn adb_root_shell(port: u16, command: String) -> Result<AdbResult, String> {
+    adb::root_shell(port, command)
+}
+
+#[tauri::command]
 fn adb_get_state(port: u16) -> Result<AdbResult, String> {
     adb::get_state(port)
 }
@@ -429,6 +444,9 @@ pub fn run() {
             get_adb_info,
             adb_connect,
             adb_disconnect,
+            adb_root,
+            adb_unroot,
+            adb_root_shell,
             adb_get_state,
             adb_shell,
             adb_install,
