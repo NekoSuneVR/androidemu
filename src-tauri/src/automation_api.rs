@@ -1,4 +1,4 @@
-use crate::{adb, runtime, settings, storage};
+use crate::{adb, runtime, sensors, settings, storage};
 use crate::runtime::RuntimeState;
 use crate::settings::AppSettings;
 use serde::Serialize;
@@ -223,6 +223,19 @@ fn route(method: &str, path: &str, body: &[u8], state: &RuntimeState) -> Result<
                 required_string(&value, "orientation")?,
             )?)
         }
+        ("POST", "/sensors/battery") => {
+            let level=required_u32(&value,"level")?;
+            if level>100{return Err("Battery level must be 0..100".into());}
+            let charging=value.get("charging").and_then(Value::as_bool).unwrap_or(false);
+            to_value(sensors::battery(required_u16(&value,"port")?,level as u8,charging)?)
+        }
+        ("POST", "/sensors/gps") => {
+            let lat=value.get("latitude").and_then(Value::as_f64).ok_or("Missing latitude")?;
+            let lon=value.get("longitude").and_then(Value::as_f64).ok_or("Missing longitude")?;
+            let alt=value.get("altitude").and_then(Value::as_f64).unwrap_or(0.0);
+            to_value(sensors::gps(required_u16(&value,"port")?,lat,lon,alt)?)
+        }
+        ("POST", "/sensors/report") => to_value(sensors::report(required_u16(&value,"port")?)?),
         ("POST", "/screenshot") => {
             to_value(adb::screenshot(
                 required_u16(&value, "port")?,
