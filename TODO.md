@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **267/643 tasks complete (41.5%)**
+> Progress: **269/643 tasks complete (41.8%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -176,7 +176,7 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 7 - Graphics Acceleration
 
-- [ ] Vulkan host detection
+- [x] Vulkan host detection
 - [ ] OpenGL host detection
 - [ ] DirectX capability detection
 - [ ] gfxstream investigation
@@ -808,7 +808,7 @@ skills/
 - [x] Detect hardware codecs
 - [x] Recommend RAM allocation
 - [x] Recommend CPU allocation
-- [ ] Recommend renderer
+- [x] Recommend renderer
 - [x] Recommend Android version
 - [x] Create gaming profile
 
