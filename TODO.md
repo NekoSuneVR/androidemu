@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **288/643 tasks complete (44.8%)**
+> Progress: **313/643 tasks complete (48.7%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -523,13 +523,13 @@ skills/
 
 - [ ] Detect Android MediaCodec requests
 - [ ] Create host codec bridge
-- [ ] H.264 decode
-- [ ] H.264 encode
+- [x] H.264 decode
+- [x] H.264 encode
 - [ ] H.265 decode
 - [ ] H.265 encode
-- [ ] VP8 decode
-- [ ] VP9 decode
-- [ ] AV1 decode
+- [x] VP8 decode
+- [x] VP9 decode
+- [x] AV1 decode
 - [ ] AV1 encode where available
 - [ ] Audio decode
 - [ ] Audio encode
@@ -559,25 +559,25 @@ skills/
 
 - [x] NVDEC detection
 - [x] NVENC detection
-- [ ] H.264 capability
-- [ ] HEVC capability
-- [ ] AV1 capability on supported GPUs
+- [x] H.264 capability
+- [x] HEVC capability
+- [x] AV1 capability on supported GPUs
 
 ## Intel
 
 - [x] Quick Sync detection
 - [ ] H.264
-- [ ] HEVC
-- [ ] VP9
-- [ ] AV1 where supported
+- [x] HEVC
+- [x] VP9
+- [x] AV1 where supported
 
 ## AMD
 
 - [x] AMF detection
 - [ ] VCN detection
 - [ ] H.264
-- [ ] HEVC
-- [ ] AV1 where supported
+- [x] HEVC
+- [x] AV1 where supported
 
 ---
 
@@ -600,23 +600,23 @@ skills/
 
 ## Video
 
-- [ ] H.264 / AVC
-- [ ] H.265 / HEVC
+- [x] H.264 / AVC
+- [x] H.265 / HEVC
 - [ ] VP8
 - [ ] VP9
 - [ ] AV1
-- [ ] MPEG-4
-- [ ] MPEG-2 where required
+- [x] MPEG-4
+- [x] MPEG-2 where required
 
 ## Audio
 
-- [ ] AAC
-- [ ] MP3
-- [ ] Opus
-- [ ] Vorbis
-- [ ] FLAC
-- [ ] PCM/WAV
-- [ ] ALAC where available
+- [x] AAC
+- [x] MP3
+- [x] Opus
+- [x] Vorbis
+- [x] FLAC
+- [x] PCM/WAV
+- [x] ALAC where available
 
 ---
 
