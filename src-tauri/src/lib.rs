@@ -372,6 +372,11 @@ fn adb_search_files(port: u16, path: String, query: String) -> Result<AdbResult,
 }
 
 #[tauri::command]
+fn adb_set_refresh_rate(port: u16, fps: Option<u32>) -> Result<AdbResult, String> {
+    adb::set_refresh_rate(port, fps)
+}
+
+#[tauri::command]
 fn adb_set_orientation(port: u16, orientation: String) -> Result<AdbResult, String> {
     adb::set_orientation(port, orientation)
 }
@@ -786,6 +791,7 @@ pub fn run() {
             adb_copy_path,
             adb_file_properties,
             adb_search_files,
+            adb_set_refresh_rate,
             adb_set_orientation,
             adb_rotate_orientation,
             create_instance,
