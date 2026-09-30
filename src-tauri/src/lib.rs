@@ -500,6 +500,20 @@ fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, Strin
 }
 
 #[tauri::command]
+fn ai_execute_actions(
+    state: State<'_, RuntimeState>,
+    port: u16,
+    actions: Vec<AiAction>,
+) -> Result<Vec<AdbResult>, String> {
+    ai::execute_actions(&state.data_dir, port, actions)
+}
+
+#[tauri::command]
+fn ai_cancel_actions() {
+    ai::cancel_actions();
+}
+
+#[tauri::command]
 fn ai_execute_action(
     state: State<'_, RuntimeState>,
     port: u16,
@@ -713,6 +727,8 @@ pub fn run() {
             run_media_batch,
             get_app_settings,
             save_app_settings,
+            ai_execute_actions,
+            ai_cancel_actions,
             ai_execute_action,
             ai_chat,
             get_ai_logs,
