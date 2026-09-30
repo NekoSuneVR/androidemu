@@ -291,7 +291,7 @@ pub fn build_qemu_args(
     accelerator: &str,
     cpu_model: &str,
 ) -> Vec<String> {
-    vec![
+    let mut args = vec![
         "-name".into(),
         format!("NekoDroid-{}", instance.name),
         "-machine".into(),
@@ -310,14 +310,20 @@ pub fn build_qemu_args(
         "virtio-keyboard-pci".into(),
         "-device".into(),
         "virtio-mouse-pci".into(),
-        "-netdev".into(),
-        format!(
+    ];
+
+    args.push("-netdev".into());
+    if instance.adb_enabled {
+        args.push(format!(
             "user,id=net0,hostfwd=tcp:127.0.0.1:{}-:5555",
             instance.adb_port
-        ),
-        "-device".into(),
-        "virtio-net-pci,netdev=net0".into(),
-    ]
+        ));
+    } else {
+        args.push("user,id=net0".into());
+    }
+    args.push("-device".into());
+    args.push("virtio-net-pci,netdev=net0".into());
+    args
 }
 
 #[cfg(test)]
@@ -335,6 +341,7 @@ mod tests {
             cpu_cores: 8,
             ram_mb: 8192,
             adb_port: 5557,
+            adb_enabled: false,
             root_mode: "standard".into(),
             image_path: Some("/tmp/android16.qcow2".into()),
             process_id: None,
@@ -343,8 +350,10 @@ mod tests {
 
     #[test]
     fn qemu_args_keep_adb_on_loopback() {
+        let mut configured = instance();
+        configured.adb_enabled = true;
         let args = build_qemu_args(
-            &instance(),
+            &configured,
             "/tmp/android16.qcow2",
             "qcow2",
             "kvm",
@@ -352,6 +361,19 @@ mod tests {
         );
         assert!(args.iter().any(|arg| arg == "user,id=net0,hostfwd=tcp:127.0.0.1:5557-:5555"));
         assert!(!args.iter().any(|arg| arg.contains("0.0.0.0")));
+    }
+
+    #[test]
+    fn qemu_args_disable_adb_forwarding_by_default() {
+        let args = build_qemu_args(
+            &instance(),
+            "/tmp/android16.qcow2",
+            "qcow2",
+            "kvm",
+            "host",
+        );
+        assert!(args.iter().any(|arg| arg == "user,id=net0"));
+        assert!(!args.iter().any(|arg| arg.contains("hostfwd=")));
     }
 
     #[test]
