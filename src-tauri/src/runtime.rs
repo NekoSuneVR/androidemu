@@ -410,6 +410,32 @@ pub fn capture_framebuffer(state:&RuntimeState,id:&str,destination:String)->Resu
     Ok(path.to_string_lossy().to_string())
 }
 
+
+pub fn record_framebuffer(state:&RuntimeState,id:&str,destination:String,seconds:u32,fps:u32)->Result<String,String>{
+    let seconds=seconds.clamp(1,120);
+    let fps=fps.clamp(1,60);
+    refresh_processes(state)?;
+    if !state.processes.lock().map_err(|_|"Runtime process lock poisoned")?.contains_key(id){return Err("Instance must be running for framebuffer recording".into());}
+    let ffmpeg=find_in_path(if cfg!(windows){"ffmpeg.exe"}else{"ffmpeg"}).ok_or("FFmpeg is required for framebuffer recording")?;
+    let stamp=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis();
+    let temp=env::temp_dir().join(format!("nekodroid-fb-{stamp}"));fs::create_dir_all(&temp).map_err(|e|e.to_string())?;
+    let frames=seconds.saturating_mul(fps);
+    let frame_delay=Duration::from_secs_f64(1.0/fps as f64);
+    for index in 0..frames{
+        let frame=temp.join(format!("frame-{index:06}.ppm"));
+        capture_framebuffer(state,id,frame.to_string_lossy().to_string())?;
+        thread::sleep(frame_delay);
+    }
+    let output=Command::new(ffmpeg).args([
+        "-hide_banner","-y","-framerate",&fps.to_string(),"-i",
+        &temp.join("frame-%06d.ppm").to_string_lossy(),
+        "-c:v","libx264","-pix_fmt","yuv420p",&destination
+    ]).output().map_err(|e|e.to_string())?;
+    let _=fs::remove_dir_all(&temp);
+    if !output.status.success(){return Err(String::from_utf8_lossy(&output.stderr).to_string());}
+    Ok(destination)
+}
+
 pub fn read_logs(state: &RuntimeState, id: &str) -> Result<RuntimeLogs, String> {
     let logs_dir = storage::instance_dir(&state.data_dir, id).join("logs");
     Ok(RuntimeLogs {
