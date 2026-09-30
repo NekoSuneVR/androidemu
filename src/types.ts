@@ -453,3 +453,12 @@ export interface PassthroughSettings {
   bluetoothUsbDevice:string;
   webcamUsbDevice:string;
 }
+
+export interface CloudAndroidNode {
+  id:string;
+  name:string;
+  baseUrl:string;
+  token:string;
+  region:string;
+  enabled:boolean;
+}
