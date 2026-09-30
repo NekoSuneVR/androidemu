@@ -22,6 +22,11 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
   const [reverseRemote, setReverseRemote] = useState("tcp:3000");
   const [reverseLocal, setReverseLocal] = useState("tcp:3000");
   const [logcatLines, setLogcatLines] = useState(300);
+  const [touchX, setTouchX] = useState(540);
+  const [touchY, setTouchY] = useState(1200);
+  const [dragX, setDragX] = useState(900);
+  const [dragY, setDragY] = useState(1200);
+  const [touchDuration, setTouchDuration] = useState(600);
   const [output, setOutput] = useState("ADB output will appear here.");
   const [busy, setBusy] = useState(false);
 
@@ -131,6 +136,25 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <h4>Logcat</h4>
                 <label>Lines<input type="number" min="1" max="5000" value={logcatLines} onChange={e => setLogcatLines(Number(e.target.value))} /></label>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_logcat", { lines: logcatLines })}>Read Logcat</button>
+              </div>
+
+              <div className="tool-group">
+                <h4>Virtual touch test</h4>
+                <div className="split-fields">
+                  <label>X<input type="number" min="0" max="32767" value={touchX} onChange={e => setTouchX(Number(e.target.value))} /></label>
+                  <label>Y<input type="number" min="0" max="32767" value={touchY} onChange={e => setTouchY(Number(e.target.value))} /></label>
+                </div>
+                <div className="split-fields">
+                  <label>Drag X<input type="number" min="0" max="32767" value={dragX} onChange={e => setDragX(Number(e.target.value))} /></label>
+                  <label>Drag Y<input type="number" min="0" max="32767" value={dragY} onChange={e => setDragY(Number(e.target.value))} /></label>
+                </div>
+                <label>Duration ms<input type="number" min="50" max="5000" value={touchDuration} onChange={e => setTouchDuration(Number(e.target.value))} /></label>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_input_tap", { x: touchX, y: touchY })}>Tap</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_input_double_tap", { x: touchX, y: touchY })}>Double tap</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_input_hold", { x: touchX, y: touchY, durationMs: touchDuration })}>Hold</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_input_swipe", { x1: touchX, y1: touchY, x2: dragX, y2: dragY, durationMs: touchDuration })}>Drag / swipe</button>
+                </div>
               </div>
 
               <div className="tool-group">
