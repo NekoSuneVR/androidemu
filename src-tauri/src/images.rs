@@ -72,6 +72,16 @@ pub fn list_images(data_dir: &Path) -> Result<Vec<InstalledImage>, String> {
     Ok(result)
 }
 
+pub fn remove_image(data_dir: &Path, id: &str) -> Result<(), String> {
+    validate_id(id)?;
+    let target_dir = images_dir(data_dir).join(id);
+    if !target_dir.exists() {
+        return Err(format!("Image is not installed: {id}"));
+    }
+    fs::remove_dir_all(&target_dir)
+        .map_err(|e| format!("Failed to remove image {id}: {e}"))
+}
+
 pub fn register_image(
     data_dir: &Path,
     manifest: AndroidImageManifest,
