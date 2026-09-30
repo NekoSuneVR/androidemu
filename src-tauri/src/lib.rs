@@ -142,7 +142,12 @@ fn adb_disconnect(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
-fn adb_root(port: u16) -> Result<AdbResult, String> {
+fn adb_root(state: State<'_, RuntimeState>, port: u16) -> Result<AdbResult, String> {
+    if let Ok(instances)=storage::load_instances(&state.data_dir) {
+        if let Some(instance)=instances.into_iter().find(|item| item.adb_port==port && item.status!="running") {
+            let _=snapshots::auto_snapshot(&state.data_dir,&instance.id,"pre-root");
+        }
+    }
     adb::root(port)
 }
 
@@ -445,6 +450,15 @@ fn update_android_image(
     state: State<'_, RuntimeState>,
     id: String,
 ) -> Result<InstalledImage, String> {
+    if let Ok(images)=images::list_images(&state.data_dir) {
+        if let Some(image)=images.into_iter().find(|image| image.manifest.id==id) {
+            if let Ok(instances)=storage::load_instances(&state.data_dir) {
+                for instance in instances.into_iter().filter(|i| i.image_path.as_deref()==Some(image.disk_path.as_str()) && i.status!="running") {
+                    let _=snapshots::auto_snapshot(&state.data_dir,&instance.id,"pre-update");
+                }
+            }
+        }
+    }
     images::update_image(&state.data_dir, &id)
 }
 
@@ -501,6 +515,20 @@ fn create_snapshot(
         return Err("Stop the instance before creating a snapshot".into());
     }
     snapshots::create(&state.data_dir, &instance_id, name, description)
+}
+
+
+#[tauri::command]
+fn create_clean_snapshot(state: State<'_, RuntimeState>, instance_id:String)->Result<SnapshotInfo,String>{
+    snapshots::create_clean(&state.data_dir,&instance_id)
+}
+#[tauri::command]
+fn create_rooted_snapshot(state: State<'_, RuntimeState>, instance_id:String)->Result<SnapshotInfo,String>{
+    snapshots::create_rooted(&state.data_dir,&instance_id)
+}
+#[tauri::command]
+fn cleanup_snapshots(state: State<'_, RuntimeState>, instance_id:String, keep:usize)->Result<usize,String>{
+    snapshots::cleanup(&state.data_dir,&instance_id,keep)
 }
 
 #[tauri::command]
@@ -920,6 +948,9 @@ pub fn run() {
             register_android_image,
             list_snapshots,
             create_snapshot,
+            create_clean_snapshot,
+            create_rooted_snapshot,
+            cleanup_snapshots,
             rename_snapshot,
             restore_snapshot,
             delete_snapshot,
