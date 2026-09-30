@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import DeviceProfiles from "./components/DeviceProfiles";
+import ImageManager from "./components/ImageManager";
 import DeveloperTools from "./components/DeveloperTools";
 import type {
   AdbInfo,
@@ -8,10 +9,11 @@ import type {
   CreateInstanceRequest,
   DeviceProfile,
   HostCapabilities,
+  InstalledImage,
   RuntimeActionResult
 } from "./types";
 
-const nav = ["Home", "Instances", "Device Profiles", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
+const nav = ["Home", "Instances", "Android Images", "Device Profiles", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
 
 const defaultRequest: CreateInstanceRequest = {
   name: "Gaming",
@@ -27,6 +29,7 @@ const defaultRequest: CreateInstanceRequest = {
 export default function App() {
   const [instances, setInstances] = useState<AndroidInstance[]>([]);
   const [profiles, setProfiles] = useState<DeviceProfile[]>([]);
+  const [images, setImages] = useState<InstalledImage[]>([]);
   const [host, setHost] = useState<HostCapabilities | null>(null);
   const [adbInfo, setAdbInfo] = useState<AdbInfo | null>(null);
   const [active, setActive] = useState("Home");
@@ -37,16 +40,18 @@ export default function App() {
   const [notice, setNotice] = useState<string>("");
 
   const refresh = async () => {
-    const [instanceData, hostData, profileData, adbData] = await Promise.all([
+    const [instanceData, hostData, profileData, adbData, imageData] = await Promise.all([
       invoke<AndroidInstance[]>("list_instances"),
       invoke<HostCapabilities>("get_host_capabilities"),
       invoke<DeviceProfile[]>("list_device_profiles"),
-      invoke<AdbInfo>("get_adb_info")
+      invoke<AdbInfo>("get_adb_info"),
+      invoke<InstalledImage[]>("list_android_images")
     ]);
     setInstances(instanceData);
     setHost(hostData);
     setProfiles(profileData);
     setAdbInfo(adbData);
+    setImages(imageData);
     setBackendOnline(true);
   };
 
@@ -219,6 +224,7 @@ export default function App() {
         )}
 
         {active === "Instances" && instancesPanel}
+        {active === "Android Images" && <ImageManager images={images} onChanged={refresh} />}
         {active === "Device Profiles" && <DeviceProfiles profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
 
@@ -258,6 +264,16 @@ export default function App() {
               <label>Privilege mode
                 <select value={request.rootMode} onChange={e => setRequest({...request, rootMode:e.target.value as CreateInstanceRequest["rootMode"]})}>
                   <option value="standard">Standard</option><option value="developer">Developer</option><option value="adb-root">ADB Root</option><option value="full-root">Full Root</option>
+                </select>
+              </label>
+              <label className="wide">Registered Android image
+                <select value={images.some(image => image.diskPath === request.imagePath) ? request.imagePath ?? "" : ""} onChange={e => setRequest({...request, imagePath:e.target.value})}>
+                  <option value="">Custom / none</option>
+                  {images.filter(image => image.valid).map(image => (
+                    <option key={image.manifest.id} value={image.diskPath}>
+                      {image.manifest.name} · Android {image.manifest.androidVersion}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="wide">Android boot disk path
