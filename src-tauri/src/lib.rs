@@ -360,6 +360,15 @@ fn remove_android_image(
 }
 
 #[tauri::command]
+fn download_android_image(
+    state: State<'_, RuntimeState>,
+    manifest: AndroidImageManifest,
+    url: String,
+) -> Result<InstalledImage, String> {
+    images::download_image(&state.data_dir, manifest, url)
+}
+
+#[tauri::command]
 fn register_android_image(
     state: State<'_, RuntimeState>,
     manifest: AndroidImageManifest,
@@ -653,6 +662,7 @@ pub fn run() {
             remove_device_profile,
             list_android_images,
             remove_android_image,
+            download_android_image,
             register_android_image,
             list_snapshots,
             create_snapshot,
