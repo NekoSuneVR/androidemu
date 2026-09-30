@@ -182,17 +182,7 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
 
     let mut command = Command::new(qemu_path);
     command
-        .args(["-name", &format!("NekoDroid-{}", instance.name)])
-        .args(["-machine", &format!("q35,accel={accelerator}")])
-        .args(["-cpu", cpu_model])
-        .args(["-smp", &instance.cpu_cores.to_string()])
-        .args(["-m", &instance.ram_mb.to_string()])
-        .args(["-drive", &format!("file={image_path},if=virtio,format={disk_format}")])
-        .args(["-device", "virtio-vga"])
-        .args(["-device", "virtio-keyboard-pci"])
-        .args(["-device", "virtio-mouse-pci"])
-        .args(["-netdev", &format!("user,id=net0,hostfwd=tcp:127.0.0.1:{}-:5555", instance.adb_port)])
-        .args(["-device", "virtio-net-pci,netdev=net0"])
+        .args(build_qemu_args(&instance, &image_path, disk_format, accelerator, cpu_model))
         .stdout(Stdio::from(stdout))
         .stderr(Stdio::from(stderr));
 
@@ -292,6 +282,91 @@ pub fn runtime_status(state: &RuntimeState, id: &str) -> Result<AndroidInstance,
         storage::save_instance(&state.data_dir, &instance)?;
     }
     Ok(instance)
+}
+
+pub fn build_qemu_args(
+    instance: &AndroidInstance,
+    image_path: &str,
+    disk_format: &str,
+    accelerator: &str,
+    cpu_model: &str,
+) -> Vec<String> {
+    vec![
+        "-name".into(),
+        format!("NekoDroid-{}", instance.name),
+        "-machine".into(),
+        format!("q35,accel={accelerator}"),
+        "-cpu".into(),
+        cpu_model.into(),
+        "-smp".into(),
+        instance.cpu_cores.to_string(),
+        "-m".into(),
+        instance.ram_mb.to_string(),
+        "-drive".into(),
+        format!("file={image_path},if=virtio,format={disk_format}"),
+        "-device".into(),
+        "virtio-vga".into(),
+        "-device".into(),
+        "virtio-keyboard-pci".into(),
+        "-device".into(),
+        "virtio-mouse-pci".into(),
+        "-netdev".into(),
+        format!(
+            "user,id=net0,hostfwd=tcp:127.0.0.1:{}-:5555",
+            instance.adb_port
+        ),
+        "-device".into(),
+        "virtio-net-pci,netdev=net0".into(),
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::build_qemu_args;
+    use crate::models::AndroidInstance;
+
+    fn instance() -> AndroidInstance {
+        AndroidInstance {
+            id: "test".into(),
+            name: "Gaming".into(),
+            android_version: "16".into(),
+            profile: "Gaming Phone".into(),
+            status: "stopped".into(),
+            cpu_cores: 8,
+            ram_mb: 8192,
+            adb_port: 5557,
+            root_mode: "standard".into(),
+            image_path: Some("/tmp/android16.qcow2".into()),
+            process_id: None,
+        }
+    }
+
+    #[test]
+    fn qemu_args_keep_adb_on_loopback() {
+        let args = build_qemu_args(
+            &instance(),
+            "/tmp/android16.qcow2",
+            "qcow2",
+            "kvm",
+            "host",
+        );
+        assert!(args.iter().any(|arg| arg == "user,id=net0,hostfwd=tcp:127.0.0.1:5557-:5555"));
+        assert!(!args.iter().any(|arg| arg.contains("0.0.0.0")));
+    }
+
+    #[test]
+    fn qemu_args_include_instance_resources() {
+        let args = build_qemu_args(
+            &instance(),
+            "/tmp/android16.qcow2",
+            "qcow2",
+            "kvm",
+            "host",
+        );
+        assert!(args.windows(2).any(|pair| pair == ["-smp", "8"]));
+        assert!(args.windows(2).any(|pair| pair == ["-m", "8192"]));
+        assert!(args.windows(2).any(|pair| pair == ["-cpu", "host"]));
+    }
 }
 
 fn find_in_path(name: &str) -> Option<PathBuf> {
