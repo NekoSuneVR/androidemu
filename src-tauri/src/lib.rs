@@ -512,6 +512,22 @@ fn start_instance(
 }
 
 #[tauri::command]
+fn pause_instance(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<RuntimeActionResult, String> {
+    runtime::pause_instance(&state, &id)
+}
+
+#[tauri::command]
+fn resume_instance(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<RuntimeActionResult, String> {
+    runtime::resume_instance(&state, &id)
+}
+
+#[tauri::command]
 fn stop_instance(
     state: State<'_, RuntimeState>,
     id: String,
@@ -654,6 +670,8 @@ pub fn run() {
             ai_emergency_stop,
             get_host_capabilities,
             start_instance,
+            pause_instance,
+            resume_instance,
             stop_instance,
             factory_reset_instance,
             get_instance_logs,
