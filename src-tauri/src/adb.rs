@@ -6,6 +6,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
+    sync::OnceLock,
 };
 
 
@@ -64,6 +65,30 @@ pub struct AndroidFileEntry {
     pub size: u64,
     pub permissions: String,
     pub modified: i64,
+}
+
+static ADB_KEY_PATH: OnceLock<PathBuf> = OnceLock::new();
+
+pub fn configure_adb_keys(data_dir: &Path) -> Result<(), String> {
+    let dir = data_dir.join("adb");
+    fs::create_dir_all(&dir).map_err(|e| format!("Unable to create ADB key directory: {e}"))?;
+    let key = dir.join("adbkey");
+    if !key.is_file() {
+        if let Some(adb) = detect_adb().executable {
+            let output = Command::new(adb).args(["keygen", key.to_string_lossy().as_ref()]).output()
+                .map_err(|e| format!("Unable to generate ADB key: {e}"))?;
+            if !output.status.success() {
+                return Err(format!("ADB key generation failed: {}", String::from_utf8_lossy(&output.stderr).trim()));
+            }
+        }
+    }
+    #[cfg(unix)]
+    if key.is_file() {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&key, fs::Permissions::from_mode(0o600)).map_err(|e| format!("Unable to secure ADB key permissions: {e}"))?;
+    }
+    let _ = ADB_KEY_PATH.set(key);
+    Ok(())
 }
 
 pub fn detect_adb() -> AdbInfo {
@@ -844,8 +869,12 @@ fn run_adb(args: &[String]) -> Result<AdbResult, String> {
         .executable
         .ok_or_else(|| "ADB was not found in PATH. Install Android platform-tools or configure it for NekoDroid.".to_string())?;
 
-    let output = Command::new(adb)
-        .args(args)
+    let mut command = Command::new(adb);
+    command.args(args);
+    if let Some(key) = ADB_KEY_PATH.get().filter(|path| path.is_file()) {
+        command.env("ADB_VENDOR_KEYS", key);
+    }
+    let output = command
         .output()
         .map_err(|e| format!("Failed to execute ADB: {e}"))?;
 
