@@ -1021,6 +1021,9 @@ fn factory_reset_instance(
 }
 
 #[tauri::command]
+fn capture_instance_framebuffer_base64(state:State<'_,RuntimeState>,id:String)->Result<String,String>{runtime::capture_framebuffer_base64(&state,&id)}
+
+#[tauri::command]
 fn capture_instance_framebuffer(state:State<'_,RuntimeState>,id:String,destination:String)->Result<String,String>{
     runtime::capture_framebuffer(&state,&id,destination)
 }
@@ -1266,6 +1269,7 @@ pub fn run() {
             resume_instance,
             stop_instance,
             factory_reset_instance,
+            capture_instance_framebuffer_base64,
             capture_instance_framebuffer,
             record_instance_framebuffer,
             get_instance_logs,
