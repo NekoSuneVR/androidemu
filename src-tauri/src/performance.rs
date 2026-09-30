@@ -69,6 +69,7 @@ pub fn launch_env(s:&PerformanceSettings)->Vec<(String,String)>{
     out.push(("NEKODROID_AUDIO_LATENCY_MS".into(),s.audio_latency_ms.to_string()));
     out.push(("NEKODROID_INPUT_LATENCY_MODE".into(),s.input_latency_mode.clone()));
     out.push(("NEKODROID_FRAME_PACING".into(),s.frame_pacing.clone()));
+    out.push(("__GL_MaxFramesAllowed".into(),match s.frame_pacing.as_str(){"low-latency"=>"1","smooth"=>"3",_=>"2"}.into()));
     out
 }
 
