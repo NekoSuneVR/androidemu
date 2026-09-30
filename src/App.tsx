@@ -11,6 +11,7 @@ import SettingsPage from "./components/SettingsPage";
 import SystemReadinessPanel from "./components/SystemReadinessPanel";
 import FileManager from "./components/FileManager";
 import GameLibrary from "./components/GameLibrary";
+import FirstRunWizard from "./components/FirstRunWizard";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -275,6 +276,7 @@ export default function App() {
 
         {active === "Home" && (
           <>
+            <FirstRunWizard />
             <section className="hero">
               <div>
                 <span className="pill">Runtime foundation</span>
