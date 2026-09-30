@@ -38,3 +38,8 @@ GrapheneOS security properties depend on supported Pixel hardware and hardware-b
 ## Native bridge architecture
 
 The native-bridge layer is an explicit compatibility boundary between APK ABI inspection and process launch. APK inspection prefers x86_64, then x86, before considering ARM ABIs. When only arm64-v8a or armeabi-v7a libraries are available, the compatibility diagnostic reports that an ARM bridge is required rather than pretending the APK is natively compatible. A future bridge provider must be selectable per app, must expose its legal/distribution status, and must not falsify Play Integrity or hardware identity.
+
+
+## libndk_translation investigation
+
+NekoDroid treats ARM translation as an optional compatibility provider rather than assuming x86_64 can execute ARM libraries. Android's libndk_translation is a native-bridge implementation used by some Android environments to translate ARM native code for x86/x86_64 hosts. Availability and redistribution terms vary by source/image, so NekoDroid does not bundle it automatically. The APK ABI inspector reports when an app contains only arm64-v8a or armeabi-v7a libraries, and the planned native-bridge provider boundary can select a legally supplied translation implementation per image/app. Native x86_64 remains preferred whenever present.
