@@ -6,7 +6,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
-    sync::OnceLock,
+    sync::{Mutex, OnceLock},
 };
 
 
@@ -68,6 +68,16 @@ pub struct AndroidFileEntry {
 }
 
 static ADB_KEY_PATH: OnceLock<PathBuf> = OnceLock::new();
+static ADB_OVERRIDE: OnceLock<Mutex<Option<PathBuf>>> = OnceLock::new();
+
+pub fn set_executable_override(path: Option<PathBuf>) {
+    let slot=ADB_OVERRIDE.get_or_init(||Mutex::new(None));
+    if let Ok(mut guard)=slot.lock(){*guard=path;}
+}
+
+fn adb_override()->Option<PathBuf>{
+    ADB_OVERRIDE.get_or_init(||Mutex::new(None)).lock().ok().and_then(|g|g.clone()).filter(|p|p.is_file())
+}
 
 pub fn configure_adb_keys(data_dir: &Path) -> Result<(), String> {
     let dir = data_dir.join("adb");
@@ -98,7 +108,7 @@ pub fn detect_adb() -> AdbInfo {
         &["adb"]
     };
 
-    let executable = candidates.iter().find_map(|name| find_in_path(name));
+    let executable = adb_override().or_else(||candidates.iter().find_map(|name| find_in_path(name)));
 
     let Some(path) = executable else {
         return AdbInfo {
