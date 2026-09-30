@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { AdbInfo, AdbResult, AndroidInstance, RuntimeLogs } from "../types";
+import type { AdbInfo, AdbResult, AndroidInstance, ApkCompatibility, RuntimeLogs } from "../types";
 
 type Props = {
   instances: AndroidInstance[];
@@ -163,6 +163,12 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <label>APK path<input placeholder="C:\\Downloads\\game.apk" value={apkPath} onChange={e => setApkPath(e.target.value)} /></label>
                 <div className="button-row">
                   <button className="ghost compact" disabled={busy} onClick={selectApk}>Select APK from PC</button>
+                  <button className="ghost compact" disabled={busy || !apkPath} onClick={async () => {
+                    try {
+                      const info = await invoke<ApkCompatibility>("inspect_apk", { apkPath });
+                      setOutput([`Preferred ABI: ${info.preferredAbi}`, `ABIs: ${info.abis.join(", ") || "none"}`, info.diagnostic].join("\n"));
+                    } catch (error) { setOutput(String(error)); }
+                  }}>Inspect APK ABI</button>
                   <button className="ghost compact" disabled={busy || !apkPath} onClick={() => run("adb_install", { apkPath })}>Install APK</button>
                 </div>
               </div>
