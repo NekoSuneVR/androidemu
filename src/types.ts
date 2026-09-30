@@ -70,6 +70,20 @@ export interface DeviceProfile {
   touchPoints: number;
   telephony: boolean;
   formFactor: string;
+  storageGb: number;
+  wifi: boolean;
+  bluetooth: boolean;
+  gps: boolean;
+  cameraConfiguration: "none" | "front" | "rear" | "front+rear";
+  microphone: boolean;
+  accelerometer: boolean;
+  gyroscope: boolean;
+  compass: boolean;
+  lightSensor: boolean;
+  proximitySensor: boolean;
+  batteryPercent: number;
+  charging: boolean;
+  tabletResources: boolean;
 }
 
 export interface AndroidImageManifest {
