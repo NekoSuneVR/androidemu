@@ -534,6 +534,24 @@ fn validate_coord(value: i32) -> Result<(), String> {
     Ok(())
 }
 
+pub fn set_refresh_rate(port: u16, fps: Option<u32>) -> Result<AdbResult, String> {
+    match fps {
+        Some(value) => {
+            if !matches!(value, 30 | 60 | 90 | 120 | 144 | 165 | 240) {
+                return Err("FPS must be one of 30, 60, 90, 120, 144, 165, or 240".into());
+            }
+            run_for_device(port, &[
+                "shell".into(), "sh".into(), "-c".into(),
+                format!("settings put system min_refresh_rate {value}; settings put system peak_refresh_rate {value}; settings put system user_refresh_rate {value}")
+            ])
+        }
+        None => run_for_device(port, &[
+            "shell".into(), "sh".into(), "-c".into(),
+            "settings delete system min_refresh_rate; settings delete system peak_refresh_rate; settings delete system user_refresh_rate".into()
+        ])
+    }
+}
+
 pub fn set_orientation(port: u16, orientation: String) -> Result<AdbResult, String> {
     let orientation = orientation.trim().to_ascii_lowercase();
 
