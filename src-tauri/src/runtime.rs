@@ -1,5 +1,5 @@
 use crate::{
-    models::{AndroidInstance, HostCapabilities, QemuInfo, RuntimeActionResult},
+    models::{AndroidInstance, HostCapabilities, QemuInfo, RuntimeActionResult, RuntimeLogs},
     storage,
 };
 use std::{
@@ -249,24 +249,54 @@ pub fn refresh_processes(state: &RuntimeState) -> Result<(), String> {
         let mut processes = state.processes.lock().map_err(|_| "Runtime process lock poisoned")?;
         for (id, child) in processes.iter_mut() {
             match child.try_wait() {
-                Ok(Some(_)) => ended.push(id.clone()),
+                Ok(Some(status)) => ended.push((id.clone(), Some(status))),
                 Ok(None) => {}
-                Err(_) => ended.push(id.clone()),
+                Err(_) => ended.push((id.clone(), None)),
             }
         }
-        for id in &ended {
+        for (id, _) in &ended {
             processes.remove(id);
         }
     }
 
-    for id in ended {
+    for (id, exit_status) in ended {
         if let Ok(mut instance) = storage::load_instance(&state.data_dir, &id) {
             instance.status = "stopped".into();
             instance.process_id = None;
             let _ = storage::save_instance(&state.data_dir, &instance);
         }
+
+        if exit_status.as_ref().map(|status| !status.success()).unwrap_or(true) {
+            let logs_dir = storage::instance_dir(&state.data_dir, &id).join("logs");
+            let _ = fs::create_dir_all(&logs_dir);
+            let status_text = exit_status
+                .map(|status| status.to_string())
+                .unwrap_or_else(|| "unknown process error".into());
+            let report = format!(
+                "NekoDroid detected an unexpected QEMU exit.\nInstance: {id}\nExit status: {status_text}\n"
+            );
+            let _ = fs::write(logs_dir.join("crash-report.log"), report);
+        }
     }
     Ok(())
+}
+
+pub fn read_logs(state: &RuntimeState, id: &str) -> Result<RuntimeLogs, String> {
+    let logs_dir = storage::instance_dir(&state.data_dir, id).join("logs");
+    Ok(RuntimeLogs {
+        stdout: read_log_tail(&logs_dir.join("qemu.out.log"))?,
+        stderr: read_log_tail(&logs_dir.join("qemu.err.log"))?,
+        crash_report: read_log_tail(&logs_dir.join("crash-report.log"))?,
+    })
+}
+
+fn read_log_tail(path: &Path) -> Result<String, String> {
+    if !path.exists() {
+        return Ok(String::new());
+    }
+    let bytes = fs::read(path).map_err(|e| format!("Unable to read {}: {e}", path.display()))?;
+    let start = bytes.len().saturating_sub(200_000);
+    Ok(String::from_utf8_lossy(&bytes[start..]).to_string())
 }
 
 pub fn runtime_status(state: &RuntimeState, id: &str) -> Result<AndroidInstance, String> {
