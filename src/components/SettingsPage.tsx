@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, DeviceProfile, GraphicsCapabilities, GraphicsSettings, PerformanceSettings, UpdateCheck } from "../types";
+import type { AppSettings, DeviceProfile, GraphicsCapabilities, GraphicsSettings, PerformanceSettings, PlatformToolsSettings, UpdateCheck } from "../types";
 
 const defaults: AppSettings = {
   defaultAndroidVersion: "16",
@@ -22,6 +22,7 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
   const [performance, setPerformance] = useState<PerformanceSettings | null>(null);
   const [graphics,setGraphics]=useState<GraphicsSettings|null>(null);
   const [graphicsCaps,setGraphicsCaps]=useState<GraphicsCapabilities|null>(null);
+  const [platformTools,setPlatformTools]=useState<PlatformToolsSettings>({directory:""});
 
   useEffect(() => {
     invoke<AppSettings>("get_app_settings")
@@ -30,6 +31,7 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
     invoke<PerformanceSettings>("get_performance_settings").then(setPerformance).catch(error => setStatus(String(error)));
     invoke<GraphicsSettings>("get_graphics_settings").then(setGraphics).catch(error=>setStatus(String(error)));
     invoke<GraphicsCapabilities>("get_graphics_capabilities").then(setGraphicsCaps).catch(error=>setStatus(String(error)));
+    invoke<PlatformToolsSettings>("get_platform_tools_settings").then(setPlatformTools).catch(error=>setStatus(String(error)));
   }, []);
 
   const save = async (event: FormEvent) => {
@@ -126,6 +128,12 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
           </div>
 
           <button className="primary" disabled={busy}>{busy ? "Saving..." : "Save Settings"}</button>
+
+          <div className="tool-group">
+            <h4>Android platform-tools manager</h4>
+            <label>Platform-tools directory<input placeholder="C:\Android\platform-tools or /opt/android/platform-tools" value={platformTools.directory} onChange={e=>setPlatformTools({directory:e.target.value})}/></label>
+            <button type="button" className="ghost compact" onClick={async()=>{try{setPlatformTools(await invoke<PlatformToolsSettings>("save_platform_tools_settings",{settings:platformTools}));setStatus("Platform-tools path saved and applied.");}catch(error){setStatus(String(error));}}}>Save platform-tools path</button>
+          </div>
 
           <div className="tool-group">
             <h4>Installation repair</h4>
