@@ -6,9 +6,13 @@ use std::{
     collections::HashMap,
     env,
     fs::{self, File},
+    io::{BufRead, BufReader, Write},
+    net::TcpStream,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
+    thread,
+    time::Duration,
 };
 
 #[derive(Clone)]
@@ -209,6 +213,48 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     })
 }
 
+pub fn pause_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionResult, String> {
+    refresh_processes(state)?;
+    let pid = {
+        let processes = state.processes.lock().map_err(|_| "Runtime process lock poisoned")?;
+        processes.get(id).map(|child| child.id())
+    }.ok_or_else(|| "Instance is not running in this NekoDroid session".to_string())?;
+
+    let mut instance = storage::load_instance(&state.data_dir, id)?;
+    qmp_execute(qmp_port(&instance), "stop")?;
+    instance.status = "paused".into();
+    instance.process_id = Some(pid);
+    storage::save_instance(&state.data_dir, &instance)?;
+
+    Ok(RuntimeActionResult {
+        instance_id: id.to_string(),
+        status: "paused".into(),
+        message: "QEMU virtual CPUs paused through QMP".into(),
+        process_id: Some(pid),
+    })
+}
+
+pub fn resume_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionResult, String> {
+    refresh_processes(state)?;
+    let pid = {
+        let processes = state.processes.lock().map_err(|_| "Runtime process lock poisoned")?;
+        processes.get(id).map(|child| child.id())
+    }.ok_or_else(|| "Instance is not running in this NekoDroid session".to_string())?;
+
+    let mut instance = storage::load_instance(&state.data_dir, id)?;
+    qmp_execute(qmp_port(&instance), "cont")?;
+    instance.status = "running".into();
+    instance.process_id = Some(pid);
+    storage::save_instance(&state.data_dir, &instance)?;
+
+    Ok(RuntimeActionResult {
+        instance_id: id.to_string(),
+        status: "running".into(),
+        message: "QEMU virtual CPUs resumed through QMP".into(),
+        process_id: Some(pid),
+    })
+}
+
 pub fn stop_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionResult, String> {
     let child = state
         .processes
@@ -335,7 +381,9 @@ pub fn runtime_status(state: &RuntimeState, id: &str) -> Result<AndroidInstance,
     let mut instance = storage::load_instance(&state.data_dir, id)?;
     let processes = state.processes.lock().map_err(|_| "Runtime process lock poisoned")?;
     if let Some(child) = processes.get(id) {
-        instance.status = "running".into();
+        if instance.status != "paused" {
+            instance.status = "running".into();
+        }
         instance.process_id = Some(child.id());
     } else if instance.status == "running" {
         instance.status = "stopped".into();
@@ -391,6 +439,64 @@ fn ensure_runtime_overlay(
     Ok(overlay_path)
 }
 
+fn qmp_port(instance: &AndroidInstance) -> u16 {
+    20_000 + (instance.adb_port % 20_000)
+}
+
+fn qmp_execute(port: u16, command: &str) -> Result<(), String> {
+    let address = format!("127.0.0.1:{port}");
+    let mut stream = None;
+
+    for _ in 0..20 {
+        match TcpStream::connect(&address) {
+            Ok(candidate) => {
+                stream = Some(candidate);
+                break;
+            }
+            Err(_) => thread::sleep(Duration::from_millis(100)),
+        }
+    }
+
+    let mut stream = stream.ok_or_else(|| format!("Unable to connect to QMP at {address}"))?;
+    stream.set_read_timeout(Some(Duration::from_secs(2))).map_err(|e| e.to_string())?;
+    stream.set_write_timeout(Some(Duration::from_secs(2))).map_err(|e| e.to_string())?;
+
+    let reader_stream = stream.try_clone().map_err(|e| e.to_string())?;
+    let mut reader = BufReader::new(reader_stream);
+    let mut line = String::new();
+    reader.read_line(&mut line).map_err(|e| format!("Failed to read QMP greeting: {e}"))?;
+    if !line.contains(""QMP"") {
+        return Err("Invalid QMP greeting".into());
+    }
+
+    stream.write_all(b"{\"execute\":\"qmp_capabilities\"}\r\n")
+        .map_err(|e| format!("Failed to enable QMP capabilities: {e}"))?;
+    read_qmp_response(&mut reader)?;
+
+    let request = format!("{{\"execute\":\"{command}\"}}\r\n");
+    stream.write_all(request.as_bytes())
+        .map_err(|e| format!("Failed to send QMP command: {e}"))?;
+    read_qmp_response(&mut reader)?;
+    Ok(())
+}
+
+fn read_qmp_response(reader: &mut BufReader<TcpStream>) -> Result<(), String> {
+    for _ in 0..20 {
+        let mut line = String::new();
+        let count = reader.read_line(&mut line).map_err(|e| format!("Failed to read QMP response: {e}"))?;
+        if count == 0 {
+            return Err("QMP connection closed unexpectedly".into());
+        }
+        if line.contains(""error"") {
+            return Err(format!("QMP returned an error: {}", line.trim()));
+        }
+        if line.contains(""return"") {
+            return Ok(());
+        }
+    }
+    Err("Timed out waiting for QMP response".into())
+}
+
 pub fn build_qemu_args(
     instance: &AndroidInstance,
     image_path: &str,
@@ -430,6 +536,12 @@ pub fn build_qemu_args(
     }
     args.push("-device".into());
     args.push("virtio-net-pci,netdev=net0".into());
+
+    args.push("-qmp".into());
+    args.push(format!(
+        "tcp:127.0.0.1:{},server=on,wait=off",
+        qmp_port(instance)
+    ));
 
     if instance.headless {
         args.push("-display".into());
@@ -488,6 +600,19 @@ mod tests {
         );
         assert!(args.iter().any(|arg| arg == "user,id=net0"));
         assert!(!args.iter().any(|arg| arg.contains("hostfwd=")));
+    }
+
+    #[test]
+    fn qemu_args_include_localhost_qmp() {
+        let args = build_qemu_args(
+            &instance(),
+            "/tmp/runtime.qcow2",
+            "qcow2",
+            "kvm",
+            "host",
+        );
+        assert!(args.iter().any(|arg| arg == "tcp:127.0.0.1:25557,server=on,wait=off"));
+        assert!(!args.iter().any(|arg| arg.contains("0.0.0.0")));
     }
 
     #[test]
