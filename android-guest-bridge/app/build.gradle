@@ -1,0 +1,12 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'uk.co.nekosunevr.nekodroid.bridge'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'uk.co.nekosunevr.nekodroid.bridge'
+        minSdk 28
+        targetSdk 36
+        versionCode 1
+        versionName '0.1.0'
+    }
+}
