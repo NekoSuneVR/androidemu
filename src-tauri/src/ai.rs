@@ -1,4 +1,4 @@
-use crate::{adb, display, models::AdbResult, settings::{self, AiSettings}};
+use crate::{adb, display, models::AdbResult, settings::{self, AiSettings}, storage};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -226,7 +226,10 @@ pub fn execute_action(
     port: u16,
     action: AiAction,
 ) -> Result<AdbResult, String> {
-    let settings = settings::load(data_dir)?;
+    let settings = storage::load_instances(data_dir).ok()
+        .and_then(|items|items.into_iter().find(|item|item.adb_port==port))
+        .and_then(|instance|settings::load_for_instance(data_dir,&instance.id).ok())
+        .unwrap_or(settings::load(data_dir)?);
     if !settings.enabled {
         return Err("NekoAI is disabled".into());
     }
@@ -331,7 +334,10 @@ pub fn execute_actions(
     if actions.len() > 100 {
         return Err("AI action queue is limited to 100 actions".into());
     }
-    let settings = settings::load(data_dir)?;
+    let settings = storage::load_instances(data_dir).ok()
+        .and_then(|items|items.into_iter().find(|item|item.adb_port==port))
+        .and_then(|instance|settings::load_for_instance(data_dir,&instance.id).ok())
+        .unwrap_or(settings::load(data_dir)?);
     if settings.control_mode == "manual" {
         return Err("AI control mode is manual; action queues are disabled".into());
     }
