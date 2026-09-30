@@ -176,3 +176,13 @@ export interface SystemReadiness {
   recommendedRamMb: number;
   recommendedAndroidVersion: string;
 }
+
+
+export interface AndroidFileEntry {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size: number;
+  permissions: string;
+  modified: number;
+}
