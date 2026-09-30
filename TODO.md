@@ -1,5 +1,9 @@
 # NekoDroid TODO
 
+> Progress: **90/643 tasks complete (14.0%)**
+>
+> This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
+
 This file tracks the planned implementation of NekoDroid.
 
 ---
@@ -14,8 +18,10 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Add contributing guide
 - [ ] Add code of conduct
 - [x] Set up CI
-- [ ] Set up release builds
-- [ ] Create Windows build pipeline
+- [x] Cancel stale CI runs when a newer commit starts
+- [x] Set up release builds
+- [x] Create Windows build pipeline
+- [x] Create Android APK build pipeline
 - [ ] Create Linux build pipeline
 - [ ] Decide minimum Windows version
 - [ ] Decide minimum Linux requirements
@@ -69,8 +75,8 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Design image manifest format
 - [ ] Add Android image downloader
 - [ ] Add checksum verification
-- [ ] Add image installation
-- [ ] Add image removal
+- [x] Add image installation
+- [x] Add image removal
 - [ ] Add image update handling
 - [x] Add custom image import
 - [ ] Add custom GSI import
@@ -257,22 +263,22 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Toggle ADB on/off
 - [x] ADB over localhost
 - [ ] Optional ADB over LAN
-- [ ] ADB authentication
+- [x] ADB authentication
 - [x] Per-instance ADB ports
 - [x] Connect/disconnect button
 - [x] Built-in ADB terminal
 - [x] `adb shell`
 - [x] `adb install`
-- [ ] `adb uninstall`
+- [x] `adb uninstall`
 - [x] `adb push`
 - [x] `adb pull`
 - [ ] `adb forward`
 - [ ] `adb reverse`
-- [ ] `adb reboot`
-- [ ] Reboot recovery
-- [ ] Screenshot
+- [x] `adb reboot`
+- [x] Reboot recovery
+- [x] Screenshot
 - [ ] Screen recording
-- [ ] Device information
+- [x] Device information
 - [ ] Package manager GUI
 - [ ] Process viewer
 - [ ] Logcat viewer
@@ -281,11 +287,11 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 13 - PC to Android File Transfer
 
-- [ ] Host-to-Android file transfer UI
-- [ ] Android-to-host file transfer UI
+- [x] Host-to-Android file transfer UI
+- [x] Android-to-host file transfer UI
 - [ ] Drag-and-drop into Android
-- [ ] Default drop folder `/sdcard/Download/`
-- [ ] Custom destination selection
+- [x] Default drop folder `/sdcard/Download/`
+- [x] Custom destination selection
 - [ ] File transfer progress
 - [ ] Cancel transfer
 - [ ] Transfer retry
@@ -293,8 +299,8 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Multiple-file transfer
 - [ ] Folder upload
 - [ ] Folder download
-- [ ] ADB push backend
-- [ ] ADB pull backend
+- [x] ADB push backend
+- [x] ADB pull backend
 - [ ] Shared-folder alternative
 - [ ] Clipboard file transfer research
 
@@ -309,7 +315,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] OBB/data handling
 - [ ] Show package name/version before install
 - [ ] Install progress
-- [ ] Install result/error display
+- [x] Install result/error display
 
 ---
 
@@ -680,7 +686,7 @@ skills/
 
 # Phase 34 - Developer Tools
 
-- [ ] ADB terminal
+- [x] ADB terminal
 - [ ] Root terminal
 - [ ] Logcat
 - [ ] Kernel log
@@ -843,7 +849,7 @@ skills/
 - [ ] Optional owner-configured unattended access
 - [ ] Multi-region signalling nodes
 - [ ] Connection quality statistics
-- [ ] Native Android viewer app
+- [x] Native Android viewer app
 - [ ] PWA install support
 
 ---
@@ -851,9 +857,9 @@ skills/
 # Long-Term Ideas
 
 - [ ] Cloud Android nodes
-- [ ] Remote control from browser
-- [ ] Android instance streaming
-- [ ] Remote ADB management
+- [x] Remote control from browser
+- [x] Android instance streaming
+- [x] Remote ADB management
 - [ ] Plugin system
 - [ ] Custom renderer plugins
 - [ ] Custom AI plugins
@@ -878,7 +884,7 @@ skills/
 
 The first usable release should include:
 
-- [ ] Windows launcher
+- [x] Windows launcher
 - [ ] Android 16 x86_64 boot
 - [ ] GPU acceleration
 - [ ] Audio
@@ -887,12 +893,12 @@ The first usable release should include:
 - [ ] Keyboard
 - [ ] Portrait/landscape rotation
 - [ ] ADB
-- [ ] ADB file push/pull
+- [x] ADB file push/pull
 - [ ] Drag-and-drop APK installation
 - [ ] PC-to-Android file transfer
 - [ ] Android-to-PC file transfer
-- [ ] Basic device profiles
-- [ ] Basic multi-instance support
+- [x] Basic device profiles
+- [x] Basic multi-instance support
 - [ ] Snapshots
 - [ ] 60 FPS mode
 - [ ] Root-capable developer image
