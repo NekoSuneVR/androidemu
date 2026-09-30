@@ -85,7 +85,7 @@ pub fn detect() -> SystemReadiness {
         hardware_encoders,
         free_disk_mb,
         qemu_found: qemu.found,
-        runtime_name: if cfg!(windows) { "MSYS2 Runtime".into() } else { "QEMU".into() },
+        runtime_name: if cfg!(windows) { "Windows Emulator Runtime".into() } else { "QEMU".into() },
         adb_found: adb_info.found,
         ffmpeg_found: ffmpeg.found,
         recommended_cpu_cores,
@@ -155,19 +155,10 @@ fn detect_virtualization() -> (bool, String) {
     }
 
     if cfg!(windows) {
-        let firmware = powershell(
-            "$p=Get-CimInstance Win32_Processor | Select-Object -First 1; if($p.VirtualizationFirmwareEnabled){'true'}else{'false'}"
-        ).unwrap_or_default();
-        let qemu = runtime::detect_qemu();
-        let whpx = qemu.accelerators.iter().any(|item| item == "whpx");
-        let available = firmware.trim().eq_ignore_ascii_case("true") && whpx;
+        let host = runtime::detect_host();
         return (
-            available,
-            format!(
-                "Firmware virtualization: {}; MSYS2 runtime WHPX: {}.",
-                if firmware.trim().eq_ignore_ascii_case("true") { "enabled" } else { "not detected" },
-                if whpx { "available" } else { "not advertised" }
-            ),
+            host.accelerator_available,
+            host.virtualization_note,
         );
     }
 
