@@ -206,3 +206,15 @@ document.querySelector("#disconnect").addEventListener("click", () => {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("/service-worker.js").catch(() => {}));
 }
+
+document.querySelector("#fileTransfer")?.addEventListener("change", async event => {
+  const file=event.target.files?.[0];
+  const channel=window.remoteFileChannel;
+  if(!file||!channel||channel.readyState!=="open") return;
+  if(file.size>64*1024*1024){alert("Remote files are limited to 64 MiB.");return;}
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  let binary=""; const step=0x8000;
+  for(let i=0;i<bytes.length;i+=step){binary+=String.fromCharCode(...bytes.subarray(i,i+step));}
+  channel.send(JSON.stringify({kind:"file",name:file.name,data:btoa(binary)}));
+  event.target.value="";
+});
