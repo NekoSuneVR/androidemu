@@ -184,6 +184,7 @@ export interface SystemReadiness {
   recommendedCpuCores: number;
   recommendedRamMb: number;
   recommendedAndroidVersion: string;
+  recommendedRenderer: string;
 }
 
 
