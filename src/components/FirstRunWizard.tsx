@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AndroidInstance, AppSettings, PrerequisiteInstallResult, SystemReadiness } from "../types";
+import type { AndroidInstance, AppSettings, InstalledImage, PrerequisiteInstallResult, SystemReadiness } from "../types";
 
 export default function FirstRunWizard() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -8,6 +8,7 @@ export default function FirstRunWizard() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [installingImage, setInstallingImage] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -44,10 +45,12 @@ export default function FirstRunWizard() {
     try {
       const existing = await invoke<AndroidInstance[]>("list_instances");
       if (existing.length === 0) {
+        setStatus("Preparing the default Android image. The first download can take a while…");
+        const image = await invoke<InstalledImage>("ensure_default_android_image");
         await invoke<AndroidInstance>("create_instance", {
           request: {
             name: "Gaming",
-            androidVersion: readiness.recommendedAndroidVersion,
+            androidVersion: image.manifest.androidVersion || readiness.recommendedAndroidVersion,
             profile: settings.defaultProfile || "Gaming Phone",
             cpuCores: readiness.recommendedCpuCores,
             ramMb: readiness.recommendedRamMb,
@@ -55,7 +58,7 @@ export default function FirstRunWizard() {
             adbEnabled: settings.defaultAdbEnabled,
             headless: settings.defaultHeadless,
             rootMode: "standard",
-            imagePath: ""
+            imagePath: image.diskPath
           }
         });
       }
@@ -73,6 +76,19 @@ export default function FirstRunWizard() {
       setStatus(String(error));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const installDefaultImage = async () => {
+    setInstallingImage(true);
+    setStatus("Downloading / installing the default Android image…");
+    try {
+      const image = await invoke<InstalledImage>("ensure_default_android_image");
+      setStatus(`Default Android image is ready: ${image.diskPath}\nThe downloaded package is kept in NekoDroid's local cache for reuse.`);
+    } catch (error) {
+      setStatus(String(error));
+    } finally {
+      setInstallingImage(false);
     }
   };
 
@@ -148,7 +164,10 @@ export default function FirstRunWizard() {
                   {installing ? "Installing / repairing runtime…" : "Install / Repair Missing Windows Runtime"}
                 </button>
               )}
-              <button className="primary" disabled={busy || !readiness.virtualizationAvailable} onClick={finish}>
+              <button className="ghost" disabled={installingImage} onClick={installDefaultImage}>
+                {installingImage ? "Downloading / installing Android…" : "Download / Install Default Android"}
+              </button>
+              <button className="primary" disabled={busy || !readiness.virtualizationAvailable || installingImage} onClick={finish}>
                 {busy ? "Saving…" : "Use Recommendations & Finish"}
               </button>
               {status && <pre className="inline-output">{status}</pre>}
