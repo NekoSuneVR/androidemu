@@ -16,6 +16,7 @@ mod game_settings;
 mod performance;
 mod transfer;
 mod apk_bundle;
+mod display;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -33,6 +34,7 @@ use game_settings::GameSettings;
 use performance::PerformanceSettings;
 use transfer::TransferJob;
 use apk_bundle::ApkPackageInfo;
+use display::DisplayState;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -427,6 +429,12 @@ fn adb_file_properties(port: u16, path: String) -> Result<AdbResult, String> {
 fn adb_search_files(port: u16, path: String, query: String) -> Result<AdbResult, String> {
     adb::search_files(port, path, query)
 }
+
+
+#[tauri::command]
+fn get_display_state(port:u16)->Result<DisplayState,String>{display::state(port)}
+#[tauri::command]
+fn get_preferred_orientation(port:u16,package_name:String)->Result<AdbResult,String>{display::preferred_orientation(port,package_name)}
 
 #[tauri::command]
 fn adb_set_refresh_rate(port: u16, fps: Option<u32>) -> Result<AdbResult, String> {
@@ -962,6 +970,8 @@ pub fn run() {
             adb_copy_path,
             adb_file_properties,
             adb_search_files,
+            get_display_state,
+            get_preferred_orientation,
             adb_set_refresh_rate,
             adb_set_orientation,
             adb_rotate_orientation,
