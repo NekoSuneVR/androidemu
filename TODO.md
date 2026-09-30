@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **346/643 tasks complete (53.8%)**
+> Progress: **357/643 tasks complete (55.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -479,17 +479,17 @@ The AI should use virtual Android controls instead of moving the host operating-
 
 # Phase 23 - AI Game Skills
 
-- [ ] Define skill manifest
-- [ ] Generic Android skill
-- [ ] Package-name detection
-- [ ] Orientation detection
-- [ ] Control definitions
-- [ ] UI region definitions
-- [ ] Game-state extraction
-- [ ] Per-game prompts
-- [ ] Skill import/export
-- [ ] Skill marketplace/repository format
-- [ ] Local custom skills
+- [x] Define skill manifest
+- [x] Generic Android skill
+- [x] Package-name detection
+- [x] Orientation detection
+- [x] Control definitions
+- [x] UI region definitions
+- [x] Game-state extraction
+- [x] Per-game prompts
+- [x] Skill import/export
+- [x] Skill marketplace/repository format
+- [x] Local custom skills
 
 Example layout:
 
