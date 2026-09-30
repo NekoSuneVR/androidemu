@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **331/643 tasks complete (51.5%)**
+> Progress: **346/643 tasks complete (53.8%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -10,13 +10,13 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 0 - Project Foundation
 
-- [ ] Choose final project name
+- [x] Choose final project name
 - [x] Create repository
 - [ ] Add open-source license
 - [x] Add `README.md`
 - [x] Add `TODO.md`
 - [x] Add contributing guide
-- [ ] Add code of conduct
+- [x] Add code of conduct
 - [x] Set up CI
 - [x] Cancel stale CI runs when a newer commit starts
 - [x] Set up release builds
@@ -43,7 +43,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Create Developer Tools page
 - [x] Create AI page
 - [x] Create Settings page
-- [ ] Add update system
+- [x] Add update system
 - [x] Add logs viewer
 - [x] Add crash reports stored locally
 - [x] Add portable mode
@@ -505,17 +505,17 @@ skills/
 
 # Phase 24 - AI Modes
 
-- [ ] Manual
-- [ ] Assistant
-- [ ] Accessibility
-- [ ] Full automation
+- [x] Manual
+- [x] Assistant
+- [x] Accessibility
+- [x] Full automation
 - [ ] Voice-command mode
-- [ ] Inventory helper
-- [ ] Quest helper
-- [ ] UI helper
-- [ ] Repetitive-task helper
-- [ ] Game-specific automation policy
-- [ ] Per-game AI permissions
+- [x] Inventory helper
+- [x] Quest helper
+- [x] UI helper
+- [x] Repetitive-task helper
+- [x] Game-specific automation policy
+- [x] Per-game AI permissions
 
 ---
 
@@ -791,9 +791,9 @@ skills/
 - [x] Disk-space check
 - [x] First-run wizard
 - [ ] Download default Android image
-- [ ] Create first instance
+- [x] Create first instance
 - [ ] Repair installation
-- [ ] Uninstaller
+- [x] Uninstaller
 
 ---
 
