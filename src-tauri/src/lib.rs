@@ -26,6 +26,7 @@ mod platform_tools;
 mod android_validation;
 mod remote_transfer;
 mod host_media_io;
+mod passthrough;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -49,6 +50,7 @@ use plugins::PluginManifest;
 use ai_capture::AiCaptureResult;
 use media_jobs::{FfmpegSettings,MediaJobStatus};
 use platform_tools::PlatformToolsSettings;
+use passthrough::PassthroughSettings;
 use android_validation::AndroidBootValidation;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
@@ -801,6 +803,12 @@ fn import_plugin(state:State<'_,RuntimeState>,path:String)->Result<PluginManifes
 #[tauri::command]
 fn remove_plugin(state:State<'_,RuntimeState>,id:String)->Result<(),String>{plugins::remove(&state.data_dir,id)}
 
+
+#[tauri::command]
+fn get_passthrough_settings(state:State<'_,RuntimeState>)->Result<PassthroughSettings,String>{passthrough::load(&state.data_dir)}
+#[tauri::command]
+fn save_passthrough_settings(state:State<'_,RuntimeState>,settings:PassthroughSettings)->Result<PassthroughSettings,String>{passthrough::save(&state.data_dir,settings)}
+
 #[tauri::command]
 fn get_graphics_settings(state:State<'_,RuntimeState>)->Result<GraphicsSettings,String>{graphics::load(&state.data_dir)}
 #[tauri::command]
@@ -1264,6 +1272,8 @@ pub fn run() {
             save_plugin,
             import_plugin,
             remove_plugin,
+            get_passthrough_settings,
+            save_passthrough_settings,
             get_graphics_settings,
             save_graphics_settings,
             get_graphics_capabilities,
