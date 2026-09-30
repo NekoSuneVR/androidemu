@@ -370,8 +370,18 @@ fn verify_file_sha256(path: &Path, expected: &str) -> Result<(), String> {
 fn install_cached_image_package(data_dir: &Path, package: &Path, source_url: &str) -> Result<InstalledImage, String> {
     let ext = package.extension().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
     if ext != "zip" {
-        let manifest = default_manifest(false, None);
-        return register_image(data_dir, AndroidImageManifest { source_url: Some(source_url.to_string()), ..manifest }, package.to_string_lossy().as_ref());
+        let mut manifest = default_manifest(false, None);
+        if matches!(ext.as_str(), "img" | "raw") {
+            manifest.disk = "android16.img".into();
+            manifest.disk_format = "raw".into();
+        } else if ext == "qcow2" {
+            manifest.disk = "android16.qcow2".into();
+            manifest.disk_format = "qcow2".into();
+        } else {
+            return Err(format!("Unsupported cached Android image package format: .{ext}"));
+        }
+        manifest.source_url = Some(source_url.to_string());
+        return register_image(data_dir, manifest, package.to_string_lossy().as_ref());
     }
 
     let file = fs::File::open(package).map_err(|e| format!("Unable to open cached Android package: {e}"))?;
