@@ -642,6 +642,7 @@ fn resolve_data_dir(app: &tauri::App) -> Result<PathBuf, Box<dyn std::error::Err
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let data_dir = resolve_data_dir(app)?;
             let runtime = RuntimeState::new(data_dir).map_err(std::io::Error::other)?;
