@@ -5,7 +5,7 @@ use std::{env,fs,path::Path,process::Command,time::{SystemTime,UNIX_EPOCH}};
 fn ffmpeg()->Result<String,String>{
     let name=if cfg!(windows){"ffmpeg.exe"}else{"ffmpeg"};
     let paths=env::var_os("PATH").ok_or("PATH unavailable")?;
-    env::split_paths(&paths).map(|d|d.join(name)).find(|p|p.is_file()).map(|p|p.to_string_lossy().to_string()).ok_or("FFmpeg not found")
+    env::split_paths(&paths).map(|d|d.join(name)).find(|p|p.is_file()).map(|p|p.to_string_lossy().to_string()).ok_or_else(||"FFmpeg not found".to_string())
 }
 
 pub fn android_audio_capture(port:u16,destination:String,seconds:u32)->Result<MediaResult,String>{
