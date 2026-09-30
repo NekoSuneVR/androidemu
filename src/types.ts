@@ -208,3 +208,10 @@ export interface MediaJobRequest {
   fps?: number | null;
   hardwareDecode: boolean;
 }
+
+
+export interface AiChatResult {
+  model: string;
+  response: string;
+  endpoint: string;
+}
