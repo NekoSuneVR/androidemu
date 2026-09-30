@@ -29,6 +29,7 @@ mod host_media_io;
 mod passthrough;
 mod cloud_nodes;
 mod frame_share;
+mod arm_compat;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -214,6 +215,12 @@ fn adb_shell(port: u16, command: String) -> Result<AdbResult, String> {
     adb::shell(port, command)
 }
 
+
+
+#[tauri::command]
+fn install_arm_native_bridge(port:u16,archive:String)->Result<Vec<AdbResult>,String>{arm_compat::install_native_bridge(port,archive)}
+#[tauri::command]
+fn test_arm_compatibility(port:u16,abi:String)->Result<AdbResult,String>{arm_compat::compatibility_test(port,abi)}
 
 #[tauri::command]
 fn inspect_apk_package(apk_path:String)->Result<ApkPackageInfo,String>{apk_bundle::inspect(apk_path)}
@@ -1174,6 +1181,8 @@ pub fn run() {
             adb_root_shell,
             adb_get_state,
             adb_shell,
+            install_arm_native_bridge,
+            test_arm_compatibility,
             inspect_apk_package,
             install_apk_bundle,
             inspect_apk,
