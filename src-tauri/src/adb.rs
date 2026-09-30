@@ -1,10 +1,22 @@
 use crate::models::{AdbInfo, AdbResult};
+use serde::Serialize;
 use std::{
     env,
     fs,
     path::{Path, PathBuf},
     process::Command,
 };
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AndroidFileEntry {
+    pub name: String,
+    pub path: String,
+    pub is_dir: bool,
+    pub size: u64,
+    pub permissions: String,
+    pub modified: i64,
+}
 
 pub fn detect_adb() -> AdbInfo {
     let candidates: &[&str] = if cfg!(windows) {
@@ -518,6 +530,124 @@ pub fn rotate_orientation(port: u16, direction: String) -> Result<AdbResult, Str
         "user_rotation".into(),
         next.to_string(),
     ])
+}
+
+
+pub fn list_files(port: u16, path: String) -> Result<Vec<AndroidFileEntry>, String> {
+    validate_android_path(&path)?;
+    let listing = run_for_device(port, &[
+        "shell".into(), "ls".into(), "-1A".into(), path.clone()
+    ])?;
+    if !listing.success {
+        return Err(if listing.stderr.is_empty() { listing.stdout } else { listing.stderr });
+    }
+
+    let mut entries = Vec::new();
+    for name in listing.stdout.lines().map(str::trim).filter(|line| !line.is_empty()) {
+        if name == "." || name == ".." {
+            continue;
+        }
+        let full_path = join_android_path(&path, name);
+        let stat = run_for_device(port, &[
+            "shell".into(),
+            "stat".into(),
+            "-c".into(),
+            "%F|%s|%a|%Y".into(),
+            full_path.clone(),
+        ])?;
+
+        let mut parts = stat.stdout.trim().split('|');
+        let kind = parts.next().unwrap_or_default();
+        let size = parts.next().and_then(|v| v.parse::<u64>().ok()).unwrap_or(0);
+        let permissions = parts.next().unwrap_or_default().to_string();
+        let modified = parts.next().and_then(|v| v.parse::<i64>().ok()).unwrap_or(0);
+
+        entries.push(AndroidFileEntry {
+            name: name.to_string(),
+            path: full_path,
+            is_dir: kind.contains("directory"),
+            size,
+            permissions,
+            modified,
+        });
+    }
+
+    entries.sort_by(|a, b| {
+        b.is_dir.cmp(&a.is_dir)
+            .then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+    });
+    Ok(entries)
+}
+
+pub fn make_directory(port: u16, path: String) -> Result<AdbResult, String> {
+    validate_android_path(&path)?;
+    run_for_device(port, &["shell".into(), "mkdir".into(), "-p".into(), path])
+}
+
+pub fn remove_path(port: u16, path: String) -> Result<AdbResult, String> {
+    validate_android_path(&path)?;
+    if path == "/" || path == "/system" || path == "/vendor" || path == "/data" {
+        return Err("Refusing to recursively remove a protected top-level Android path".into());
+    }
+    run_for_device(port, &["shell".into(), "rm".into(), "-rf".into(), path])
+}
+
+pub fn move_path(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
+    validate_android_path(&source)?;
+    validate_android_path(&destination)?;
+    run_for_device(port, &["shell".into(), "mv".into(), source, destination])
+}
+
+pub fn copy_path(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
+    validate_android_path(&source)?;
+    validate_android_path(&destination)?;
+    run_for_device(port, &["shell".into(), "cp".into(), "-r".into(), source, destination])
+}
+
+pub fn file_properties(port: u16, path: String) -> Result<AdbResult, String> {
+    validate_android_path(&path)?;
+    run_for_device(port, &[
+        "shell".into(),
+        "stat".into(),
+        "-c".into(),
+        "Path: %n\\nType: %F\\nSize: %s bytes\\nPermissions: %A (%a)\\nOwner: %U:%G\\nModified: %y".into(),
+        path,
+    ])
+}
+
+pub fn search_files(port: u16, path: String, query: String) -> Result<AdbResult, String> {
+    validate_android_path(&path)?;
+    let query = query.trim();
+    if query.is_empty() || query.len() > 128 {
+        return Err("Search query must be between 1 and 128 characters".into());
+    }
+    run_for_device(port, &[
+        "shell".into(),
+        "find".into(),
+        path,
+        "-maxdepth".into(),
+        "5".into(),
+        "-iname".into(),
+        format!("*{query}*"),
+    ])
+}
+
+fn validate_android_path(path: &str) -> Result<(), String> {
+    if !path.starts_with('/') {
+        return Err("Android path must be absolute and start with '/'".into());
+    }
+    if path.contains('\0') || path.contains('\n') || path.contains('\r') {
+        return Err("Android path contains invalid characters".into());
+    }
+    Ok(())
+}
+
+fn join_android_path(parent: &str, name: &str) -> String {
+    if parent == "/" {
+        format!("/{name}")
+    } else {
+        format!("{}/{}", parent.trim_end_matches('/'), name)
+    }
 }
 
 fn validate_socket_spec(value: &str, label: &str) -> Result<(), String> {
