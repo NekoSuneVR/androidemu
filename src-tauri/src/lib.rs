@@ -28,6 +28,7 @@ mod remote_transfer;
 mod host_media_io;
 mod passthrough;
 mod cloud_nodes;
+mod frame_share;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -53,6 +54,7 @@ use media_jobs::{FfmpegSettings,MediaJobStatus};
 use platform_tools::PlatformToolsSettings;
 use passthrough::PassthroughSettings;
 use cloud_nodes::CloudAndroidNode;
+use frame_share::SharedFrameInfo;
 use android_validation::AndroidBootValidation;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
@@ -1081,6 +1083,9 @@ fn factory_reset_instance(
 }
 
 #[tauri::command]
+fn capture_shared_frame(state:State<'_,RuntimeState>,id:String)->Result<SharedFrameInfo,String>{frame_share::capture(&state,&id)}
+
+#[tauri::command]
 fn capture_instance_framebuffer_base64(state:State<'_,RuntimeState>,id:String)->Result<String,String>{runtime::capture_framebuffer_base64(&state,&id)}
 
 #[tauri::command]
@@ -1349,6 +1354,7 @@ pub fn run() {
             resume_instance,
             stop_instance,
             factory_reset_instance,
+            capture_shared_frame,
             capture_instance_framebuffer_base64,
             capture_instance_framebuffer,
             record_instance_framebuffer,
