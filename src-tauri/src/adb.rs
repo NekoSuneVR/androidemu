@@ -375,6 +375,14 @@ pub fn services(port: u16) -> Result<AdbResult, String> {
     ])
 }
 
+pub fn surfaceflinger_info(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(),
+        "dumpsys".into(),
+        "SurfaceFlinger".into(),
+    ])
+}
+
 pub fn network_connections(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &[
         "shell".into(),
