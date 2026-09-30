@@ -176,6 +176,10 @@ export interface SystemReadiness {
   gpuNames: string[];
   vulkanAvailable: boolean;
   vulkanDetail: string;
+  openglAvailable: boolean;
+  openglDetail: string;
+  directxAvailable: boolean;
+  directxDetail: string;
   hardwareEncoders: string[];
   freeDiskMb?: number | null;
   qemuFound: boolean;
