@@ -231,6 +231,13 @@ pub fn uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
     run_for_device(port, &["uninstall".into(), package_name.into()])
 }
 
+pub fn device_state(port:u16,state:Option<u32>)->Result<AdbResult,String>{
+    match state {
+        Some(id)=>shell(port,format!("cmd device_state state {id}; cmd device_state print-state 2>/dev/null || true")),
+        None=>shell(port,"cmd device_state print-states 2>/dev/null; cmd device_state print-state 2>/dev/null".into())
+    }
+}
+
 pub fn desktop_mode(port:u16,enabled:bool)->Result<AdbResult,String>{
     let value=if enabled{1}else{0};
     shell(port,format!("settings put global force_desktop_mode_on_external_displays {value}; settings put global enable_freeform_support {value}; echo desktop_mode={value}"))
