@@ -18,6 +18,10 @@ pub struct SystemReadiness {
     pub gpu_names: Vec<String>,
     pub vulkan_available: bool,
     pub vulkan_detail: String,
+    pub opengl_available: bool,
+    pub opengl_detail: String,
+    pub directx_available: bool,
+    pub directx_detail: String,
     pub hardware_encoders: Vec<String>,
     pub free_disk_mb: Option<u64>,
     pub qemu_found: bool,
@@ -38,6 +42,8 @@ pub fn detect() -> SystemReadiness {
     let (virtualization_available, virtualization_detail) = detect_virtualization();
     let gpu_names = detect_gpus();
     let (vulkan_available, vulkan_detail) = detect_vulkan();
+    let (opengl_available, opengl_detail) = detect_opengl();
+    let (directx_available, directx_detail) = detect_directx();
     let hardware_encoders = detect_hardware_encoders();
     let free_disk_mb = detect_free_disk_mb();
     let qemu = runtime::detect_qemu();
@@ -71,6 +77,10 @@ pub fn detect() -> SystemReadiness {
         gpu_names,
         vulkan_available,
         vulkan_detail,
+        opengl_available,
+        opengl_detail,
+        directx_available,
+        directx_detail,
         hardware_encoders,
         free_disk_mb,
         qemu_found: qemu.found,
@@ -210,6 +220,59 @@ fn detect_vulkan() -> (bool, String) {
     }
 
     (false, "vulkaninfo was not found in PATH.".into())
+}
+
+
+fn detect_opengl() -> (bool, String) {
+    if cfg!(target_os = "linux") {
+        if let Some(path) = find_in_path("glxinfo") {
+            if let Ok(output) = Command::new(path).arg("-B").output() {
+                let mut text = String::from_utf8_lossy(&output.stdout).to_string();
+                text.push_str(&String::from_utf8_lossy(&output.stderr));
+                let version = text.lines()
+                    .find(|line| line.to_ascii_lowercase().contains("opengl version"))
+                    .map(str::trim)
+                    .unwrap_or("glxinfo reported OpenGL support");
+                return (output.status.success(), version.to_string());
+            }
+        }
+        return (false, "glxinfo was not found in PATH.".into());
+    }
+
+    if cfg!(windows) {
+        let system_root = env::var("SystemRoot").unwrap_or_else(|_| "C:\\Windows".into());
+        let dll = PathBuf::from(system_root).join("System32").join("opengl32.dll");
+        return (
+            dll.is_file(),
+            if dll.is_file() {
+                format!("Windows OpenGL runtime detected at {}.", dll.display())
+            } else {
+                "Windows OpenGL runtime was not detected.".into()
+            },
+        );
+    }
+
+    (false, "OpenGL host detection is not implemented for this host OS yet.".into())
+}
+
+fn detect_directx() -> (bool, String) {
+    if !cfg!(windows) {
+        return (false, "DirectX is only available on Windows hosts.".into());
+    }
+
+    let system_root = env::var("SystemRoot").unwrap_or_else(|_| "C:\\Windows".into());
+    let system32 = PathBuf::from(system_root).join("System32");
+    let d3d12 = system32.join("d3d12.dll");
+    let d3d11 = system32.join("d3d11.dll");
+
+    if d3d12.is_file() {
+        return (true, format!("Direct3D 12 runtime detected at {}.", d3d12.display()));
+    }
+    if d3d11.is_file() {
+        return (true, format!("Direct3D 11 runtime detected at {}.", d3d11.display()));
+    }
+
+    (false, "Direct3D runtime DLLs were not detected.".into())
 }
 
 fn detect_free_disk_mb() -> Option<u64> {
