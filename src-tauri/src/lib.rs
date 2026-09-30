@@ -18,6 +18,7 @@ mod transfer;
 mod apk_bundle;
 mod display;
 mod graphics;
+mod plugins;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -37,6 +38,7 @@ use transfer::TransferJob;
 use apk_bundle::ApkPackageInfo;
 use display::DisplayState;
 use graphics::{GraphicsSettings,GraphicsCapabilities};
+use plugins::PluginManifest;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -695,6 +697,16 @@ fn stream_media(input:String,url:String,video_codec:String,rotate:Option<String>
 }
 
 
+
+#[tauri::command]
+fn list_plugins(state:State<'_,RuntimeState>)->Result<Vec<PluginManifest>,String>{plugins::list(&state.data_dir)}
+#[tauri::command]
+fn save_plugin(state:State<'_,RuntimeState>,plugin:PluginManifest)->Result<PluginManifest,String>{plugins::save(&state.data_dir,plugin)}
+#[tauri::command]
+fn import_plugin(state:State<'_,RuntimeState>,path:String)->Result<PluginManifest,String>{plugins::import_file(&state.data_dir,path)}
+#[tauri::command]
+fn remove_plugin(state:State<'_,RuntimeState>,id:String)->Result<(),String>{plugins::remove(&state.data_dir,id)}
+
 #[tauri::command]
 fn get_graphics_settings(state:State<'_,RuntimeState>)->Result<GraphicsSettings,String>{graphics::load(&state.data_dir)}
 #[tauri::command]
@@ -1079,6 +1091,10 @@ pub fn run() {
             run_media_job,
             run_media_batch,
             stream_media,
+            list_plugins,
+            save_plugin,
+            import_plugin,
+            remove_plugin,
             get_graphics_settings,
             save_graphics_settings,
             get_graphics_capabilities,
