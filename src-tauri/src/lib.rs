@@ -14,6 +14,7 @@ mod skills;
 mod keymaps;
 mod game_settings;
 mod performance;
+mod transfer;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -29,6 +30,7 @@ use skills::{AiGameState, SkillManifest};
 use keymaps::{KeyBinding, KeymapProfile};
 use game_settings::GameSettings;
 use performance::PerformanceSettings;
+use transfer::TransferJob;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -241,6 +243,20 @@ fn adb_screen_record(
 ) -> Result<AdbResult, String> {
     adb::screen_record(port, destination, seconds)
 }
+
+
+#[tauri::command]
+fn start_transfer(port:u16,direction:String,source:String,destination:String)->Result<TransferJob,String>{transfer::start(port,direction,source,destination)}
+#[tauri::command]
+fn list_transfers()->Result<Vec<TransferJob>,String>{transfer::list()}
+#[tauri::command]
+fn get_transfer(id:String)->Result<TransferJob,String>{transfer::get(&id)}
+#[tauri::command]
+fn cancel_transfer(id:String)->Result<TransferJob,String>{transfer::cancel(&id)}
+#[tauri::command]
+fn retry_transfer(id:String)->Result<TransferJob,String>{transfer::retry(&id)}
+#[tauri::command]
+fn sync_shared_folder(port:u16,host_path:String)->Result<TransferJob,String>{transfer::sync_shared(port,host_path)}
 
 #[tauri::command]
 fn adb_push(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
@@ -899,6 +915,12 @@ pub fn run() {
             adb_security_state,
             adb_screenshot,
             adb_screen_record,
+            start_transfer,
+            list_transfers,
+            get_transfer,
+            cancel_transfer,
+            retry_transfer,
+            sync_shared_folder,
             adb_push,
             adb_push_multiple,
             adb_pull,
