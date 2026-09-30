@@ -293,16 +293,23 @@ export default function RemoteAccess({ instances, profiles }: Props) {
         const start = pointerState.current.get(viewerId);
         pointerState.current.delete(viewerId);
         if (!start) {
-          await adbShell(`input tap ${x} ${y}`);
+          await invoke("adb_input_tap", { port: selected.adbPort, x, y });
           return;
         }
 
         const distance = Math.hypot(x - start.x, y - start.y);
         if (distance < 12) {
-          await adbShell(`input tap ${x} ${y}`);
+          await invoke("adb_input_tap", { port: selected.adbPort, x, y });
         } else {
           const duration = Math.max(80, Math.min(1200, Date.now() - start.at));
-          await adbShell(`input swipe ${start.x} ${start.y} ${x} ${y} ${duration}`);
+          await invoke("adb_input_swipe", {
+            port: selected.adbPort,
+            x1: start.x,
+            y1: start.y,
+            x2: x,
+            y2: y,
+            durationMs: duration
+          });
         }
       }
       return;
@@ -315,7 +322,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
         APP_SWITCH: "KEYCODE_APP_SWITCH"
       };
       const key = keys[String(payload.key)];
-      if (key) await adbShell(`input keyevent ${key}`);
+      if (key) await invoke("adb_input_keyevent", { port: selected.adbPort, keycode: key });
       return;
     }
 
@@ -331,22 +338,13 @@ export default function RemoteAccess({ instances, profiles }: Props) {
         ArrowRight: "KEYCODE_DPAD_RIGHT"
       };
       if (keyMap[key]) {
-        await adbShell(`input keyevent ${keyMap[key]}`);
+        await invoke("adb_input_keyevent", { port: selected.adbPort, keycode: keyMap[key] });
       } else if (key.length === 1 && /^[ -~]$/.test(key)) {
-        const encoded = key === " " ? "%s" : key.replace(/[%&|<>]/g, "");
-        if (encoded) await adbShell(`input text '${encoded}'`);
+        await invoke("adb_input_text", { port: selected.adbPort, text: key });
       }
     }
   };
 
-  const adbShell = async (command: string) => {
-    if (!selected) return;
-    try {
-      await invoke("adb_shell", { port: selected.adbPort, command });
-    } catch (error) {
-      setStatus(`Remote control failed: ${String(error)}`);
-    }
-  };
 
   const endSession = async (revokeOnServer = true) => {
     const current = invite;
