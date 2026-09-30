@@ -259,6 +259,7 @@ export default function App() {
                 ) : (
                   <button className="primary compact" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "start_instance")}>Start</button>
                 )}
+                {["adb-root","full-root"].includes(instance.rootMode) && <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={async()=>{try{await invoke("set_root_on_next_boot",{id:instance.id,enabled:true});setNotice(`${instance.name} will request ADB root after its next boot.`);}catch(error){setNotice(String(error));}}}>Root next boot</button>}
                 <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => cloneInstance(instance)}>Clone</button>
                 <button className="danger compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => factoryResetInstance(instance)}>Factory Reset</button>
                 <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => deleteInstance(instance)}>Delete</button>
