@@ -417,6 +417,7 @@ fn run_media_job(
     width: Option<u32>,
     height: Option<u32>,
     fps: Option<u32>,
+    hardware_decode: bool,
 ) -> Result<MediaResult, String> {
     media::run_media_job(
         input,
@@ -427,6 +428,7 @@ fn run_media_job(
         width,
         height,
         fps,
+        hardware_decode,
     )
 }
 
