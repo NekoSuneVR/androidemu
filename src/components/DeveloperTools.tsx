@@ -149,7 +149,9 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               <div className="tool-group">
                 <h4>Root tools</h4>
                 <div className="button-row">
-                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_root", {})}>ADB Root</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => {
+                    if (window.confirm("Enable ADB root for this instance? Root can weaken isolation and break app compatibility.")) run("adb_root", {});
+                  }}>ADB Root</button>
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_unroot", {})}>ADB Unroot</button>
                 </div>
                 <label>Root shell command<input value={rootCommand} onChange={e => setRootCommand(e.target.value)} /></label>
