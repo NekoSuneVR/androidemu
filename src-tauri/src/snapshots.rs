@@ -1,3 +1,4 @@
+use crate::runtime;
 use serde::{Deserialize, Serialize};
 use std::{
     env,
@@ -191,8 +192,12 @@ fn validate_snapshot_id(id: &str) -> Result<(), String> {
 }
 
 fn run_qemu_img(args: &[String]) -> Result<(), String> {
-    let executable = find_qemu_img()
-        .ok_or_else(|| "qemu-img was not found in PATH".to_string())?;
+    let executable = runtime::find_runtime_tool("qemu-img")
+        .ok_or_else(|| if cfg!(windows) {
+            "MSYS2 qemu-img was not found; install the MSYS2 QEMU runtime or set MSYS2_ROOT".to_string()
+        } else {
+            "qemu-img was not found in PATH".to_string()
+        })?;
     let output = Command::new(executable)
         .args(args)
         .output()
@@ -206,17 +211,3 @@ fn run_qemu_img(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn find_qemu_img() -> Option<PathBuf> {
-    let names: &[&str] = if cfg!(windows) {
-        &["qemu-img.exe", "qemu-img"]
-    } else {
-        &["qemu-img"]
-    };
-    names.iter().find_map(|name| {
-        env::var_os("PATH").and_then(|paths| {
-            env::split_paths(&paths)
-                .map(|dir| dir.join(name))
-                .find(|candidate| candidate.is_file())
-        })
-    })
-}
