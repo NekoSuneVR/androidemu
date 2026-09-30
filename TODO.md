@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **202/643 tasks complete (31.4%)**
+> Progress: **219/643 tasks complete (34.1%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -705,24 +705,24 @@ skills/
 
 # Phase 35 - Automation API
 
-- [ ] REST server
+- [x] REST server
 - [ ] WebSocket server
-- [ ] API authentication
-- [ ] localhost-only default
-- [ ] Instance API
-- [ ] Start/stop API
-- [ ] Screenshot/frame API
-- [ ] Tap API
-- [ ] Swipe API
-- [ ] Keyboard API
+- [x] API authentication
+- [x] localhost-only default
+- [x] Instance API
+- [x] Start/stop API
+- [x] Screenshot/frame API
+- [x] Tap API
+- [x] Swipe API
+- [x] Keyboard API
 - [ ] Gamepad API
-- [ ] File push API
-- [ ] File pull API
-- [ ] APK install API
-- [ ] ADB API
-- [ ] Rotation API
-- [ ] Reboot API
-- [ ] AI API
+- [x] File push API
+- [x] File pull API
+- [x] APK install API
+- [x] ADB API
+- [x] Rotation API
+- [x] Reboot API
+- [x] AI API
 - [ ] Log stream API
 - [ ] Audio stream API
 
@@ -734,7 +734,7 @@ skills/
 - [x] Root off by default
 - [x] AI control off by default
 - [x] LAN ADB off by default
-- [ ] API localhost-only by default
+- [x] API localhost-only by default
 - [ ] Require user approval for dangerous actions
 - [ ] Root warning
 - [ ] Network exposure warning
