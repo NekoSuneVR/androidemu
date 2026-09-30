@@ -7,6 +7,7 @@ import DeveloperTools from "./components/DeveloperTools";
 import NekoAI from "./components/NekoAI";
 import SnapshotManager from "./components/SnapshotManager";
 import MediaTools from "./components/MediaTools";
+import SettingsPage from "./components/SettingsPage";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -14,7 +15,8 @@ import type {
   DeviceProfile,
   HostCapabilities,
   InstalledImage,
-  RuntimeActionResult
+  RuntimeActionResult,
+  AppSettings
 } from "./types";
 
 const nav = ["Home", "Instances", "Android Images", "Device Profiles", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
@@ -46,18 +48,26 @@ export default function App() {
   const [notice, setNotice] = useState<string>("");
 
   const refresh = async () => {
-    const [instanceData, hostData, profileData, adbData, imageData] = await Promise.all([
+    const [instanceData, hostData, profileData, adbData, imageData, appSettings] = await Promise.all([
       invoke<AndroidInstance[]>("list_instances"),
       invoke<HostCapabilities>("get_host_capabilities"),
       invoke<DeviceProfile[]>("list_device_profiles"),
       invoke<AdbInfo>("get_adb_info"),
-      invoke<InstalledImage[]>("list_android_images")
+      invoke<InstalledImage[]>("list_android_images"),
+      invoke<AppSettings>("get_app_settings")
     ]);
     setInstances(instanceData);
     setHost(hostData);
     setProfiles(profileData);
     setAdbInfo(adbData);
     setImages(imageData);
+    setRequest(current => ({
+      ...current,
+      androidVersion: appSettings.defaultAndroidVersion,
+      profile: appSettings.defaultProfile,
+      adbEnabled: appSettings.defaultAdbEnabled,
+      headless: appSettings.defaultHeadless
+    }));
     setBackendOnline(true);
   };
 
@@ -298,15 +308,7 @@ export default function App() {
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
         {active === "NekoAI" && <NekoAI />}
         {active === "Media Tools" && <MediaTools />}
-
-        {["Settings"].includes(active) && (
-          <section className="panel">
-            <div className="empty">
-              <h4>{active} foundation is queued next</h4>
-              <p>The page exists in navigation but its backend module has not been marked complete yet.</p>
-            </div>
-          </section>
-        )}
+        {active === "Settings" && <SettingsPage profiles={profiles} />}
       </main>
 
       {showCreate && (
