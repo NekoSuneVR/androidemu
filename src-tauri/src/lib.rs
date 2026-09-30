@@ -226,6 +226,11 @@ fn adb_uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_desktop_mode(port:u16,enabled:bool)->Result<AdbResult,String>{adb::desktop_mode(port,enabled)}
+#[tauri::command]
+fn adb_overlay_display(port:u16,spec:Option<String>)->Result<AdbResult,String>{adb::overlay_display(port,spec)}
+
+#[tauri::command]
 fn adb_timezone(port:u16,timezone:Option<String>)->Result<AdbResult,String>{adb::timezone(port,timezone)}
 
 #[tauri::command]
@@ -1083,6 +1088,8 @@ pub fn run() {
             adb_install_batch,
             adb_install_multiple,
             adb_uninstall,
+            adb_desktop_mode,
+            adb_overlay_display,
             adb_timezone,
             adb_shutdown,
             adb_boot_status,
