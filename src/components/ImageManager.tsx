@@ -180,18 +180,29 @@ export default function ImageManager({ images, onChanged }: Props) {
         </div>
 
         <form className="image-register-form" onSubmit={submit}>
-          <h4>Default Android 16 images</h4>
-          <label>Default image URL<input value={defaultImages.url} onChange={e=>setDefaultImages({...defaultImages,url:e.target.value})}/></label>
-          <label>Default SHA-256<input value={defaultImages.sha256??""} onChange={e=>setDefaultImages({...defaultImages,sha256:e.target.value||null})}/></label>
-          <label>Root developer image URL<input value={defaultImages.rootDeveloperUrl??""} onChange={e=>setDefaultImages({...defaultImages,rootDeveloperUrl:e.target.value||null})}/></label>
-          <label>Root developer SHA-256<input value={defaultImages.rootDeveloperSha256??""} onChange={e=>setDefaultImages({...defaultImages,rootDeveloperSha256:e.target.value||null})}/></label>
+          <h4>Managed Android installation</h4>
+          <div className="warning-box">
+            NekoDroid downloads the default Android image package once, keeps the package in its local cache, installs it into managed storage, and reuses it for future instances. If no custom URL is set, NekoDroid looks for a NekoDroid-Android-16-x86_64 image asset on the latest GitHub release.
+          </div>
           <div className="button-row">
-            <button type="button" className="ghost compact" onClick={async()=>{try{setDefaultImages(await invoke<DefaultImageSettings>("save_default_image_settings",{settings:defaultImages}));setOutput("Default image sources saved.");}catch(error){setOutput(String(error));}}}>Save sources</button>
-            <button type="button" className="primary compact" disabled={busy||!defaultImages.url} onClick={async()=>{try{setBusy(true);const image=await invoke<InstalledImage>("download_default_android_image",{root:false});setOutput(`Installed ${image.manifest.name}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Download default Android 16</button>
-            <button type="button" className="danger compact" disabled={busy||!defaultImages.rootDeveloperUrl} onClick={async()=>{try{setBusy(true);const image=await invoke<InstalledImage>("download_default_android_image",{root:true});setOutput(`Installed ${image.manifest.name}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Download root developer image</button>
+            <button type="button" className="primary compact" disabled={busy} onClick={async()=>{try{setBusy(true);setOutput("Downloading / installing managed Android 16 image…");const image=await invoke<InstalledImage>("ensure_default_android_image");setOutput(`Managed Android image ready at ${image.diskPath}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>
+              {busy ? "Working…" : "Download / Install Default Android 16"}
+            </button>
           </div>
 
-          <h4>Custom GSI boot bundle</h4>
+          <details>
+            <summary>Advanced: override default image source</summary>
+            <label>Custom default image/package URL<input placeholder="Optional — leave blank to use NekoDroid release asset" value={defaultImages.url} onChange={e=>setDefaultImages({...defaultImages,url:e.target.value})}/></label>
+            <label>Default package SHA-256<input value={defaultImages.sha256??""} onChange={e=>setDefaultImages({...defaultImages,sha256:e.target.value||null})}/></label>
+            <label>Root developer image URL<input value={defaultImages.rootDeveloperUrl??""} onChange={e=>setDefaultImages({...defaultImages,rootDeveloperUrl:e.target.value||null})}/></label>
+            <label>Root developer SHA-256<input value={defaultImages.rootDeveloperSha256??""} onChange={e=>setDefaultImages({...defaultImages,rootDeveloperSha256:e.target.value||null})}/></label>
+            <div className="button-row">
+              <button type="button" className="ghost compact" onClick={async()=>{try{setDefaultImages(await invoke<DefaultImageSettings>("save_default_image_settings",{settings:defaultImages}));setOutput("Default image source override saved.");}catch(error){setOutput(String(error));}}}>Save source override</button>
+              <button type="button" className="danger compact" disabled={busy||!defaultImages.rootDeveloperUrl} onClick={async()=>{try{setBusy(true);const image=await invoke<InstalledImage>("download_default_android_image",{root:true});setOutput(`Installed ${image.manifest.name}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Download root developer image</button>
+            </div>
+          </details>
+
+          <h4>Advanced / Manual GSI boot bundle</h4>
           <label>Android version<input value={gsi.androidVersion} onChange={e=>setGsi({...gsi,androidVersion:e.target.value})}/></label>
           <label>System GSI image<input value={gsi.system} onChange={e=>setGsi({...gsi,system:e.target.value})}/></label>
           <label>Kernel<input value={gsi.kernel} onChange={e=>setGsi({...gsi,kernel:e.target.value})}/></label>
@@ -200,7 +211,7 @@ export default function ImageManager({ images, onChanged }: Props) {
           <label className="checkbox-line"><input type="checkbox" checked={gsi.rootCapable} onChange={e=>setGsi({...gsi,rootCapable:e.target.checked})}/>Root-capable bundle</label>
           <button type="button" className="ghost compact" disabled={busy||!gsi.system||!gsi.kernel||!gsi.initrd} onClick={async()=>{try{setBusy(true);const image=await invoke<InstalledImage>("register_gsi_boot_bundle",{androidVersion:gsi.androidVersion,system:gsi.system,kernel:gsi.kernel,initrd:gsi.initrd,vendor:gsi.vendor||null,rootCapable:gsi.rootCapable});setOutput(`Registered GSI boot bundle ${image.manifest.name}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Register GSI boot bundle</button>
 
-          <h4>Register local image</h4>
+          <h4>Advanced / Manual image import</h4>
           <label>Image ID<input value={manifest.id} onChange={e => setManifest({...manifest,id:e.target.value})} /></label>
           <label>Name<input value={manifest.name} onChange={e => setManifest({...manifest,name:e.target.value})} /></label>
           <div className="split-fields">
@@ -242,7 +253,7 @@ export default function ImageManager({ images, onChanged }: Props) {
           <div className="warning-box">Image metadata is descriptive only. NekoDroid does not claim genuine Pixel identity, hardware-backed attestation, Play Integrity certification, or secure-element features that the VM does not actually have.</div>
           <label>Stored disk filename<input value={manifest.disk} onChange={e => setManifest({...manifest,disk:e.target.value})} /></label>
           <label>Source disk path<input placeholder="C:\\Android\\android16.qcow2" value={sourceDisk} onChange={e => setSourceDisk(e.target.value)} /></label>
-          <label>Image download URL
+          <label>Manual image download URL
             <input
               placeholder="https://example.com/android16.qcow2"
               value={downloadUrl}
@@ -257,9 +268,9 @@ export default function ImageManager({ images, onChanged }: Props) {
             />
           </label>
           <div className="button-row">
-            <button className="primary" disabled={busy || !sourceDisk}>{busy ? "Working..." : "Register Local Image"}</button>
+            <button className="primary" disabled={busy || !sourceDisk}>{busy ? "Working..." : "Import Local Image"}</button>
             <button type="button" className="ghost" disabled={busy || !downloadUrl.trim()} onClick={download}>
-              {busy ? "Working..." : "Download & Install"}
+              {busy ? "Working..." : "Manual Download & Install"}
             </button>
           </div>
           {output && <pre className="inline-output">{output}</pre>}
