@@ -23,6 +23,7 @@ mod sensors;
 mod ai_capture;
 mod media_jobs;
 mod platform_tools;
+mod android_validation;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -46,6 +47,7 @@ use plugins::PluginManifest;
 use ai_capture::AiCaptureResult;
 use media_jobs::{FfmpegSettings,MediaJobStatus};
 use platform_tools::PlatformToolsSettings;
+use android_validation::AndroidBootValidation;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -143,6 +145,16 @@ fn delete_instance(state: State<'_, RuntimeState>, id: String) -> Result<(), Str
 
 
 
+
+
+#[tauri::command]
+fn validate_android_boot(port:u16,expected_version:Option<String>)->Result<AndroidBootValidation,String>{android_validation::validate(port,expected_version)}
+#[tauri::command]
+fn wait_android_boot(port:u16,expected_version:Option<String>,timeout_seconds:u32)->Result<AndroidBootValidation,String>{android_validation::wait_for_boot(port,expected_version,timeout_seconds)}
+#[tauri::command]
+fn test_google_services(port:u16)->Result<AdbResult,String>{android_validation::google_services_test(port)}
+#[tauri::command]
+fn test_google_login(port:u16)->Result<AdbResult,String>{android_validation::google_login_test(port)}
 
 #[tauri::command]
 fn get_platform_tools_settings(state:State<'_,RuntimeState>)->Result<PlatformToolsSettings,String>{platform_tools::load(&state.data_dir)}
@@ -1078,6 +1090,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             check_for_updates,
             list_instances,
+            validate_android_boot,
+            wait_android_boot,
+            test_google_services,
+            test_google_login,
             get_platform_tools_settings,
             save_platform_tools_settings,
             get_adb_info,
