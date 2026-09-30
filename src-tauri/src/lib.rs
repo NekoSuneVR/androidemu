@@ -22,6 +22,7 @@ mod plugins;
 mod sensors;
 mod ai_capture;
 mod media_jobs;
+mod platform_tools;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -44,6 +45,7 @@ use graphics::{GraphicsSettings,GraphicsCapabilities};
 use plugins::PluginManifest;
 use ai_capture::AiCaptureResult;
 use media_jobs::{FfmpegSettings,MediaJobStatus};
+use platform_tools::PlatformToolsSettings;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -140,6 +142,12 @@ fn delete_instance(state: State<'_, RuntimeState>, id: String) -> Result<(), Str
 }
 
 
+
+
+#[tauri::command]
+fn get_platform_tools_settings(state:State<'_,RuntimeState>)->Result<PlatformToolsSettings,String>{platform_tools::load(&state.data_dir)}
+#[tauri::command]
+fn save_platform_tools_settings(state:State<'_,RuntimeState>,settings:PlatformToolsSettings)->Result<PlatformToolsSettings,String>{platform_tools::save(&state.data_dir,settings)}
 
 #[tauri::command]
 fn get_adb_info() -> AdbInfo {
@@ -1027,6 +1035,9 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let data_dir = resolve_data_dir(app)?;
+            if let Ok(tool_settings)=platform_tools::load(&data_dir) {
+                if let Err(error)=platform_tools::apply(&tool_settings){eprintln!("Unable to apply platform-tools settings: {error}");}
+            }
             if let Err(error) = adb::configure_adb_keys(&data_dir) {
                 eprintln!("Unable to configure dedicated ADB keys: {error}");
             }
@@ -1048,6 +1059,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             check_for_updates,
             list_instances,
+            get_platform_tools_settings,
+            save_platform_tools_settings,
             get_adb_info,
             adb_connect,
             adb_disconnect,
