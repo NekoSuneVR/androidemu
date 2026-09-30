@@ -31,3 +31,12 @@ pub fn clear_gps(port:u16)->Result<AdbResult,String>{
 pub fn report(port:u16)->Result<AdbResult,String>{
     adb::shell(port,"echo '--- battery ---'; dumpsys battery; echo '--- location ---'; dumpsys location | head -n 160; echo '--- sensors ---'; dumpsys sensorservice | head -n 240".into())
 }
+
+fn bridge_broadcast(port:u16,action:&str,extras:&str)->Result<AdbResult,String>{
+    adb::shell(port,format!("am broadcast -a uk.co.nekosunevr.nekodroid.bridge.{action} {extras}"))
+}
+pub fn accelerometer(port:u16,x:f64,y:f64,z:f64)->Result<AdbResult,String>{bridge_broadcast(port,"ACCELEROMETER",&format!("--ef x {x} --ef y {y} --ef z {z}"))}
+pub fn gyroscope(port:u16,x:f64,y:f64,z:f64)->Result<AdbResult,String>{bridge_broadcast(port,"GYROSCOPE",&format!("--ef x {x} --ef y {y} --ef z {z}"))}
+pub fn compass(port:u16,heading:f64)->Result<AdbResult,String>{bridge_broadcast(port,"COMPASS",&format!("--ef heading {heading}"))}
+pub fn light(port:u16,lux:f64)->Result<AdbResult,String>{bridge_broadcast(port,"LIGHT",&format!("--ef lux {lux}"))}
+pub fn proximity(port:u16,cm:f64)->Result<AdbResult,String>{bridge_broadcast(port,"PROXIMITY",&format!("--ef cm {cm}"))}
