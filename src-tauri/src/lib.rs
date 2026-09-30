@@ -234,6 +234,11 @@ fn adb_network_connections(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_surfaceflinger_info(port: u16) -> Result<AdbResult, String> {
+    adb::surfaceflinger_info(port)
+}
+
+#[tauri::command]
 fn adb_kernel_log(port: u16, lines: u32) -> Result<AdbResult, String> {
     adb::kernel_log(port, lines)
 }
@@ -601,6 +606,7 @@ pub fn run() {
             adb_activities,
             adb_services,
             adb_network_connections,
+            adb_surfaceflinger_info,
             adb_kernel_log,
             adb_input_tap,
             adb_input_double_tap,
