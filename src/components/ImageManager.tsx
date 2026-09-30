@@ -35,6 +35,20 @@ export default function ImageManager({ images, onChanged }: Props) {
   const [output, setOutput] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const updateImage = async (id: string, name: string) => {
+    if (!window.confirm(`Update ${name} from its saved source URL? The downloaded image is verified before replacing the installed disk.`)) return;
+    setBusy(true);
+    try {
+      const updated = await invoke<InstalledImage>("update_android_image", { id });
+      setOutput(`Updated ${updated.manifest.name} at ${updated.diskPath}`);
+      await onChanged();
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const repairImage = async (id: string, name: string) => {
     if (!window.confirm(`Re-download and repair ${name} from its saved source URL?`)) return;
     setBusy(true);
@@ -127,13 +141,22 @@ export default function ImageManager({ images, onChanged }: Props) {
                   {image.validationError && <small>{image.validationError}</small>}
                   <div className="button-row">
                     {image.manifest.sourceUrl && (
-                      <button
-                        className="ghost compact"
-                        disabled={busy}
-                        onClick={() => repairImage(image.manifest.id, image.manifest.name)}
-                      >
-                        Repair / Re-download
-                      </button>
+                      <>
+                        <button
+                          className="ghost compact"
+                          disabled={busy}
+                          onClick={() => updateImage(image.manifest.id, image.manifest.name)}
+                        >
+                          Update from source
+                        </button>
+                        <button
+                          className="ghost compact"
+                          disabled={busy}
+                          onClick={() => repairImage(image.manifest.id, image.manifest.name)}
+                        >
+                          Repair / Re-download
+                        </button>
+                      </>
                     )}
                     <button
                       className="danger compact"
