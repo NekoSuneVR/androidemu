@@ -18,7 +18,14 @@ const defaultManifest: AndroidImageManifest = {
   diskFormat: "qcow2",
   recommended: true,
   notes: "",
-  sha256: ""
+  sha256: "",
+  gmsProvider: "none",
+  certificationStatus: "Uncertified / unknown",
+  playStorePackage: null,
+  secureImage: false,
+  verifiedBootState: "unknown",
+  securityState: "virtualized / unknown",
+  missingHardwareFeatures: ["hardware-backed attestation", "Pixel secure element"]
 };
 
 export default function ImageManager({ images, onChanged }: Props) {
@@ -112,7 +119,10 @@ export default function ImageManager({ images, onChanged }: Props) {
                     </span>
                   </div>
                   <p>Android {image.manifest.androidVersion} · API {image.manifest.api} · {image.manifest.architecture}</p>
-                  <small>{image.manifest.imageType} · {image.manifest.diskFormat}</small>
+                  <small>{image.manifest.imageType} · {image.manifest.diskFormat} · GMS: {image.manifest.gmsProvider}</small>
+                  <small>Certification: {image.manifest.certificationStatus || "unknown"} · Verified boot: {image.manifest.verifiedBootState || "unknown"}</small>
+                  <small>Security: {image.manifest.securityState || "unknown"}</small>
+                  {image.manifest.missingHardwareFeatures?.length ? <small>Unavailable hardware features: {image.manifest.missingHardwareFeatures.join(", ")}</small> : null}
                   <small className="image-path">{image.diskPath}</small>
                   {image.validationError && <small>{image.validationError}</small>}
                   <div className="button-row">
@@ -163,6 +173,23 @@ export default function ImageManager({ images, onChanged }: Props) {
               </select>
             </label>
           </div>
+          <label>GMS provider
+            <select value={manifest.gmsProvider} onChange={e => setManifest({...manifest,gmsProvider:e.target.value as AndroidImageManifest["gmsProvider"]})}>
+              <option value="none">None / AOSP</option>
+              <option value="google-compatible">Legally obtained Google-compatible image</option>
+              <option value="microg">microG profile</option>
+              <option value="custom-gapps">Custom GApps profile</option>
+            </select>
+          </label>
+          <label>Certification status<input value={manifest.certificationStatus} onChange={e => setManifest({...manifest,certificationStatus:e.target.value})} /></label>
+          <label>Play Store package<input value={manifest.playStorePackage ?? ""} placeholder="com.android.vending" onChange={e => setManifest({...manifest,playStorePackage:e.target.value || null})} /></label>
+          <label className="checkbox-line"><input type="checkbox" checked={manifest.secureImage} onChange={e => setManifest({...manifest,secureImage:e.target.checked})} />Generic custom secure-image profile</label>
+          <label>Verified boot state<input value={manifest.verifiedBootState} onChange={e => setManifest({...manifest,verifiedBootState:e.target.value})} /></label>
+          <label>Actual security state<input value={manifest.securityState} onChange={e => setManifest({...manifest,securityState:e.target.value})} /></label>
+          <label>Missing hardware-backed features
+            <textarea value={manifest.missingHardwareFeatures.join("\n")} onChange={e => setManifest({...manifest,missingHardwareFeatures:e.target.value.split(/\r?\n/).map(v => v.trim()).filter(Boolean)})} />
+          </label>
+          <div className="warning-box">Image metadata is descriptive only. NekoDroid does not claim genuine Pixel identity, hardware-backed attestation, certification, or secure-element features that the VM does not actually have.</div>
           <label>Stored disk filename<input value={manifest.disk} onChange={e => setManifest({...manifest,disk:e.target.value})} /></label>
           <label>Source disk path<input placeholder="C:\\Android\\android16.qcow2" value={sourceDisk} onChange={e => setSourceDisk(e.target.value)} /></label>
           <label>Image download URL
