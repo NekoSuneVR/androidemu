@@ -73,6 +73,7 @@ export default function SystemReadinessPanel() {
 
               <h4>Recommendations</h4>
               <small>Android {readiness.recommendedAndroidVersion}</small>
+              <small>Renderer: {readiness.recommendedRenderer}</small>
               <small>{readiness.recommendedCpuCores} vCPU</small>
               <small>{Math.round(readiness.recommendedRamMb / 1024)} GB RAM</small>
             </div>
