@@ -611,6 +611,36 @@ fn delete_snapshot(
     snapshots::delete(&state.data_dir, &instance_id, &snapshot_id)
 }
 
+
+#[tauri::command]
+fn repair_installation(state:State<'_,RuntimeState>)->Result<Vec<String>,String>{
+    let mut actions=Vec::new();
+    for name in ["images","instances","profiles","keymaps","game-settings","skills","adb"] {
+        let path=state.data_dir.join(name);
+        std::fs::create_dir_all(&path).map_err(|e|format!("Unable to repair {}: {e}",path.display()))?;
+        actions.push(format!("Checked {}",path.display()));
+    }
+    images::ensure_layout(&state.data_dir)?;
+    storage::ensure_layout(&state.data_dir).map_err(|e|e.to_string())?;
+    if settings::load_app(&state.data_dir).is_err(){
+        let path=state.data_dir.join("app-settings.json");
+        if path.exists(){let backup=state.data_dir.join("app-settings.invalid.json");let _=std::fs::rename(&path,&backup);}
+        settings::save_app(&state.data_dir,AppSettings::default())?;
+        actions.push("Reset invalid app settings to safe defaults".into());
+    }
+    if settings::load(&state.data_dir).is_err(){
+        let path=state.data_dir.join("ai-settings.json");
+        if path.exists(){let backup=state.data_dir.join("ai-settings.invalid.json");let _=std::fs::rename(&path,&backup);}
+        settings::save(&state.data_dir,AiSettings::default())?;
+        actions.push("Reset invalid AI settings to safe defaults".into());
+    }
+    let readiness=first_run::detect();
+    actions.push(format!("QEMU: {}",if readiness.qemu_found{"ready"}else{"missing"}));
+    actions.push(format!("ADB: {}",if readiness.adb_found{"ready"}else{"missing"}));
+    actions.push(format!("FFmpeg: {}",if readiness.ffmpeg_found{"ready"}else{"missing"}));
+    Ok(actions)
+}
+
 #[tauri::command]
 fn get_system_readiness() -> SystemReadiness {
     first_run::detect()
@@ -1020,6 +1050,7 @@ pub fn run() {
             rename_snapshot,
             restore_snapshot,
             delete_snapshot,
+            repair_installation,
             get_system_readiness,
             get_media_codec_report,
             get_ffmpeg_info,
