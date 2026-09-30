@@ -148,3 +148,12 @@ export interface MediaResult {
   stderr: string;
   outputPath: string;
 }
+
+
+export interface AppSettings {
+  defaultAndroidVersion: string;
+  defaultProfile: string;
+  defaultAdbEnabled: boolean;
+  defaultHeadless: boolean;
+  confirmDangerousActions: boolean;
+}
