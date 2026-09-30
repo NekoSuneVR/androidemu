@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **219/643 tasks complete (34.1%)**
+> Progress: **226/643 tasks complete (35.1%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -542,8 +542,8 @@ skills/
 
 - [ ] Bundle/manage FFmpeg
 - [x] Detect FFmpeg capabilities
-- [ ] Hardware decode
-- [ ] Hardware encode
+- [x] Hardware decode
+- [x] Hardware encode
 - [x] Software decode
 - [x] Software encode
 - [ ] Progress reporting
@@ -557,15 +557,15 @@ skills/
 
 ## NVIDIA
 
-- [ ] NVDEC detection
-- [ ] NVENC detection
+- [x] NVDEC detection
+- [x] NVENC detection
 - [ ] H.264 capability
 - [ ] HEVC capability
 - [ ] AV1 capability on supported GPUs
 
 ## Intel
 
-- [ ] Quick Sync detection
+- [x] Quick Sync detection
 - [ ] H.264
 - [ ] HEVC
 - [ ] VP9
@@ -573,7 +573,7 @@ skills/
 
 ## AMD
 
-- [ ] AMF detection
+- [x] AMF detection
 - [ ] VCN detection
 - [ ] H.264
 - [ ] HEVC
@@ -590,7 +590,7 @@ skills/
 - [x] Remux
 - [x] Resolution conversion
 - [x] Frame-rate conversion
-- [ ] Hardware transcoding
+- [x] Hardware transcoding
 - [ ] Batch converter
 - [ ] Drag-and-drop input
 
