@@ -91,7 +91,7 @@ pub fn detect_host() -> HostCapabilities {
     }
 }
 
-fn find_windows_msys2_tool(name: &str) -> Option<PathBuf> {
+pub(crate) fn find_runtime_tool(name: &str) -> Option<PathBuf> {
     if !cfg!(windows) {
         return find_in_path(name);
     }
@@ -127,7 +127,7 @@ fn find_windows_msys2_tool(name: &str) -> Option<PathBuf> {
 
 pub fn detect_qemu() -> QemuInfo {
     let executable = if cfg!(windows) {
-        find_windows_msys2_tool("qemu-system-x86_64")
+        find_runtime_tool("qemu-system-x86_64")
     } else {
         find_in_path("qemu-system-x86_64")
     };
@@ -639,7 +639,7 @@ fn ensure_runtime_overlay(
     }
 
     let qemu_img = if cfg!(windows) {
-        find_windows_msys2_tool("qemu-img")
+        find_runtime_tool("qemu-img")
     } else {
         find_in_path("qemu-img")
     }
