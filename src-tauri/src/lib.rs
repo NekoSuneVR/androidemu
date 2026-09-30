@@ -521,6 +521,9 @@ fn get_display_state(port:u16)->Result<DisplayState,String>{display::state(port)
 fn get_preferred_orientation(port:u16,package_name:String)->Result<AdbResult,String>{display::preferred_orientation(port,package_name)}
 
 #[tauri::command]
+fn adb_dynamic_resolution(port:u16,scale:f64)->Result<AdbResult,String>{adb::dynamic_resolution(port,scale)}
+
+#[tauri::command]
 fn adb_set_refresh_rate(port: u16, fps: Option<u32>) -> Result<AdbResult, String> {
     adb::set_refresh_rate(port, fps)
 }
@@ -1206,6 +1209,7 @@ pub fn run() {
             sensor_report,
             get_display_state,
             get_preferred_orientation,
+            adb_dynamic_resolution,
             adb_set_refresh_rate,
             adb_set_orientation,
             adb_rotate_orientation,
