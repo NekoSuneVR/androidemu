@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::process::Command;
 use std::{fs, path::{Path, PathBuf}};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,4 +70,26 @@ pub fn launch_env(s:&PerformanceSettings)->Vec<(String,String)>{
     out.push(("NEKODROID_INPUT_LATENCY_MODE".into(),s.input_latency_mode.clone()));
     out.push(("NEKODROID_FRAME_PACING".into(),s.frame_pacing.clone()));
     out
+}
+
+#[derive(Debug,Clone,Serialize)]
+#[serde(rename_all="camelCase")]
+pub struct PerformanceTelemetry{
+    pub cpu:String,
+    pub gpu:String,
+    pub ram:String,
+}
+pub fn telemetry()->PerformanceTelemetry{
+    let cpu=if cfg!(windows){
+        Command::new("wmic").args(["cpu","get","loadpercentage","/value"]).output().ok().map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_else(||"unavailable".into())
+    }else{
+        fs::read_to_string("/proc/loadavg").ok().and_then(|s|s.split_whitespace().next().map(|v|format!("load {v}"))).unwrap_or_else(||"unavailable".into())
+    };
+    let ram=if cfg!(windows){
+        Command::new("wmic").args(["OS","get","FreePhysicalMemory,TotalVisibleMemorySize","/value"]).output().ok().map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_else(||"unavailable".into())
+    }else{
+        fs::read_to_string("/proc/meminfo").ok().map(|s|s.lines().take(4).collect::<Vec<_>>().join(" | ")).unwrap_or_else(||"unavailable".into())
+    };
+    let gpu=Command::new(if cfg!(windows){"nvidia-smi.exe"}else{"nvidia-smi"}).args(["--query-gpu=utilization.gpu,memory.used,memory.total","--format=csv,noheader,nounits"]).output().ok().filter(|o|o.status.success()).map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_else(||"GPU telemetry unavailable".into());
+    PerformanceTelemetry{cpu,gpu,ram}
 }
