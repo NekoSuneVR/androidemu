@@ -7,6 +7,10 @@ use std::{fs, path::{Path, PathBuf}};
 pub struct GameSettings {
     pub package_name: String,
     #[serde(default)]
+    pub renderer: Option<String>,
+    #[serde(default)]
+    pub android_version: Option<String>,
+    #[serde(default)]
     pub orientation: Option<String>,
     #[serde(default)]
     pub dpi: Option<u32>,
@@ -16,6 +20,12 @@ pub struct GameSettings {
     pub keymap_id: Option<String>,
     #[serde(default)]
     pub ai_skill_id: Option<String>,
+    #[serde(default)]
+    pub compatibility_rating: Option<String>,
+    #[serde(default)]
+    pub known_issues: Vec<String>,
+    #[serde(default)]
+    pub crash_diagnostics: bool,
     #[serde(default)]
     pub notes: String,
 }
@@ -38,7 +48,10 @@ pub fn list(data_dir:&Path)->Result<Vec<GameSettings>,String>{
 }
 pub fn save(data_dir:&Path,settings:GameSettings)->Result<GameSettings,String>{
     let name=safe_name(&settings.package_name)?;
+    if let Some(r)=settings.renderer.as_deref(){if !matches!(r,"auto"|"vulkan"|"opengl"|"directx"|"software"){return Err("Unsupported renderer".into());}}
+    if let Some(v)=settings.android_version.as_deref(){if !matches!(v,"9"|"10"|"11"|"12"|"12L"|"13"|"14"|"15"|"16"){return Err("Unsupported Android version".into());}}
     if let Some(o)=settings.orientation.as_deref(){if !matches!(o,"portrait"|"landscape"|"reverse-portrait"|"reverse-landscape"|"automatic"){return Err("Unsupported orientation".into());}}
+    if let Some(r)=settings.compatibility_rating.as_deref(){if !matches!(r,"unknown"|"good"|"partial"|"broken"){return Err("Compatibility rating must be unknown, good, partial, or broken".into());}}
     if let Some(dpi)=settings.dpi{if !(72..=1000).contains(&dpi){return Err("DPI must be 72..1000".into());}}
     if let Some(fps)=settings.fps{if !matches!(fps,30|60|90|120|144|165|240){return Err("Unsupported FPS".into());}}
     let d=dir(data_dir);fs::create_dir_all(&d).map_err(|e|e.to_string())?;
