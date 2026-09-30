@@ -32,7 +32,7 @@ mod frame_share;
 mod arm_compat;
 mod sdl_gamepad;
 
-use images::{AndroidImageManifest, InstalledImage};
+use images::{AndroidImageManifest, DefaultImageSettings, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
 use adb::{AndroidFileEntry, ApkCompatibility};
 use profiles::DeviceProfile;
@@ -582,6 +582,18 @@ fn remove_device_profile(
 #[tauri::command]
 fn list_android_images(state: State<'_, RuntimeState>) -> Result<Vec<InstalledImage>, String> {
     images::list_images(&state.data_dir)
+}
+
+
+#[tauri::command]
+fn get_default_image_settings(state:State<'_,RuntimeState>)->Result<DefaultImageSettings,String>{images::load_default_image_settings(&state.data_dir)}
+#[tauri::command]
+fn save_default_image_settings(state:State<'_,RuntimeState>,settings:DefaultImageSettings)->Result<DefaultImageSettings,String>{images::save_default_image_settings(&state.data_dir,settings)}
+#[tauri::command]
+fn download_default_android_image(state:State<'_,RuntimeState>,root:bool)->Result<InstalledImage,String>{images::download_default(&state.data_dir,root)}
+#[tauri::command]
+fn register_gsi_boot_bundle(state:State<'_,RuntimeState>,android_version:String,system:String,kernel:String,initrd:String,vendor:Option<String>,root_capable:bool)->Result<InstalledImage,String>{
+    images::register_gsi_bundle(&state.data_dir,android_version,system,kernel,initrd,vendor,root_capable)
 }
 
 #[tauri::command]
@@ -1279,6 +1291,10 @@ pub fn run() {
             save_device_profile,
             remove_device_profile,
             list_android_images,
+            get_default_image_settings,
+            save_default_image_settings,
+            download_default_android_image,
+            register_gsi_boot_bundle,
             supported_android_versions,
             import_custom_gsi,
             update_android_image,
