@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **138/643 tasks complete (21.5%)**
+> Progress: **147/643 tasks complete (22.9%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -52,15 +52,15 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 2 - Virtualization Core
 
-- [ ] Integrate QEMU
-- [ ] Add Windows WHPX support
+- [x] Integrate QEMU
+- [x] Add Windows WHPX support
 - [ ] Investigate Hyper-V-compatible acceleration
-- [ ] Add Linux KVM support
-- [ ] Add VirtIO block devices
-- [ ] Add VirtIO networking
-- [ ] Add VirtIO input
+- [x] Add Linux KVM support
+- [x] Add VirtIO block devices
+- [x] Add VirtIO networking
+- [x] Add VirtIO input
 - [ ] Add VirtIO audio
-- [ ] Add QCOW2 storage
+- [x] Add QCOW2 storage
 - [ ] Add dynamically expanding userdata disks
 - [ ] Add snapshot support
 - [ ] Add clone support
@@ -655,7 +655,7 @@ skills/
 - [x] Instance deletion
 - [x] Instance rename
 - [ ] Instance clone
-- [ ] Concurrent instances
+- [x] Concurrent instances
 - [ ] Separate userdata
 - [x] Separate Android versions
 - [x] Separate device profiles
@@ -801,7 +801,7 @@ skills/
 
 - [ ] Detect CPU
 - [ ] Detect VT-x/AMD-V
-- [ ] Detect Hyper-V/WHPX
+- [x] Detect Hyper-V/WHPX
 - [x] Detect KVM
 - [ ] Detect GPU
 - [ ] Detect Vulkan
