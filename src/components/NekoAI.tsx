@@ -308,6 +308,9 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
               <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"drag", x1, y1, x2, y2, durationMs })}>AI Drag</button>
               <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"joystick", centerX:x1, centerY:y1, dx:x2-x1, dy:y2-y1, durationMs })}>AI Joystick</button>
               <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"gamepad", button:"a" })}>AI Gamepad A</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"multi-touch", points:[[x1,y1],[x2,y2]], durationMs })}>AI Multi-touch</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"gyro", x:0, y:0, z:1 })}>AI Gyro Test</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"accelerometer", x:0, y:9.81, z:0 })}>AI Accelerometer Test</button>
             </div>
 
             <label>Android keycode<input value={keycode} onChange={e => setKeycode(e.target.value)} /></label>
