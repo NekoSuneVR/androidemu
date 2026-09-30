@@ -265,6 +265,17 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="tool-group">
+                <h4>Frame rate</h4>
+                <div className="button-row">
+                  {[30,60,90,120,144,165,240].map(fps => (
+                    <button key={fps} className="ghost compact" disabled={busy} onClick={() => run("adb_set_refresh_rate", { fps })}>{fps} FPS</button>
+                  ))}
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_set_refresh_rate", { fps: null })}>Unlimited / app default</button>
+                </div>
+                <small className="muted">Android and the app may cap refresh rate below the requested value if the virtual display does not advertise it.</small>
+              </div>
+
+              <div className="tool-group">
                 <h4>Orientation</h4>
                 <div className="button-row">
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_set_orientation", { orientation: "auto" })}>Auto</button>
