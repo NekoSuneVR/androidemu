@@ -432,7 +432,8 @@ pub fn capture_framebuffer(state:&RuntimeState,id:&str,destination:String)->Resu
     let instance=storage::load_instance(&state.data_dir,id)?;
     let path=PathBuf::from(&destination);
     if let Some(parent)=path.parent(){if !parent.as_os_str().is_empty(){fs::create_dir_all(parent).map_err(|e|e.to_string())?;}}
-    let args=serde_json::json!({"filename":destination,"format":"png"});
+    let requested_format=if path.extension().and_then(|v|v.to_str()).map(|v|v.eq_ignore_ascii_case("png")).unwrap_or(false){"png"}else{"ppm"};
+    let args=serde_json::json!({"filename":destination,"format":requested_format});
     if let Err(first)=qmp_execute_with_arguments(qmp_port(&instance),"screendump",Some(args)){
         let fallback=serde_json::json!({"filename":path.to_string_lossy().to_string()});
         qmp_execute_with_arguments(qmp_port(&instance),"screendump",Some(fallback)).map_err(|second|format!("{first}; fallback failed: {second}"))?;
