@@ -228,6 +228,9 @@ fn adb_device_info(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_set_lan(port:u16,enabled:bool,lan_port:u16)->Result<AdbResult,String>{adb::set_lan_adb(port,enabled,lan_port)}
+
+#[tauri::command]
 fn adb_clipboard_set(port: u16, text: String) -> Result<AdbResult, String> { adb::clipboard_set(port, text) }
 #[tauri::command]
 fn adb_clipboard_get(port: u16) -> Result<AdbResult, String> { adb::clipboard_get(port) }
@@ -937,6 +940,7 @@ pub fn run() {
             adb_crash_diagnostics,
             adb_reboot,
             adb_device_info,
+            adb_set_lan,
             adb_clipboard_set,
             adb_clipboard_get,
             adb_media_codec_requests,
