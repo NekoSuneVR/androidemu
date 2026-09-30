@@ -488,6 +488,14 @@ fn list_android_images(state: State<'_, RuntimeState>) -> Result<Vec<InstalledIm
 }
 
 #[tauri::command]
+fn supported_android_versions()->Vec<String>{images::supported_android_versions()}
+
+#[tauri::command]
+fn import_custom_gsi(state:State<'_,RuntimeState>,source:String,android_version:String,architecture:String)->Result<InstalledImage,String>{
+    images::import_gsi(&state.data_dir,source,android_version,architecture)
+}
+
+#[tauri::command]
 fn update_android_image(
     state: State<'_, RuntimeState>,
     id: String,
@@ -1037,6 +1045,8 @@ pub fn run() {
             save_device_profile,
             remove_device_profile,
             list_android_images,
+            supported_android_versions,
+            import_custom_gsi,
             update_android_image,
             repair_android_image,
             remove_android_image,
