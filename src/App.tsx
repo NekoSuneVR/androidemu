@@ -23,6 +23,7 @@ const defaultRequest: CreateInstanceRequest = {
   cpuCores: 4,
   ramMb: 4096,
   adbPort: 5555,
+  adbEnabled: false,
   rootMode: "standard",
   imagePath: ""
 };
@@ -111,6 +112,31 @@ export default function App() {
     }
   };
 
+  const updateInstance = async (instance: AndroidInstance, patch: { name?: string; adbEnabled?: boolean }) => {
+    setBusyId(instance.id);
+    try {
+      const updated = await invoke<AndroidInstance>("update_instance", {
+        id: instance.id,
+        request: {
+          name: patch.name ?? instance.name,
+          adbEnabled: patch.adbEnabled ?? instance.adbEnabled
+        }
+      });
+      setInstances(current => current.map(item => item.id === updated.id ? updated : item));
+      setNotice(`${updated.name} settings updated.`);
+    } catch (error) {
+      setNotice(String(error));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const renameInstance = async (instance: AndroidInstance) => {
+    const name = window.prompt("Rename Android instance", instance.name)?.trim();
+    if (!name || name === instance.name) return;
+    await updateInstance(instance, { name });
+  };
+
   const deleteInstance = async (instance: AndroidInstance) => {
     if (!window.confirm(`Delete ${instance.name}? Its instance configuration, logs and snapshots will be removed.`)) return;
     setBusyId(instance.id);
@@ -149,10 +175,18 @@ export default function App() {
                 <span className={`status status-${instance.status}`}>{instance.status}</span>
               </div>
               <p>Android {instance.androidVersion} · {instance.profile}</p>
-              <small>{instance.cpuCores} vCPU · {Math.round(instance.ramMb / 1024)} GB RAM · ADB localhost:{instance.adbPort}</small>
+              <small>{instance.cpuCores} vCPU · {Math.round(instance.ramMb / 1024)} GB RAM · {instance.adbEnabled ? `ADB localhost:${instance.adbPort}` : "ADB disabled"}</small>
               <small className="image-path">{instance.imagePath || "No boot image configured"}</small>
               {instance.processId && <small>PID {instance.processId}</small>}
               <div className="instance-actions">
+                <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => renameInstance(instance)}>Rename</button>
+                <button
+                  className="ghost compact"
+                  disabled={busyId === instance.id || instance.status === "running"}
+                  onClick={() => updateInstance(instance, { adbEnabled: !instance.adbEnabled })}
+                >
+                  {instance.adbEnabled ? "Disable ADB" : "Enable ADB"}
+                </button>
                 {instance.status === "running" ? (
                   <button className="danger" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "stop_instance")}>Stop</button>
                 ) : (
@@ -263,6 +297,10 @@ export default function App() {
               <label>CPU cores<input type="number" min="1" max="64" value={request.cpuCores} onChange={e => setRequest({...request, cpuCores:Number(e.target.value)})} /></label>
               <label>RAM (MB)<input type="number" min="512" step="512" value={request.ramMb} onChange={e => setRequest({...request, ramMb:Number(e.target.value)})} /></label>
               <label>ADB localhost port<input type="number" min="1" max="65535" value={request.adbPort} onChange={e => setRequest({...request, adbPort:Number(e.target.value)})} /></label>
+              <label className="checkbox-line">
+                <input type="checkbox" checked={request.adbEnabled} onChange={e => setRequest({...request, adbEnabled:e.target.checked})} />
+                Enable localhost ADB for this instance
+              </label>
               <label>Privilege mode
                 <select value={request.rootMode} onChange={e => setRequest({...request, rootMode:e.target.value as CreateInstanceRequest["rootMode"]})}>
                   <option value="standard">Standard</option><option value="developer">Developer</option><option value="adb-root">ADB Root</option><option value="full-root">Full Root</option>
