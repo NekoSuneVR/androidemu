@@ -1,3 +1,4 @@
+use crate::runtime;
 use serde::Serialize;
 use std::{
     env,
@@ -114,7 +115,11 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
         &["ffmpeg"]
     };
 
-    let executable = candidates.iter().find_map(|name| find_in_path(name));
+    let executable = if cfg!(windows) {
+        runtime::find_runtime_tool("ffmpeg")
+    } else {
+        candidates.iter().find_map(|name| find_in_path(name))
+    };
     let Some(path) = executable else {
         return FfmpegInfo {
             found: false,
@@ -127,9 +132,11 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
         };
     };
 
-    let version = Command::new(&path)
-        .arg("-version")
-        .output()
+    let version = {
+        let mut command = Command::new(&path);
+        runtime::apply_runtime_environment(&mut command, &path);
+        command.arg("-version").output()
+    }
         .ok()
         .and_then(|output| {
             String::from_utf8_lossy(&output.stdout)
@@ -138,9 +145,11 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
                 .map(str::to_string)
         });
 
-    let hwaccels = Command::new(&path)
-        .args(["-hide_banner", "-hwaccels"])
-        .output()
+    let hwaccels = {
+        let mut command = Command::new(&path);
+        runtime::apply_runtime_environment(&mut command, &path);
+        command.args(["-hide_banner", "-hwaccels"]).output()
+    }
         .ok()
         .map(|output| {
             String::from_utf8_lossy(&output.stdout)
