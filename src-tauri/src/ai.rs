@@ -1,4 +1,4 @@
-use crate::{adb, models::AdbResult, settings::{self, AiSettings}};
+use crate::{adb, display, models::AdbResult, settings::{self, AiSettings}};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -235,10 +235,11 @@ pub fn execute_action(
     enforce_action_rate(settings.max_actions_per_minute)?;
 
     let result = match action {
-        AiAction::Tap { x, y } => adb::input_tap(port, x, y)?,
-        AiAction::Hold { x, y, duration_ms } => adb::input_hold(port, x, y, duration_ms)?,
+        AiAction::Tap { x, y } => { let (x,y)=display::transform(port,x,y)?; adb::input_tap(port,x,y)? },
+        AiAction::Hold { x, y, duration_ms } => { let (x,y)=display::transform(port,x,y)?; adb::input_hold(port,x,y,duration_ms)? },
         AiAction::Swipe { x1, y1, x2, y2, duration_ms }
         | AiAction::Drag { x1, y1, x2, y2, duration_ms } => {
+            let (x1,y1,x2,y2)=display::transform_swipe(port,x1,y1,x2,y2)?;
             adb::input_swipe(port, x1, y1, x2, y2, duration_ms)?
         }
         AiAction::Key { keycode } => adb::input_keyevent(port, keycode)?,
