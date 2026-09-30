@@ -210,6 +210,12 @@ export default function MediaTools() {
               <pre>{info.hardwareDecoders.join("\n")}</pre>
             </>
           ) : null}
+          {info?.codecCapabilities?.length ? (
+            <>
+              <div className="terminal-title">Common codec capabilities</div>
+              <pre>{info.codecCapabilities.join("\n")}</pre>
+            </>
+          ) : null}
           <div className="terminal-title">Job output</div>
           <pre>{result}</pre>
         </div>
