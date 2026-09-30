@@ -294,6 +294,44 @@ pub fn packages(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &["shell".into(), "pm".into(), "list".into(), "packages".into(), "-f".into()])
 }
 
+pub fn user_packages(port: u16) -> Result<Vec<String>, String> {
+    let result = run_for_device(port, &[
+        "shell".into(),
+        "pm".into(),
+        "list".into(),
+        "packages".into(),
+        "-3".into(),
+    ])?;
+
+    if !result.success {
+        return Err(if result.stderr.is_empty() { result.stdout } else { result.stderr });
+    }
+
+    let mut packages = result.stdout
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("package:"))
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    packages.sort();
+    packages.dedup();
+    Ok(packages)
+}
+
+pub fn launch_package(port: u16, package_name: String) -> Result<AdbResult, String> {
+    validate_package_name(&package_name)?;
+    run_for_device(port, &[
+        "shell".into(),
+        "monkey".into(),
+        "-p".into(),
+        package_name,
+        "-c".into(),
+        "android.intent.category.LAUNCHER".into(),
+        "1".into(),
+    ])
+}
+
 pub fn processes(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &["shell".into(), "ps".into(), "-A".into()])
 }
@@ -630,6 +668,16 @@ pub fn search_files(port: u16, path: String, query: String) -> Result<AdbResult,
         "-iname".into(),
         format!("*{query}*"),
     ])
+}
+
+fn validate_package_name(package_name: &str) -> Result<(), String> {
+    if package_name.is_empty()
+        || package_name.len() > 255
+        || !package_name.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_'))
+    {
+        return Err("Invalid Android package name".into());
+    }
+    Ok(())
 }
 
 fn validate_android_path(path: &str) -> Result<(), String> {
