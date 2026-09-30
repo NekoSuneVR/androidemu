@@ -244,6 +244,14 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="tool-group">
+                <h4>Direct QEMU framebuffer</h4>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy||selected.status!=="running"} onClick={async()=>{try{setBusy(true);const path=await invoke<string>("capture_instance_framebuffer",{id:selected.id,destination:screenshotPath});setOutput(`Direct framebuffer saved to ${path}`);}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Capture framebuffer</button>
+                  <button className="ghost compact" disabled={busy||selected.status!=="running"} onClick={async()=>{try{setBusy(true);const path=await invoke<string>("record_instance_framebuffer",{id:selected.id,destination:recordingPath,seconds:recordingSeconds,fps:30});setOutput(`Framebuffer recording saved to ${path}`);}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Record framebuffer 30 FPS</button>
+                </div>
+              </div>
+
+              <div className="tool-group">
                 <label>Screenshot host path<input value={screenshotPath} onChange={e => setScreenshotPath(e.target.value)} /></label>
                 <div className="button-row">
                   <button className="ghost compact" disabled={busy || !screenshotPath} onClick={() => run("adb_screenshot", { destination: screenshotPath })}>Save screenshot</button>
