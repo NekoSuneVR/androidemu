@@ -1,4 +1,5 @@
 use serde::{Deserialize,Serialize};
+use sha2::{Digest,Sha256};
 use std::{env,fs,path::{Path,PathBuf},process::Command};
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -90,4 +91,15 @@ pub fn astc_transcode(input:String,output:String,decode:bool)->Result<String,Str
     let result=Command::new(exe).args(args).output().map_err(|e|e.to_string())?;
     if !result.status.success(){return Err(String::from_utf8_lossy(&result.stderr).to_string());}
     Ok(output)
+}
+
+pub fn astc_cache_transcode(data_dir:&Path,input:String,decode:bool)->Result<String,String>{
+    let bytes=fs::read(&input).map_err(|e|e.to_string())?;
+    let key=format!("{:x}",Sha256::digest(&bytes));
+    let cache=data_dir.join("cache").join("astc");
+    fs::create_dir_all(&cache).map_err(|e|e.to_string())?;
+    let ext=if decode{"png"}else{"astc"};
+    let output=cache.join(format!("{key}.{ext}"));
+    if output.is_file(){return Ok(output.to_string_lossy().to_string());}
+    astc_transcode(input,output.to_string_lossy().to_string(),decode)
 }
