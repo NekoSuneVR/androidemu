@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::{fs, path::{Path, PathBuf}};
+use sha2::{Digest, Sha256};
+use std::{fs, io::Read, path::{Path, PathBuf}};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,6 +17,8 @@ pub struct AndroidImageManifest {
     pub recommended: bool,
     #[serde(default)]
     pub notes: Option<String>,
+    #[serde(default)]
+    pub sha256: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -99,6 +102,8 @@ pub fn register_image(
         return Err(format!("Source disk does not exist: {source_disk}"));
     }
 
+    verify_checksum(&manifest, source)?;
+
     let target_dir = images_dir(data_dir).join(&manifest.id);
     fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
 
@@ -135,7 +140,47 @@ fn validate_manifest(manifest: &AndroidImageManifest, disk_path: &Path) -> Resul
     if !disk_path.is_file() {
         return Err(format!("Disk file is missing: {}", disk_path.display()));
     }
+    verify_checksum(manifest, disk_path)?;
     Ok(())
+}
+
+fn verify_checksum(manifest: &AndroidImageManifest, path: &Path) -> Result<(), String> {
+    let Some(expected) = manifest.sha256.as_deref().map(str::trim).filter(|value| !value.is_empty()) else {
+        return Ok(());
+    };
+
+    if expected.len() != 64 || !expected.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err("Manifest SHA-256 must contain exactly 64 hexadecimal characters".into());
+    }
+
+    let actual = sha256_file(path)?;
+    if !actual.eq_ignore_ascii_case(expected) {
+        return Err(format!(
+            "SHA-256 mismatch for {}: expected {}, got {}",
+            path.display(),
+            expected,
+            actual
+        ));
+    }
+    Ok(())
+}
+
+fn sha256_file(path: &Path) -> Result<String, String> {
+    let mut file = fs::File::open(path)
+        .map_err(|e| format!("Unable to open {} for checksum: {e}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 1024 * 1024];
+
+    loop {
+        let read = file.read(&mut buffer)
+            .map_err(|e| format!("Unable to read {} for checksum: {e}", path.display()))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+
+    Ok(format!("{:x}", hasher.finalize()))
 }
 
 fn validate_id(id: &str) -> Result<(), String> {
