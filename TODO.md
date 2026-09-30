@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **229/643 tasks complete (35.6%)**
+> Progress: **234/643 tasks complete (36.4%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -785,11 +785,11 @@ skills/
 
 - [ ] Windows installer
 - [ ] Linux installer
-- [ ] Dependency checks
-- [ ] Virtualization capability check
-- [ ] GPU capability check
-- [ ] Disk-space check
-- [ ] First-run wizard
+- [x] Dependency checks
+- [x] Virtualization capability check
+- [x] GPU capability check
+- [x] Disk-space check
+- [x] First-run wizard
 - [ ] Download default Android image
 - [ ] Create first instance
 - [ ] Repair installation
