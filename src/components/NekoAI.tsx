@@ -26,6 +26,7 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
   const [durationMs, setDurationMs] = useState(600);
   const [keycode, setKeycode] = useState("KEYCODE_ENTER");
   const [inputText, setInputText] = useState("hello");
+  const [queueJson, setQueueJson] = useState('[{"kind":"tap","x":540,"y":1200},{"kind":"hold","x":540,"y":1200,"durationMs":500}]');
   const [busy, setBusy] = useState(false);
 
   const selectedInstance = instances.find(instance => instance.id === instanceId) ?? instances[0];
@@ -78,6 +79,41 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
     }
   };
 
+  const runAiQueue = async () => {
+    if (!selectedInstance) {
+      setOutput("Create an Android instance before using the AI queue.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const actions = JSON.parse(queueJson);
+      if (!Array.isArray(actions)) throw new Error("Queue JSON must be an array of actions.");
+      const results = await invoke<AdbResult[]>("ai_execute_actions", {
+        port: selectedInstance.adbPort,
+        actions
+      });
+      setOutput(results.map((result, index) => [
+        `Action ${index + 1}: ${result.success ? "SUCCESS" : "FAILED"}`,
+        result.stdout,
+        result.stderr
+      ].filter(Boolean).join("\n")).join("\n\n"));
+      setLogs(await invoke<string>("get_ai_logs"));
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancelAiQueue = async () => {
+    try {
+      await invoke("ai_cancel_actions");
+      setOutput("AI action queue cancellation requested.");
+    } catch (error) {
+      setOutput(String(error));
+    }
+  };
+
   const sendPrompt = async () => {
     if (!prompt.trim()) return;
     setBusy(true);
@@ -119,6 +155,7 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
   const emergencyStop = async () => {
     setBusy(true);
     try {
+      await invoke("ai_cancel_actions");
       const stopped = await invoke<AiSettings>("ai_emergency_stop");
       setSettings(stopped);
       setOutput("Emergency stop applied. AI control is disabled.");
@@ -231,6 +268,15 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
 
             <label>Text<input value={inputText} onChange={e => setInputText(e.target.value)} /></label>
             <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance || !inputText} onClick={() => runAiAction({ kind:"text", text:inputText })}>AI Text</button>
+
+            <h4>AI action queue</h4>
+            <label>Action JSON array
+              <textarea value={queueJson} onChange={e => setQueueJson(e.target.value)} />
+            </label>
+            <div className="button-row">
+              <button type="button" className="primary compact" disabled={busy || !settings.enabled || !selectedInstance || !queueJson.trim()} onClick={runAiQueue}>Run Queue</button>
+              <button type="button" className="danger compact" onClick={cancelAiQueue}>Cancel Queue</button>
+            </div>
           </div>
 
           <div className="warning-box">
