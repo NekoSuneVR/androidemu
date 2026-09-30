@@ -152,6 +152,26 @@ fn adb_storage_info(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_activities(port: u16) -> Result<AdbResult, String> {
+    adb::activities(port)
+}
+
+#[tauri::command]
+fn adb_services(port: u16) -> Result<AdbResult, String> {
+    adb::services(port)
+}
+
+#[tauri::command]
+fn adb_network_connections(port: u16) -> Result<AdbResult, String> {
+    adb::network_connections(port)
+}
+
+#[tauri::command]
+fn adb_kernel_log(port: u16, lines: u32) -> Result<AdbResult, String> {
+    adb::kernel_log(port, lines)
+}
+
+#[tauri::command]
 fn list_device_profiles() -> Vec<DeviceProfile> {
     profiles::builtin_profiles()
 }
@@ -237,6 +257,10 @@ pub fn run() {
             adb_properties,
             adb_build_properties,
             adb_storage_info,
+            adb_activities,
+            adb_services,
+            adb_network_connections,
+            adb_kernel_log,
             create_instance,
             update_instance,
             delete_instance,
