@@ -2,6 +2,7 @@ use crate::{
     models::{AndroidInstance, HostCapabilities, QemuInfo, RuntimeActionResult, RuntimeLogs},
     storage,
     performance,
+    adb,
 };
 use std::{
     collections::HashMap,
@@ -132,6 +133,15 @@ pub fn detect_qemu() -> QemuInfo {
     }
 }
 
+
+pub fn set_root_on_next_boot(state:&RuntimeState,id:&str,enabled:bool)->Result<(),String>{
+    let dir=storage::instance_dir(&state.data_dir,id);
+    fs::create_dir_all(&dir).map_err(|e|e.to_string())?;
+    let marker=dir.join("root-on-next-boot");
+    if enabled{fs::write(marker,b"1").map_err(|e|e.to_string())?;}else if marker.exists(){fs::remove_file(marker).map_err(|e|e.to_string())?;}
+    Ok(())
+}
+
 pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionResult, String> {
     refresh_processes(state)?;
     {
@@ -231,6 +241,25 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     instance.status = "running".into();
     instance.process_id = Some(pid);
     storage::save_instance(&state.data_dir, &instance)?;
+
+    let root_marker=storage::instance_dir(&state.data_dir,id).join("root-on-next-boot");
+    if root_marker.exists() && instance.adb_enabled {
+        let marker=root_marker.clone();
+        let port=instance.adb_port;
+        thread::spawn(move||{
+            for _ in 0..60 {
+                let _=adb::connect(port);
+                if let Ok(status)=adb::get_state(port) {
+                    if status.success {
+                        let _=adb::root(port);
+                        let _=fs::remove_file(&marker);
+                        break;
+                    }
+                }
+                thread::sleep(Duration::from_secs(2));
+            }
+        });
+    }
 
     Ok(RuntimeActionResult {
         instance_id: id.to_string(),
