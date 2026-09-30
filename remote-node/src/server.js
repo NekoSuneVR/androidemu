@@ -17,6 +17,7 @@ const TURN_URL = process.env.TURN_URL || "";
 const TURN_USERNAME = process.env.TURN_USERNAME || "";
 const TURN_PASSWORD = process.env.TURN_PASSWORD || "";
 const ALLOW_ORIGIN = process.env.ALLOW_ORIGIN || "*";
+const MAX_VIEWERS_PER_SESSION = Math.max(1, Math.min(Number(process.env.MAX_VIEWERS_PER_SESSION || 4), 32));
 
 if (!NODE_SECRET) {
   console.warn("WARNING: NODE_SECRET is not set. Session creation is disabled until it is configured.");
@@ -100,6 +101,17 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/api/config") {
+      const invite = String(url.searchParams.get("invite") || "").toUpperCase();
+      const bearer = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+      const inviteValid = invite && [...sessions.values()].some(
+        item => item.code === invite && item.expiresAt > Date.now()
+      );
+      const hostValid = NODE_SECRET && safeTextEqual(NODE_SECRET, bearer);
+
+      if (!inviteValid && !hostValid) {
+        return json(res, 401, { error: "Valid invite or host authentication required" });
+      }
+
       const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
       if (TURN_URL) {
         iceServers.push({
@@ -256,6 +268,11 @@ wss.on("connection", ws => {
           if (!session || session.expiresAt <= Date.now()) {
             send(ws, { type: "error", error: "Invite not found or expired" });
             return ws.close(4003, "Invalid invite");
+          }
+
+          if (session.viewers.size >= MAX_VIEWERS_PER_SESSION) {
+            send(ws, { type: "error", error: "This session has reached its viewer limit" });
+            return ws.close(4006, "Viewer limit reached");
           }
 
           const viewerId = id(10);
