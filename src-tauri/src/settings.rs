@@ -80,3 +80,56 @@ fn validate(settings: &AiSettings) -> Result<(), String> {
 
     Ok(())
 }
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppSettings {
+    pub default_android_version: String,
+    pub default_profile: String,
+    pub default_adb_enabled: bool,
+    pub default_headless: bool,
+    pub confirm_dangerous_actions: bool,
+}
+
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            default_android_version: "16".into(),
+            default_profile: "Gaming Phone".into(),
+            default_adb_enabled: false,
+            default_headless: false,
+            confirm_dangerous_actions: true,
+        }
+    }
+}
+
+fn app_settings_path(data_dir: &Path) -> PathBuf {
+    data_dir.join("app-settings.json")
+}
+
+pub fn load_app(data_dir: &Path) -> Result<AppSettings, String> {
+    let path = app_settings_path(data_dir);
+    if !path.exists() {
+        return Ok(AppSettings::default());
+    }
+    let bytes = fs::read(&path).map_err(|e| format!("Unable to read {}: {e}", path.display()))?;
+    serde_json::from_slice(&bytes).map_err(|e| format!("Invalid app settings: {e}"))
+}
+
+pub fn save_app(data_dir: &Path, settings: AppSettings) -> Result<AppSettings, String> {
+    if !matches!(
+        settings.default_android_version.as_str(),
+        "9" | "10" | "11" | "12" | "13" | "14" | "15" | "16"
+    ) {
+        return Err("Default Android version must be between 9 and 16".into());
+    }
+    if settings.default_profile.trim().is_empty() {
+        return Err("Default profile cannot be empty".into());
+    }
+
+    fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
+    let encoded = serde_json::to_vec_pretty(&settings).map_err(|e| e.to_string())?;
+    fs::write(app_settings_path(data_dir), encoded).map_err(|e| e.to_string())?;
+    Ok(settings)
+}
