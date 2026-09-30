@@ -12,6 +12,7 @@ mod automation_api;
 mod ai;
 mod skills;
 mod keymaps;
+mod game_settings;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -25,6 +26,7 @@ use first_run::SystemReadiness;
 use ai::{AiAction, AiChatResult};
 use skills::{AiGameState, SkillManifest};
 use keymaps::{KeyBinding, KeymapProfile};
+use game_settings::GameSettings;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -575,6 +577,33 @@ fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, Strin
 
 
 
+
+#[tauri::command]
+fn list_game_settings(state: State<'_, RuntimeState>) -> Result<Vec<GameSettings>, String> {
+    game_settings::list(&state.data_dir)
+}
+#[tauri::command]
+fn save_game_settings(state: State<'_, RuntimeState>, settings: GameSettings) -> Result<GameSettings, String> {
+    game_settings::save(&state.data_dir, settings)
+}
+#[tauri::command]
+fn remove_game_settings(state: State<'_, RuntimeState>, package_name: String) -> Result<(), String> {
+    game_settings::remove(&state.data_dir, package_name)
+}
+#[tauri::command]
+fn launch_game_with_settings(
+    state: State<'_, RuntimeState>,
+    port: u16,
+    package_name: String,
+) -> Result<Vec<AdbResult>, String> {
+    let mut out=Vec::new();
+    if let Some(settings)=game_settings::list(&state.data_dir)?.into_iter().find(|s| s.package_name==package_name) {
+        out.extend(game_settings::apply(port,&settings)?);
+    }
+    out.push(adb::launch_package(port,package_name)?);
+    Ok(out)
+}
+
 #[tauri::command]
 fn list_keymaps(state: State<'_, RuntimeState>) -> Result<Vec<KeymapProfile>, String> {
     keymaps::list(&state.data_dir)
@@ -863,6 +892,10 @@ pub fn run() {
             run_media_batch,
             get_app_settings,
             save_app_settings,
+            list_game_settings,
+            save_game_settings,
+            remove_game_settings,
+            launch_game_with_settings,
             list_keymaps,
             save_keymap,
             remove_keymap,
