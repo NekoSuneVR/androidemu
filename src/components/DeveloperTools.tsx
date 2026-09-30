@@ -17,6 +17,11 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
   const [pushDestination, setPushDestination] = useState("/sdcard/Download/");
   const [pullSource, setPullSource] = useState("/sdcard/Download/");
   const [pullDestination, setPullDestination] = useState("");
+  const [forwardLocal, setForwardLocal] = useState("tcp:8080");
+  const [forwardRemote, setForwardRemote] = useState("tcp:8080");
+  const [reverseRemote, setReverseRemote] = useState("tcp:3000");
+  const [reverseLocal, setReverseLocal] = useState("tcp:3000");
+  const [logcatLines, setLogcatLines] = useState(300);
   const [output, setOutput] = useState("ADB output will appear here.");
   const [busy, setBusy] = useState(false);
 
@@ -106,6 +111,26 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <label>Android source<input value={pullSource} onChange={e => setPullSource(e.target.value)} /></label>
                 <label>Host destination<input value={pullDestination} onChange={e => setPullDestination(e.target.value)} /></label>
                 <button className="ghost compact" disabled={busy || !pullDestination} onClick={() => run("adb_pull", { source: pullSource, destination: pullDestination })}>Pull file</button>
+              </div>
+
+              <div className="tool-group">
+                <h4>Port forwarding</h4>
+                <label>Host/local socket<input value={forwardLocal} onChange={e => setForwardLocal(e.target.value)} /></label>
+                <label>Android/remote socket<input value={forwardRemote} onChange={e => setForwardRemote(e.target.value)} /></label>
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_forward", { local: forwardLocal, remote: forwardRemote })}>ADB forward</button>
+              </div>
+
+              <div className="tool-group">
+                <h4>Reverse forwarding</h4>
+                <label>Android/remote socket<input value={reverseRemote} onChange={e => setReverseRemote(e.target.value)} /></label>
+                <label>Host/local socket<input value={reverseLocal} onChange={e => setReverseLocal(e.target.value)} /></label>
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_reverse", { remote: reverseRemote, local: reverseLocal })}>ADB reverse</button>
+              </div>
+
+              <div className="tool-group">
+                <h4>Logcat</h4>
+                <label>Lines<input type="number" min="1" max="5000" value={logcatLines} onChange={e => setLogcatLines(Number(e.target.value))} /></label>
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_logcat", { lines: logcatLines })}>Read Logcat</button>
               </div>
             </>
           ) : <p className="muted">Create an Android instance before using ADB tools.</p>}
