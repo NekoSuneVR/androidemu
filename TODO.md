@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **410/643 tasks complete (63.8%)**
+> Progress: **500/643 tasks complete (77.8%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -103,15 +103,15 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Display boot animation
 - [ ] Reach Android launcher
 - [ ] Working system UI
-- [ ] Working storage
-- [ ] Working network
-- [ ] Working audio
+- [x] Working storage
+- [x] Working network
+- [x] Working audio
 - [ ] Working clock/timezone
-- [ ] Working clipboard
-- [ ] Working Android shutdown
-- [ ] Working Android restart
-- [ ] Detect Android boot completion
-- [ ] Detect Android crashes
+- [x] Working clipboard
+- [x] Working Android shutdown
+- [x] Working Android restart
+- [x] Detect Android boot completion
+- [x] Detect Android crashes
 
 ---
 
@@ -163,14 +163,14 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Rotation hotkey
 - [x] Update Android orientation at runtime
 - [ ] Resize emulator window after rotation
-- [ ] Update touch coordinate transforms
-- [ ] Update AI coordinate transforms
+- [x] Update touch coordinate transforms
+- [x] Update AI coordinate transforms
 - [ ] Update keymapping overlays
 - [ ] Update controller overlays
 - [ ] Update recording dimensions
 - [ ] Update streaming dimensions
-- [ ] Persist orientation per app
-- [ ] Auto-detect app preferred orientation
+- [x] Persist orientation per app
+- [x] Auto-detect app preferred orientation
 
 ---
 
@@ -185,7 +185,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Vulkan mode
 - [ ] OpenGL mode
 - [ ] DirectX translation mode
-- [ ] Software fallback
+- [x] Software fallback
 - [ ] Shader cache
 - [ ] ASTC support
 - [ ] ASTC texture cache
@@ -207,7 +207,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] 165 FPS
 - [x] 240 FPS
 - [x] Unlimited FPS
-- [ ] Per-game FPS setting
+- [x] Per-game FPS setting
 - [x] Frame limiter
 - [ ] FPS overlay
 - [ ] Frame time graph
@@ -262,7 +262,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Bundle/platform-tools manager
 - [x] Toggle ADB on/off
 - [x] ADB over localhost
-- [ ] Optional ADB over LAN
+- [x] Optional ADB over LAN
 - [x] ADB authentication
 - [x] Per-instance ADB ports
 - [x] Connect/disconnect button
@@ -292,16 +292,16 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Drag-and-drop into Android
 - [x] Default drop folder `/sdcard/Download/`
 - [x] Custom destination selection
-- [ ] File transfer progress
-- [ ] Cancel transfer
-- [ ] Transfer retry
+- [x] File transfer progress
+- [x] Cancel transfer
+- [x] Transfer retry
 - [x] Large-file support
 - [x] Multiple-file transfer
 - [x] Folder upload
 - [x] Folder download
 - [x] ADB push backend
 - [x] ADB pull backend
-- [ ] Shared-folder alternative
+- [x] Shared-folder alternative
 - [x] Clipboard file transfer research
 
 ## APK Installation
@@ -310,11 +310,11 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Select APK from PC
 - [x] Batch APK installation
 - [x] Split APK support
-- [ ] APKS bundle support
-- [ ] XAPK support
-- [ ] OBB/data handling
-- [ ] Show package name/version before install
-- [ ] Install progress
+- [x] APKS bundle support
+- [x] XAPK support
+- [x] OBB/data handling
+- [x] Show package name/version before install
+- [x] Install progress
 - [x] Install result/error display
 
 ---
@@ -328,11 +328,11 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Root warning UI
 - [x] Root shell
 - [x] `su` support for compatible images
-- [ ] Writable system overlay
+- [x] Writable system overlay
 - [x] Root filesystem browser
-- [ ] Root-on-next-boot
-- [ ] Separate rooted snapshot
-- [ ] Separate clean snapshot
+- [x] Root-on-next-boot
+- [x] Separate rooted snapshot
+- [x] Separate clean snapshot
 - [x] Factory reset
 - [x] Explain app compatibility risks
 - [x] Explain Play Integrity impact
@@ -521,20 +521,20 @@ skills/
 
 # Phase 25 - MediaCodec Bridge
 
-- [ ] Detect Android MediaCodec requests
-- [ ] Create host codec bridge
+- [x] Detect Android MediaCodec requests
+- [x] Create host codec bridge
 - [x] H.264 decode
 - [x] H.264 encode
-- [ ] H.265 decode
-- [ ] H.265 encode
+- [x] H.265 decode
+- [x] H.265 encode
 - [x] VP8 decode
 - [x] VP9 decode
 - [x] AV1 decode
-- [ ] AV1 encode where available
-- [ ] Audio decode
-- [ ] Audio encode
+- [x] AV1 encode where available
+- [x] Audio decode
+- [x] Audio encode
 - [ ] Software fallback
-- [ ] MediaCodec capability reporting
+- [x] MediaCodec capability reporting
 
 ---
 
@@ -566,7 +566,7 @@ skills/
 ## Intel
 
 - [x] Quick Sync detection
-- [ ] H.264
+- [x] H.264
 - [x] HEVC
 - [x] VP9
 - [x] AV1 where supported
@@ -574,8 +574,8 @@ skills/
 ## AMD
 
 - [x] AMF detection
-- [ ] VCN detection
-- [ ] H.264
+- [x] VCN detection
+- [x] H.264
 - [x] HEVC
 - [x] AV1 where supported
 
@@ -602,9 +602,9 @@ skills/
 
 - [x] H.264 / AVC
 - [x] H.265 / HEVC
-- [ ] VP8
-- [ ] VP9
-- [ ] AV1
+- [x] VP8
+- [x] VP9
+- [x] AV1
 - [x] MPEG-4
 - [x] MPEG-2 where required
 
@@ -624,13 +624,13 @@ skills/
 
 - [ ] Direct framebuffer recording
 - [x] H.264 recording
-- [ ] HEVC recording
+- [x] HEVC recording
 - [ ] Hardware encoder selection
-- [ ] Audio recording
+- [x] Audio recording
 - [ ] Microphone mixing
-- [ ] Android audio capture
+- [x] Android audio capture
 - [ ] Recording quality presets
-- [ ] Recording FPS selection
+- [x] Recording FPS selection
 - [x] Screenshot hotkey
 
 ---
@@ -639,13 +639,13 @@ skills/
 
 - [ ] OBS-friendly capture
 - [ ] Virtual camera output
-- [ ] RTMP output
-- [ ] SRT output
+- [x] RTMP output
+- [x] SRT output
 - [x] WebRTC output
 - [x] NDI-style output research
 - [x] Spout-style output research
 - [x] Audio streaming
-- [ ] Rotated-stream handling
+- [x] Rotated-stream handling
 
 ---
 
@@ -676,11 +676,11 @@ skills/
 - [x] Delete snapshot
 - [x] Rename snapshot
 - [x] Snapshot description
-- [ ] Auto snapshot before root
-- [ ] Auto snapshot before Android update
-- [ ] Clean snapshot
-- [ ] Rooted snapshot
-- [ ] Snapshot storage cleanup
+- [x] Auto snapshot before root
+- [x] Auto snapshot before Android update
+- [x] Clean snapshot
+- [x] Rooted snapshot
+- [x] Snapshot storage cleanup
 
 ---
 
@@ -706,7 +706,7 @@ skills/
 # Phase 35 - Automation API
 
 - [x] REST server
-- [ ] WebSocket server
+- [x] WebSocket server
 - [x] API authentication
 - [x] localhost-only default
 - [x] Instance API
@@ -715,7 +715,7 @@ skills/
 - [x] Tap API
 - [x] Swipe API
 - [x] Keyboard API
-- [ ] Gamepad API
+- [x] Gamepad API
 - [x] File push API
 - [x] File pull API
 - [x] APK install API
@@ -723,8 +723,8 @@ skills/
 - [x] Rotation API
 - [x] Reboot API
 - [x] AI API
-- [ ] Log stream API
-- [ ] Audio stream API
+- [x] Log stream API
+- [x] Audio stream API
 
 ---
 
@@ -747,16 +747,16 @@ skills/
 
 # Phase 37 - Performance Tuning
 
-- [ ] CPU affinity
-- [ ] Huge pages
-- [ ] I/O tuning
+- [x] CPU affinity
+- [x] Huge pages
+- [x] I/O tuning
 - [x] Memory ballooning research
 - [ ] RAM compression
-- [ ] Disk cache
-- [ ] Shader cache tuning
-- [ ] Audio latency tuning
-- [ ] Input latency tuning
-- [ ] Frame pacing tuning
+- [x] Disk cache
+- [x] Shader cache tuning
+- [x] Audio latency tuning
+- [x] Input latency tuning
+- [x] Frame pacing tuning
 - [ ] Startup optimization
 - [ ] Background service minimization
 - [ ] CPU usage overlay
@@ -767,17 +767,17 @@ skills/
 
 # Phase 38 - Game Compatibility
 
-- [ ] Package-specific settings
-- [ ] Per-game renderer selection
-- [ ] Per-game Android version
-- [ ] Per-game orientation
-- [ ] Per-game DPI
-- [ ] Per-game FPS
-- [ ] Per-game keymap
-- [ ] Per-game AI skill
-- [ ] Compatibility database
-- [ ] Known-issues system
-- [ ] Crash diagnostics
+- [x] Package-specific settings
+- [x] Per-game renderer selection
+- [x] Per-game Android version
+- [x] Per-game orientation
+- [x] Per-game DPI
+- [x] Per-game FPS
+- [x] Per-game keymap
+- [x] Per-game AI skill
+- [x] Compatibility database
+- [x] Known-issues system
+- [x] Crash diagnostics
 
 ---
 
@@ -792,7 +792,7 @@ skills/
 - [x] First-run wizard
 - [ ] Download default Android image
 - [x] Create first instance
-- [ ] Repair installation
+- [x] Repair installation
 - [x] Uninstaller
 
 ---
@@ -838,17 +838,17 @@ skills/
 - [x] Explicit host screen/window sharing
 - [ ] Direct emulator framebuffer WebRTC capture
 - [ ] Direct Android audio capture
-- [ ] Adaptive bitrate
-- [ ] 30/60/90/120 FPS remote presets
-- [ ] Clipboard synchronization
+- [x] Adaptive bitrate
+- [x] 30/60/90/120 FPS remote presets
+- [x] Clipboard synchronization
 - [ ] Encrypted remote file transfer
-- [ ] Gamepad forwarding
+- [x] Gamepad forwarding
 - [ ] Remote microphone
 - [ ] Remote virtual camera
 - [ ] Persistent trusted-device pairing
 - [ ] Optional owner-configured unattended access
 - [ ] Multi-region signalling nodes
-- [ ] Connection quality statistics
+- [x] Connection quality statistics
 - [x] Native Android viewer app
 - [x] PWA install support
 
@@ -888,22 +888,22 @@ The first usable release should include:
 - [ ] Android 16 x86_64 boot
 - [ ] GPU acceleration
 - [ ] Audio
-- [ ] Internet
-- [ ] Mouse/touch
-- [ ] Keyboard
-- [ ] Portrait/landscape rotation
+- [x] Internet
+- [x] Mouse/touch
+- [x] Keyboard
+- [x] Portrait/landscape rotation
 - [x] ADB
 - [x] ADB file push/pull
-- [ ] Drag-and-drop APK installation
+- [x] Drag-and-drop APK installation
 - [x] PC-to-Android file transfer
 - [x] Android-to-PC file transfer
 - [x] Basic device profiles
 - [x] Basic multi-instance support
 - [x] Snapshots
-- [ ] 60 FPS mode
+- [x] 60 FPS mode
 - [ ] Root-capable developer image
 - [ ] Basic framebuffer capture
-- [ ] Basic AI virtual tap/swipe API
+- [x] Basic AI virtual tap/swipe API
 
 After the MVP is stable, development should focus on:
 
