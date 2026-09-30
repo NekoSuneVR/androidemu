@@ -444,3 +444,5 @@ export interface MediaJobStatus {
 }
 
 export interface PerformanceTelemetry { cpu:string; gpu:string; ram:string; }
+
+export interface PlatformToolsSettings { directory:string; }
