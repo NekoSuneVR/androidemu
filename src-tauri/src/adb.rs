@@ -45,6 +45,26 @@ pub fn disconnect(port: u16) -> Result<AdbResult, String> {
     run_adb(&["disconnect".into(), format!("127.0.0.1:{port}")])
 }
 
+pub fn root(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &["root".into()])
+}
+
+pub fn unroot(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &["unroot".into()])
+}
+
+pub fn root_shell(port: u16, command: String) -> Result<AdbResult, String> {
+    if command.trim().is_empty() {
+        return Err("Root shell command cannot be empty".into());
+    }
+    run_for_device(port, &[
+        "shell".into(),
+        "su".into(),
+        "-c".into(),
+        command,
+    ])
+}
+
 pub fn get_state(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &["get-state".into()])
 }
