@@ -231,6 +231,21 @@ pub fn uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
     run_for_device(port, &["uninstall".into(), package_name.into()])
 }
 
+pub fn desktop_mode(port:u16,enabled:bool)->Result<AdbResult,String>{
+    let value=if enabled{1}else{0};
+    shell(port,format!("settings put global force_desktop_mode_on_external_displays {value}; settings put global enable_freeform_support {value}; echo desktop_mode={value}"))
+}
+
+pub fn overlay_display(port:u16,spec:Option<String>)->Result<AdbResult,String>{
+    match spec {
+        Some(value)=>{
+            if value.len()>120||!value.chars().all(|c|c.is_ascii_alphanumeric()||matches!(c,'x'|'/'|'@'|','|';'|'-')){return Err("Invalid overlay display specification".into());}
+            shell(port,format!("settings put global overlay_display_devices '{value}'; echo overlay_display_devices='{value}'"))
+        }
+        None=>shell(port,"settings delete global overlay_display_devices; echo overlay displays cleared".into())
+    }
+}
+
 pub fn timezone(port:u16,timezone:Option<String>)->Result<AdbResult,String>{
     match timezone {
         Some(tz)=>{
