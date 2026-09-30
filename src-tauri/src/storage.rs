@@ -81,6 +81,7 @@ pub fn create_instance(data_dir: &Path, request: CreateInstanceRequest) -> Resul
         ram_mb: request.ram_mb,
         adb_port: request.adb_port,
         adb_enabled: request.adb_enabled,
+        headless: request.headless,
         root_mode: request.root_mode,
         image_path: request.image_path.filter(|p| !p.trim().is_empty()),
         process_id: None,
@@ -107,6 +108,7 @@ pub fn update_instance(
 
     instance.name = name.to_string();
     instance.adb_enabled = request.adb_enabled;
+    instance.headless = request.headless;
     save_instance(data_dir, &instance)?;
     Ok(instance)
 }
