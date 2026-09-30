@@ -132,6 +132,17 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <label>Lines<input type="number" min="1" max="5000" value={logcatLines} onChange={e => setLogcatLines(Number(e.target.value))} /></label>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_logcat", { lines: logcatLines })}>Read Logcat</button>
               </div>
+
+              <div className="tool-group">
+                <h4>Inspect Android</h4>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_packages", {})}>Packages</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_processes", {})}>Processes</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_properties", {})}>Properties</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_build_properties", {})}>Build props</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_storage_info", {})}>Storage</button>
+                </div>
+              </div>
             </>
           ) : <p className="muted">Create an Android instance before using ADB tools.</p>}
         </div>
