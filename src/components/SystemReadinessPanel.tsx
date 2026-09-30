@@ -55,6 +55,16 @@ export default function SystemReadinessPanel() {
               <small>{readiness.vulkanDetail}</small>
             </article>
             <article>
+              <span>OpenGL</span>
+              <strong>{readiness.openglAvailable ? "Detected" : "Not detected"}</strong>
+              <small>{readiness.openglDetail}</small>
+            </article>
+            <article>
+              <span>DirectX</span>
+              <strong>{readiness.directxAvailable ? "Detected" : "Not detected"}</strong>
+              <small>{readiness.directxDetail}</small>
+            </article>
+            <article>
               <span>Memory</span>
               <strong>{readiness.totalMemoryMb ? `${Math.round(readiness.totalMemoryMb / 1024)} GB` : "Unknown"}</strong>
               <small>Recommended guest: {Math.round(readiness.recommendedRamMb / 1024)} GB</small>
