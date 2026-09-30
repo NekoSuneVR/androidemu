@@ -20,7 +20,7 @@ fn jobs()->&'static Mutex<HashMap<String,TransferJob>>{JOBS.get_or_init(||Mutex:
 fn new_id()->String{format!("transfer-{}",SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis())}
 
 pub fn start(port:u16,direction:String,source:String,destination:String)->Result<TransferJob,String>{
-    if !matches!(direction.as_str(),"push"|"pull"){return Err("direction must be push or pull".into());}
+    if !matches!(direction.as_str(),"push"|"pull"|"install"){return Err("direction must be push, pull, or install".into());}
     let id=new_id();
     let job=TransferJob{id:id.clone(),direction:direction.clone(),source:source.clone(),destination:destination.clone(),port,status:"queued".into(),progress:0,message:String::new(),pid:None};
     jobs().lock().map_err(|_|"transfer lock poisoned")?.insert(id.clone(),job.clone());
@@ -28,7 +28,11 @@ pub fn start(port:u16,direction:String,source:String,destination:String)->Result
         let adb_path=match adb::detect_adb().executable{Some(v)=>v,None=>{update(&id,"failed",0,"ADB not found",None);return;}};
         let serial=format!("127.0.0.1:{port}");
         let mut cmd=Command::new(adb_path);
-        cmd.args(["-s",&serial,&direction,&source,&destination]);
+        if direction=="install" {
+            cmd.args(["-s",&serial,"install","-r",&source]);
+        } else {
+            cmd.args(["-s",&serial,&direction,&source,&destination]);
+        }
         match cmd.spawn(){
             Ok(mut child)=>{
                 let pid=child.id(); update(&id,"running",10,"Transfer started",Some(pid));
@@ -58,3 +62,8 @@ pub fn cancel(id:&str)->Result<TransferJob,String>{
 }
 pub fn retry(id:&str)->Result<TransferJob,String>{let j=get(id)?;start(j.port,j.direction,j.source,j.destination)}
 pub fn sync_shared(port:u16,host_path:String)->Result<TransferJob,String>{start(port,"push".into(),host_path,"/sdcard/NekoDroidShared/".into())}
+
+pub fn install(port:u16,apk_path:String)->Result<TransferJob,String>{
+    if !std::path::Path::new(&apk_path).is_file(){return Err("APK does not exist".into());}
+    start(port,"install".into(),apk_path,String::new())
+}
