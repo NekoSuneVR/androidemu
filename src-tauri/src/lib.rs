@@ -73,6 +73,26 @@ fn adb_install(port: u16, apk_path: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
+    adb::uninstall(port, package_name)
+}
+
+#[tauri::command]
+fn adb_reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
+    adb::reboot(port, mode)
+}
+
+#[tauri::command]
+fn adb_device_info(port: u16) -> Result<AdbResult, String> {
+    adb::device_info(port)
+}
+
+#[tauri::command]
+fn adb_screenshot(port: u16, destination: String) -> Result<AdbResult, String> {
+    adb::screenshot(port, destination)
+}
+
+#[tauri::command]
 fn adb_push(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
     adb::push(port, source, destination)
 }
@@ -146,6 +166,10 @@ pub fn run() {
             adb_get_state,
             adb_shell,
             adb_install,
+            adb_uninstall,
+            adb_reboot,
+            adb_device_info,
+            adb_screenshot,
             adb_push,
             adb_pull,
             create_instance,
