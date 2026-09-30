@@ -187,3 +187,31 @@ The next Android boot layer should add an image manifest similar to:
 ```
 
 That work should be completed before the roadmap item **Boot Android 16 x86_64** is checked.
+
+
+## Portable mode
+
+NekoDroid normally stores persistent data in the operating system application-data directory.
+
+To keep instances, profiles, settings, logs, snapshots and imported images beside the NekoDroid executable instead, set:
+
+### Windows PowerShell
+
+```powershell
+$env:NEKODROID_PORTABLE = "1"
+.\NekoDroid.exe
+```
+
+### Linux
+
+```bash
+NEKODROID_PORTABLE=1 ./nekodroid
+```
+
+Portable data is stored in:
+
+```text
+NekoDroidData/
+```
+
+beside the running executable.
