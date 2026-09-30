@@ -447,3 +447,9 @@ export interface MediaJobStatus {
 export interface PerformanceTelemetry { cpu:string; gpu:string; ram:string; }
 
 export interface PlatformToolsSettings { directory:string; }
+
+export interface PassthroughSettings {
+  usbDevices:string[];
+  bluetoothUsbDevice:string;
+  webcamUsbDevice:string;
+}
