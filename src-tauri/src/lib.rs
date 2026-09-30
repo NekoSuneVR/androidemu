@@ -7,7 +7,7 @@ mod storage;
 mod settings;
 
 use images::{AndroidImageManifest, InstalledImage};
-use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, UpdateInstanceRequest};
+use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use settings::AiSettings;
@@ -303,6 +303,14 @@ fn stop_instance(
 }
 
 #[tauri::command]
+fn get_instance_logs(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<RuntimeLogs, String> {
+    runtime::read_logs(&state, &id)
+}
+
+#[tauri::command]
 fn get_instance_status(
     state: State<'_, RuntimeState>,
     id: String,
@@ -367,6 +375,7 @@ pub fn run() {
             get_host_capabilities,
             start_instance,
             stop_instance,
+            get_instance_logs,
             get_instance_status
         ])
         .run(tauri::generate_context!())
