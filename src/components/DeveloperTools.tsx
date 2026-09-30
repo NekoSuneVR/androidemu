@@ -58,14 +58,24 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "F9" || !selected || busy || !screenshotPath) return;
-      event.preventDefault();
-      run("adb_screenshot", { destination: screenshotPath });
+      if (!selected || busy) return;
+
+      if (event.key === "F9" && screenshotPath) {
+        event.preventDefault();
+        run("adb_screenshot", { destination: screenshotPath });
+        return;
+      }
+
+      if (event.ctrlKey && event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        event.preventDefault();
+        run("adb_rotate_orientation", {
+          direction: event.key === "ArrowLeft" ? "left" : "right"
+        });
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   });
-
   const shell = (event: FormEvent) => {
     event.preventDefault();
     run("adb_shell", { command });
@@ -230,6 +240,7 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_rotate_orientation", { direction: "left" })}>Rotate left</button>
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_rotate_orientation", { direction: "right" })}>Rotate right</button>
                 </div>
+                <small className="muted">Hotkeys: Ctrl+Alt+Left / Ctrl+Alt+Right</small>
               </div>
 
               <div className="tool-group">
@@ -262,6 +273,7 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_activities", {})}>Activities</button>
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_services", {})}>Services</button>
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_network_connections", {})}>Network</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_surfaceflinger_info", {})}>SurfaceFlinger</button>
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_kernel_log", { lines: logcatLines })}>Kernel log</button>
                 </div>
               </div>
