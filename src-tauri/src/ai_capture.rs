@@ -71,7 +71,7 @@ pub fn speech_to_text(audio_path:String)->Result<String,String>{
 pub fn tts(text:String)->Result<String,String>{
     if text.trim().is_empty(){return Err("TTS text cannot be empty".into());}
     if cfg!(windows){
-        let escaped=text.replace(''',"''");
+        let escaped=text.replace('\'',"''");
         let script=format!("Add-Type -AssemblyName System.Speech; $s=New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Speak('{escaped}')");
         let out=Command::new("powershell").args(["-NoProfile","-Command",&script]).output().map_err(|e|e.to_string())?;
         if !out.status.success(){return Err(String::from_utf8_lossy(&out.stderr).to_string());}
