@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **264/643 tasks complete (41.1%)**
+> Progress: **266/643 tasks complete (41.4%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -469,8 +469,8 @@ This file tracks the planned implementation of NekoDroid.
 - [x] AI text input
 - [ ] AI gyro input
 - [ ] AI accelerometer input
-- [ ] AI action queue
-- [ ] AI action cancellation
+- [x] AI action queue
+- [x] AI action cancellation
 - [ ] AI input visualizer
 
 The AI should use virtual Android controls instead of moving the host operating-system mouse.
