@@ -59,7 +59,10 @@ pub fn launch_env(s:&GraphicsSettings)->Vec<(String,String)>{
     if s.shader_cache{out.push(("MESA_SHADER_CACHE_DISABLE".into(),"false".into()));}
     if s.astc_cache{out.push(("NEKODROID_ASTC_CACHE".into(),"1".into()));}
     out.push(("NEKODROID_VSYNC".into(),if s.vsync{"1".into()}else{"0".into()}));
+    out.push(("vblank_mode".into(),if s.vsync{"1".into()}else{"0".into()}));
+    out.push(("__GL_SYNC_TO_VBLANK".into(),if s.vsync{"1".into()}else{"0".into()}));
     out.push(("NEKODROID_TRIPLE_BUFFER".into(),if s.triple_buffer{"1".into()}else{"0".into()}));
+    out.push(("__GL_TRIPLE_BUFFER".into(),if s.triple_buffer{"1".into()}else{"0".into()}));
     out.push(("NEKODROID_DYNAMIC_RESOLUTION".into(),if s.dynamic_resolution{"1".into()}else{"0".into()}));
     match s.renderer.as_str(){
         "vulkan"=>{out.push(("ANGLE_DEFAULT_PLATFORM".into(),"vulkan".into()));},
