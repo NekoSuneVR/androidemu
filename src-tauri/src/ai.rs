@@ -1,12 +1,27 @@
-use crate::settings::{self, AiSettings};
+use crate::{adb, models::AdbResult, settings::{self, AiSettings}};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
+    collections::VecDeque,
     fs::{self, OpenOptions},
     io::Write,
     path::Path,
-    time::{SystemTime, UNIX_EPOCH},
+    sync::{Mutex, OnceLock},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum AiAction {
+    Tap { x: i32, y: i32 },
+    Hold { x: i32, y: i32, duration_ms: u32 },
+    Swipe { x1: i32, y1: i32, x2: i32, y2: i32, duration_ms: u32 },
+    Drag { x1: i32, y1: i32, x2: i32, y2: i32, duration_ms: u32 },
+    Key { keycode: String },
+    Text { text: String },
+}
+
+static ACTION_TIMES: OnceLock<Mutex<VecDeque<Instant>>> = OnceLock::new();
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -175,4 +190,64 @@ fn append_log(
 
 fn truncate(value: &str, max_chars: usize) -> String {
     value.chars().take(max_chars).collect()
+}
+
+
+pub fn execute_action(
+    data_dir: &Path,
+    port: u16,
+    action: AiAction,
+) -> Result<AdbResult, String> {
+    let settings = settings::load(data_dir)?;
+    if !settings.enabled {
+        return Err("NekoAI is disabled".into());
+    }
+    enforce_action_rate(settings.max_actions_per_minute)?;
+
+    let result = match action {
+        AiAction::Tap { x, y } => adb::input_tap(port, x, y)?,
+        AiAction::Hold { x, y, duration_ms } => adb::input_hold(port, x, y, duration_ms)?,
+        AiAction::Swipe { x1, y1, x2, y2, duration_ms }
+        | AiAction::Drag { x1, y1, x2, y2, duration_ms } => {
+            adb::input_swipe(port, x1, y1, x2, y2, duration_ms)?
+        }
+        AiAction::Key { keycode } => adb::input_keyevent(port, keycode)?,
+        AiAction::Text { text } => adb::input_text(port, text)?,
+    };
+
+    append_control_log(data_dir, port, result.success)?;
+    Ok(result)
+}
+
+fn enforce_action_rate(limit: u32) -> Result<(), String> {
+    let now = Instant::now();
+    let window = Duration::from_secs(60);
+    let queue = ACTION_TIMES.get_or_init(|| Mutex::new(VecDeque::new()));
+    let mut queue = queue.lock().map_err(|_| "AI action limiter lock poisoned".to_string())?;
+
+    while queue.front().map(|time| now.duration_since(*time) >= window).unwrap_or(false) {
+        queue.pop_front();
+    }
+
+    if queue.len() >= limit as usize {
+        return Err(format!("AI action rate limit reached ({limit} actions/minute)"));
+    }
+
+    queue.push_back(now);
+    Ok(())
+}
+
+fn append_control_log(data_dir: &Path, port: u16, success: bool) -> Result<(), String> {
+    fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs();
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(data_dir.join("ai.log"))
+        .map_err(|e| format!("Unable to open AI log: {e}"))?;
+    writeln!(file, "[{timestamp}] android-control port={port} success={success}")
+        .map_err(|e| format!("Unable to write AI control log: {e}"))
 }
