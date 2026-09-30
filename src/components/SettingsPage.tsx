@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, DeviceProfile, GraphicsCapabilities, GraphicsSettings, PerformanceSettings, PlatformToolsSettings, UpdateCheck } from "../types";
+import type { AppSettings, DeviceProfile, GraphicsCapabilities, GraphicsSettings, PassthroughSettings, PerformanceSettings, PlatformToolsSettings, UpdateCheck } from "../types";
 
 const defaults: AppSettings = {
   defaultAndroidVersion: "16",
@@ -23,6 +23,7 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
   const [graphics,setGraphics]=useState<GraphicsSettings|null>(null);
   const [graphicsCaps,setGraphicsCaps]=useState<GraphicsCapabilities|null>(null);
   const [platformTools,setPlatformTools]=useState<PlatformToolsSettings>({directory:""});
+  const [passthrough,setPassthrough]=useState<PassthroughSettings>({usbDevices:[],bluetoothUsbDevice:"",webcamUsbDevice:""});
 
   useEffect(() => {
     invoke<AppSettings>("get_app_settings")
@@ -32,6 +33,7 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
     invoke<GraphicsSettings>("get_graphics_settings").then(setGraphics).catch(error=>setStatus(String(error)));
     invoke<GraphicsCapabilities>("get_graphics_capabilities").then(setGraphicsCaps).catch(error=>setStatus(String(error)));
     invoke<PlatformToolsSettings>("get_platform_tools_settings").then(setPlatformTools).catch(error=>setStatus(String(error)));
+    invoke<PassthroughSettings>("get_passthrough_settings").then(setPassthrough).catch(error=>setStatus(String(error)));
   }, []);
 
   const save = async (event: FormEvent) => {
@@ -128,6 +130,14 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
           </div>
 
           <button className="primary" disabled={busy}>{busy ? "Saving..." : "Save Settings"}</button>
+
+          <div className="tool-group">
+            <h4>Host passthrough</h4>
+            <label>USB devices (VVVV:PPPP, one per line)<textarea value={passthrough.usbDevices.join("\n")} onChange={e=>setPassthrough({...passthrough,usbDevices:e.target.value.split(/\r?\n/).map(v=>v.trim()).filter(Boolean)})}/></label>
+            <label>Bluetooth USB adapter<input placeholder="0a12:0001" value={passthrough.bluetoothUsbDevice} onChange={e=>setPassthrough({...passthrough,bluetoothUsbDevice:e.target.value})}/></label>
+            <label>USB webcam<input placeholder="046d:0825" value={passthrough.webcamUsbDevice} onChange={e=>setPassthrough({...passthrough,webcamUsbDevice:e.target.value})}/></label>
+            <button type="button" className="ghost compact" onClick={async()=>{try{setPassthrough(await invoke<PassthroughSettings>("save_passthrough_settings",{settings:passthrough}));setStatus("Passthrough settings saved; changes apply on next VM start.");}catch(error){setStatus(String(error));}}}>Save passthrough settings</button>
+          </div>
 
           <div className="tool-group">
             <h4>Android platform-tools manager</h4>
