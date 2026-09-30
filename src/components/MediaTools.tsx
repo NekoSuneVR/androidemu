@@ -14,6 +14,7 @@ export default function MediaTools() {
   const [fps, setFps] = useState(60);
   const [useResize, setUseResize] = useState(false);
   const [useFps, setUseFps] = useState(false);
+  const [hardwareDecode, setHardwareDecode] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState("FFmpeg job output will appear here.");
 
@@ -35,7 +36,8 @@ export default function MediaTools() {
         audioCodec,
         width: useResize && operation === "video" ? width : null,
         height: useResize && operation === "video" ? height : null,
-        fps: useFps && operation === "video" ? fps : null
+        fps: useFps && operation === "video" ? fps : null,
+        hardwareDecode
       });
 
       setResult([
@@ -79,7 +81,14 @@ export default function MediaTools() {
           {operation !== "remux" && (
             <>
               {operation === "video" && (
-                <label>Video codec<input value={videoCodec} onChange={e => setVideoCodec(e.target.value)} /></label>
+                <label>Video codec
+                  <input list="video-codecs" value={videoCodec} onChange={e => setVideoCodec(e.target.value)} />
+                  <datalist id="video-codecs">
+                    <option value="libx264" />
+                    <option value="libx265" />
+                    {info?.hardwareEncoders?.map(codec => <option key={codec} value={codec} />)}
+                  </datalist>
+                </label>
               )}
               <label>Audio codec<input value={audioCodec} onChange={e => setAudioCodec(e.target.value)} /></label>
             </>
@@ -87,6 +96,10 @@ export default function MediaTools() {
 
           {operation === "video" && (
             <>
+              <label className="checkbox-line">
+                <input type="checkbox" checked={hardwareDecode} onChange={e => setHardwareDecode(e.target.checked)} />
+                Use FFmpeg hardware decode auto-detection
+              </label>
               <label className="checkbox-line">
                 <input type="checkbox" checked={useResize} onChange={e => setUseResize(e.target.checked)} />
                 Resize output
@@ -124,6 +137,18 @@ export default function MediaTools() {
             <>
               <div className="terminal-title">Hardware acceleration advertised</div>
               <pre>{info.hwaccels.join("\n")}</pre>
+            </>
+          ) : null}
+          {info?.hardwareEncoders?.length ? (
+            <>
+              <div className="terminal-title">Hardware encoders</div>
+              <pre>{info.hardwareEncoders.join("\n")}</pre>
+            </>
+          ) : null}
+          {info?.hardwareDecoders?.length ? (
+            <>
+              <div className="terminal-title">Hardware decoders</div>
+              <pre>{info.hardwareDecoders.join("\n")}</pre>
             </>
           ) : null}
           <div className="terminal-title">Job output</div>
