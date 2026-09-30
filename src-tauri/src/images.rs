@@ -262,7 +262,7 @@ pub fn load_default_image_settings(data_dir:&Path)->Result<DefaultImageSettings,
     serde_json::from_slice(&fs::read(p).map_err(|e|e.to_string())?).map_err(|e|e.to_string())
 }
 pub fn save_default_image_settings(data_dir:&Path,s:DefaultImageSettings)->Result<DefaultImageSettings,String>{
-    for url in [&s.url,s.root_developer_url.as_deref().unwrap_or("")] {
+    for url in [s.url.as_str(),s.root_developer_url.as_deref().unwrap_or("")] {
         if !url.is_empty() && !(url.starts_with("https://")||url.starts_with("http://127.0.0.1")||url.starts_with("http://localhost")){return Err("Default image URLs must use HTTPS (localhost HTTP allowed)".into());}
     }
     fs::write(default_image_settings_path(data_dir),serde_json::to_vec_pretty(&s).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;Ok(s)
