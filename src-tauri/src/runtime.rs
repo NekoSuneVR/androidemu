@@ -203,6 +203,7 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     let performance = performance::load(&state.data_dir).unwrap_or_default();
     let graphics = graphics::load(&state.data_dir).unwrap_or_default();
     let mut qemu_args = build_qemu_args(&instance, &runtime_disk, "qcow2", accelerator, cpu_model);
+    qemu_args.extend(crate::images::boot_component_args(&state.data_dir,&image_path)?);
     let (video_device, use_gl)=graphics::qemu_video_device(&graphics);
     if let Some(index)=qemu_args.iter().position(|arg|arg=="virtio-vga"){qemu_args[index]=video_device.into();}
     if use_gl && !instance.headless {
