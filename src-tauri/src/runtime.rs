@@ -64,7 +64,7 @@ pub fn detect_host() -> HostCapabilities {
                 "MSYS2 + WHPX".to_string(),
                 whpx,
                 if !qemu.found {
-                    "MSYS2 runtime was not found. Install MSYS2 under C:\\msys64 (or set MSYS2_ROOT) and install the UCRT64/MINGW64 QEMU runtime package.".to_string()
+                    "MSYS2 runtime was not found automatically. Install MSYS2 with the UCRT64/MINGW64 QEMU package, or set MSYS2_ROOT only for a custom install location.".to_string()
                 } else if whpx && msys2_path {
                     "MSYS2 Android VM runtime detected with Windows Hypervisor Platform acceleration.".to_string()
                 } else if whpx {
@@ -91,21 +91,62 @@ pub fn detect_host() -> HostCapabilities {
     }
 }
 
+fn push_unique_path(paths: &mut Vec<PathBuf>, path: PathBuf) {
+    if path.as_os_str().is_empty() || paths.iter().any(|existing| existing.eq_ignore_ascii_case(&path)) {
+        return;
+    }
+    paths.push(path);
+}
+
+fn windows_msys2_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::<PathBuf>::new();
+
+    for key in ["MSYS2_ROOT", "MSYS2_PATH"] {
+        if let Some(value) = env::var_os(key) {
+            push_unique_path(&mut roots, PathBuf::from(value));
+        }
+    }
+
+    for path in [
+        PathBuf::from(r"C:\msys64"),
+        PathBuf::from(r"C:\msys32"),
+    ] {
+        push_unique_path(&mut roots, path);
+    }
+
+    for key in ["ProgramFiles", "ProgramFiles(x86)", "LOCALAPPDATA"] {
+        if let Some(base) = env::var_os(key) {
+            let base = PathBuf::from(base);
+            push_unique_path(&mut roots, base.join("MSYS2"));
+            push_unique_path(&mut roots, base.join("msys64"));
+            push_unique_path(&mut roots, base.join("Programs").join("MSYS2"));
+        }
+    }
+
+    // Pick up Scoop/Chocolatey/custom installs when pacman or bash is already reachable.
+    for probe in ["pacman.exe", "bash.exe"] {
+        if let Some(found) = find_in_path(probe) {
+            let mut current = found.parent().map(Path::to_path_buf);
+            while let Some(dir) = current {
+                if dir.join("usr").join("bin").join("pacman.exe").is_file()
+                    || dir.join("ucrt64").join("bin").is_dir()
+                    || dir.join("mingw64").join("bin").is_dir()
+                {
+                    push_unique_path(&mut roots, dir.clone());
+                    break;
+                }
+                current = dir.parent().map(Path::to_path_buf);
+            }
+        }
+    }
+
+    roots.into_iter().filter(|root| root.is_dir()).collect()
+}
+
 pub(crate) fn find_runtime_tool(name: &str) -> Option<PathBuf> {
     if !cfg!(windows) {
         return find_in_path(name);
     }
-
-    let mut roots = Vec::<PathBuf>::new();
-    for key in ["MSYS2_ROOT", "MSYS2_PATH"] {
-        if let Some(value) = env::var_os(key) {
-            let value = PathBuf::from(value);
-            if !value.as_os_str().is_empty() {
-                roots.push(value);
-            }
-        }
-    }
-    roots.push(PathBuf::from(r"C:\msys64"));
 
     let exe_name = if name.to_ascii_lowercase().ends_with(".exe") {
         name.to_string()
@@ -113,8 +154,8 @@ pub(crate) fn find_runtime_tool(name: &str) -> Option<PathBuf> {
         format!("{name}.exe")
     };
 
-    for root in roots {
-        for prefix in ["ucrt64", "mingw64", "clang64", "mingw32", "usr"] {
+    for root in windows_msys2_roots() {
+        for prefix in ["ucrt64", "mingw64", "clang64", "clangarm64", "mingw32", "usr"] {
             let candidate = root.join(prefix).join("bin").join(&exe_name);
             if candidate.is_file() {
                 return Some(candidate);
@@ -123,6 +164,33 @@ pub(crate) fn find_runtime_tool(name: &str) -> Option<PathBuf> {
     }
 
     find_in_path(&exe_name).or_else(|| find_in_path(name))
+}
+
+pub(crate) fn apply_runtime_environment(command: &mut Command, tool_path: &Path) {
+    if !cfg!(windows) {
+        return;
+    }
+
+    let Some(bin_dir) = tool_path.parent() else { return; };
+    let Some(prefix_dir) = bin_dir.parent() else { return; };
+    let Some(root) = prefix_dir.parent() else { return; };
+
+    let mut path_parts = Vec::<PathBuf>::new();
+    push_unique_path(&mut path_parts, bin_dir.to_path_buf());
+    push_unique_path(&mut path_parts, root.join("usr").join("bin"));
+    push_unique_path(&mut path_parts, root.join("bin"));
+
+    if let Some(existing) = env::var_os("PATH") {
+        path_parts.extend(env::split_paths(&existing));
+    }
+
+    if let Ok(joined) = env::join_paths(path_parts) {
+        command.env("PATH", joined);
+    }
+    command.env("MSYS2_ROOT", root);
+    if let Some(prefix) = prefix_dir.file_name().and_then(|v| v.to_str()) {
+        command.env("MSYSTEM", prefix.to_ascii_uppercase());
+    }
 }
 
 pub fn detect_qemu() -> QemuInfo {
@@ -141,18 +209,22 @@ pub fn detect_qemu() -> QemuInfo {
         };
     };
 
-    let version = Command::new(&path)
-        .arg("--version")
-        .output()
+    let version = {
+        let mut command = Command::new(&path);
+        apply_runtime_environment(&mut command, &path);
+        command.arg("--version").output()
+    }
         .ok()
         .and_then(|o| {
             let text = String::from_utf8_lossy(&o.stdout);
             text.lines().next().map(str::to_string)
         });
 
-    let accelerators = Command::new(&path)
-        .args(["-accel", "help"])
-        .output()
+    let accelerators = {
+        let mut command = Command::new(&path);
+        apply_runtime_environment(&mut command, &path);
+        command.args(["-accel", "help"]).output()
+    }
         .ok()
         .map(|o| {
             let mut all = String::from_utf8_lossy(&o.stdout).to_string();
@@ -202,7 +274,7 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
         .qemu
         .executable
         .ok_or_else(|| if cfg!(windows) {
-            "MSYS2 runtime was not found. Install MSYS2 and its QEMU runtime, or set MSYS2_ROOT.".to_string()
+            "MSYS2 runtime was not found automatically. Install MSYS2 and its UCRT64/MINGW64 QEMU runtime package.".to_string()
         } else {
             "QEMU qemu-system-x86_64 was not found in PATH".to_string()
         })?;
@@ -272,7 +344,8 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
         qemu_args.push("virtio-sound-pci,audiodev=nekodroid_audio".into());
     }
 
-    let mut command = Command::new(qemu_path);
+    let mut command = Command::new(&qemu_path);
+    apply_runtime_environment(&mut command, Path::new(&qemu_path));
     command
         .args(qemu_args)
         .envs(performance::launch_env(&performance))
@@ -584,9 +657,11 @@ pub fn runtime_status(state: &RuntimeState, id: &str) -> Result<AndroidInstance,
 }
 
 fn detect_virtio_audio_backend(qemu_path: &str) -> Option<String> {
-    let devices = Command::new(qemu_path)
-        .args(["-device", "help"])
-        .output()
+    let devices = {
+        let mut command = Command::new(qemu_path);
+        apply_runtime_environment(&mut command, Path::new(qemu_path));
+        command.args(["-device", "help"]).output()
+    }
         .ok()
         .map(|output| {
             let mut text = String::from_utf8_lossy(&output.stdout).to_string();
@@ -598,9 +673,11 @@ fn detect_virtio_audio_backend(qemu_path: &str) -> Option<String> {
         return None;
     }
 
-    let drivers = Command::new(qemu_path)
-        .args(["-audio", "driver=help"])
-        .output()
+    let drivers = {
+        let mut command = Command::new(qemu_path);
+        apply_runtime_environment(&mut command, Path::new(qemu_path));
+        command.args(["-audio", "driver=help"]).output()
+    }
         .ok()
         .map(|output| {
             let mut text = String::from_utf8_lossy(&output.stdout).to_ascii_lowercase();
@@ -650,7 +727,9 @@ fn ensure_runtime_overlay(
     })?;
 
     let overlay_path = overlay.to_string_lossy().to_string();
-    let output = Command::new(qemu_img)
+    let mut command = Command::new(&qemu_img);
+    apply_runtime_environment(&mut command, &qemu_img);
+    let output = command
         .args([
             "create",
             "-f",
