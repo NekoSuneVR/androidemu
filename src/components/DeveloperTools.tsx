@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AdbInfo, AdbResult, AndroidInstance } from "../types";
+import type { AdbInfo, AdbResult, AndroidInstance, RuntimeLogs } from "../types";
 
 type Props = {
   instances: AndroidInstance[];
@@ -57,6 +57,28 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
     run("adb_shell", { command });
   };
 
+  const readRuntimeLogs = async () => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      const logs = await invoke<RuntimeLogs>("get_instance_logs", { id: selected.id });
+      setOutput([
+        "=== QEMU STDOUT ===",
+        logs.stdout || "(empty)",
+        "",
+        "=== QEMU STDERR ===",
+        logs.stderr || "(empty)",
+        "",
+        "=== CRASH REPORT ===",
+        logs.crashReport || "(none)"
+      ].join("\n"));
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section className="panel">
       <div className="panel-heading">
@@ -95,6 +117,7 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="button-row">
+                <button className="ghost compact" disabled={busy} onClick={readRuntimeLogs}>Runtime logs</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_device_info", {})}>Device info</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_reboot", { mode: null })}>Reboot Android</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_reboot", { mode: "recovery" })}>Recovery</button>
