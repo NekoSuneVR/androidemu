@@ -235,3 +235,10 @@ export interface AiChatResult {
   response: string;
   endpoint: string;
 }
+
+export interface UpdateCheck {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseUrl: string;
+}
