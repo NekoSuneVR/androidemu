@@ -199,8 +199,24 @@ fn adb_input_text(port: u16, text: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
-fn list_device_profiles() -> Vec<DeviceProfile> {
-    profiles::builtin_profiles()
+fn list_device_profiles(state: State<'_, RuntimeState>) -> Result<Vec<DeviceProfile>, String> {
+    profiles::list_profiles(&state.data_dir)
+}
+
+#[tauri::command]
+fn save_device_profile(
+    state: State<'_, RuntimeState>,
+    profile: DeviceProfile,
+) -> Result<DeviceProfile, String> {
+    profiles::save_custom_profile(&state.data_dir, profile)
+}
+
+#[tauri::command]
+fn remove_device_profile(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<(), String> {
+    profiles::remove_custom_profile(&state.data_dir, &id)
 }
 
 #[tauri::command]
@@ -296,6 +312,8 @@ pub fn run() {
             update_instance,
             delete_instance,
             list_device_profiles,
+            save_device_profile,
+            remove_device_profile,
             list_android_images,
             remove_android_image,
             register_android_image,
