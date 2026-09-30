@@ -162,6 +162,15 @@ pub fn reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
     run_for_device(port, &args)
 }
 
+pub fn security_state(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(),
+        "sh".into(),
+        "-c".into(),
+        "echo 'verified_boot_state='$(getprop ro.boot.verifiedbootstate); echo 'vbmeta_device_state='$(getprop ro.boot.vbmeta.device_state); echo 'flash_locked='$(getprop ro.boot.flash.locked); echo 'build_tags='$(getprop ro.build.tags); echo 'product_model='$(getprop ro.product.model); echo 'hardware_attestation=not asserted by NekoDroid'".into(),
+    ])
+}
+
 pub fn device_info(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &[
         "shell".into(),
