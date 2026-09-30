@@ -269,6 +269,28 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
             }
         });
     }
+    if instance.adb_enabled && (performance.startup_optimization || performance.minimize_background_services) {
+        let port=instance.adb_port;
+        let startup=performance.startup_optimization;
+        let minimize=performance.minimize_background_services;
+        thread::spawn(move||{
+            for _ in 0..60 {
+                let _=adb::connect(port);
+                if let Ok(status)=adb::get_state(port) {
+                    if status.success {
+                        if startup {
+                            let _=adb::shell(port,"settings put global window_animation_scale 0.5; settings put global transition_animation_scale 0.5; settings put global animator_duration_scale 0.5".into());
+                        }
+                        if minimize {
+                            let _=adb::shell(port,"settings put global activity_manager_constants max_cached_processes=16; cmd deviceidle enable 2>/dev/null || true".into());
+                        }
+                        break;
+                    }
+                }
+                thread::sleep(Duration::from_secs(2));
+            }
+        });
+    }
 
     Ok(RuntimeActionResult {
         instance_id: id.to_string(),
