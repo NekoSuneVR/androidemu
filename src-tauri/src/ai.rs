@@ -1,4 +1,4 @@
-use crate::{adb, display, models::AdbResult, settings::{self, AiSettings}, storage};
+use crate::{adb, display, models::AdbResult, sensors, settings::{self, AiSettings}, storage};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -24,6 +24,9 @@ pub enum AiAction {
     Text { text: String },
     Joystick { center_x:i32, center_y:i32, dx:i32, dy:i32, duration_ms:u32 },
     Gamepad { button:String },
+    MultiTouch { points:Vec<(i32,i32)>, duration_ms:u32 },
+    Gyro { x:f64, y:f64, z:f64 },
+    Accelerometer { x:f64, y:f64, z:f64 },
 }
 
 static ACTION_TIMES: OnceLock<Mutex<VecDeque<Instant>>> = OnceLock::new();
@@ -263,6 +266,13 @@ pub fn execute_action(
             };
             adb::input_keyevent(port,key.into())?
         },
+        AiAction::MultiTouch { points, duration_ms } => {
+            let mut transformed=Vec::with_capacity(points.len());
+            for (x,y) in points { transformed.push(display::transform(port,x,y)?); }
+            adb::input_multitouch(port,transformed,duration_ms)?
+        }
+        AiAction::Gyro { x,y,z } => sensors::gyroscope(port,x,y,z)?,
+        AiAction::Accelerometer { x,y,z } => sensors::accelerometer(port,x,y,z)?,
     };
 
     append_control_log(data_dir, port, result.success)?;
