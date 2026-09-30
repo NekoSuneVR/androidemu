@@ -13,6 +13,8 @@ pub struct AndroidInstance {
     pub adb_port: u16,
     #[serde(default)]
     pub adb_enabled: bool,
+    #[serde(default)]
+    pub headless: bool,
     pub root_mode: String,
     #[serde(default)]
     pub image_path: Option<String>,
@@ -31,6 +33,8 @@ pub struct CreateInstanceRequest {
     pub adb_port: u16,
     #[serde(default)]
     pub adb_enabled: bool,
+    #[serde(default)]
+    pub headless: bool,
     pub root_mode: String,
     pub image_path: Option<String>,
 }
@@ -40,6 +44,7 @@ pub struct CreateInstanceRequest {
 pub struct UpdateInstanceRequest {
     pub name: String,
     pub adb_enabled: bool,
+    pub headless: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
