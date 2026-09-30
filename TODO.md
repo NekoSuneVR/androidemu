@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **327/643 tasks complete (50.9%)**
+> Progress: **331/643 tasks complete (51.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -364,7 +364,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Double tap
 - [x] Hold
 - [x] Swipe
-- [ ] Drag
+- [x] Drag
 - [ ] Multi-touch
 - [ ] Pinch
 - [ ] Zoom
@@ -641,10 +641,10 @@ skills/
 - [ ] Virtual camera output
 - [ ] RTMP output
 - [ ] SRT output
-- [ ] WebRTC output
+- [x] WebRTC output
 - [x] NDI-style output research
 - [x] Spout-style output research
-- [ ] Audio streaming
+- [x] Audio streaming
 - [ ] Rotated-stream handling
 
 ---
@@ -850,7 +850,7 @@ skills/
 - [ ] Multi-region signalling nodes
 - [ ] Connection quality statistics
 - [x] Native Android viewer app
-- [ ] PWA install support
+- [x] PWA install support
 
 ---
 
