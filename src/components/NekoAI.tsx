@@ -306,6 +306,8 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
               <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"hold", x:x1, y:y1, durationMs })}>AI Hold</button>
               <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"swipe", x1, y1, x2, y2, durationMs })}>AI Swipe</button>
               <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"drag", x1, y1, x2, y2, durationMs })}>AI Drag</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"joystick", centerX:x1, centerY:y1, dx:x2-x1, dy:y2-y1, durationMs })}>AI Joystick</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"gamepad", button:"a" })}>AI Gamepad A</button>
             </div>
 
             <label>Android keycode<input value={keycode} onChange={e => setKeycode(e.target.value)} /></label>
