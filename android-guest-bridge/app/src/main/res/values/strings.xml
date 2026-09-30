@@ -1,0 +1,4 @@
+<resources>
+  <string name="app_name">NekoDroid Guest Bridge</string>
+  <string name="accessibility_description">Allows NekoDroid to inject multi-touch gestures you explicitly request.</string>
+</resources>
