@@ -11,6 +11,7 @@ mod first_run;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
+use adb::AndroidFileEntry;
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use settings::{AiSettings, AppSettings};
@@ -263,6 +264,41 @@ fn adb_input_text(port: u16, text: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_list_files(port: u16, path: String) -> Result<Vec<AndroidFileEntry>, String> {
+    adb::list_files(port, path)
+}
+
+#[tauri::command]
+fn adb_make_directory(port: u16, path: String) -> Result<AdbResult, String> {
+    adb::make_directory(port, path)
+}
+
+#[tauri::command]
+fn adb_remove_path(port: u16, path: String) -> Result<AdbResult, String> {
+    adb::remove_path(port, path)
+}
+
+#[tauri::command]
+fn adb_move_path(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
+    adb::move_path(port, source, destination)
+}
+
+#[tauri::command]
+fn adb_copy_path(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
+    adb::copy_path(port, source, destination)
+}
+
+#[tauri::command]
+fn adb_file_properties(port: u16, path: String) -> Result<AdbResult, String> {
+    adb::file_properties(port, path)
+}
+
+#[tauri::command]
+fn adb_search_files(port: u16, path: String, query: String) -> Result<AdbResult, String> {
+    adb::search_files(port, path, query)
+}
+
+#[tauri::command]
 fn adb_set_orientation(port: u16, orientation: String) -> Result<AdbResult, String> {
     adb::set_orientation(port, orientation)
 }
@@ -507,6 +543,13 @@ pub fn run() {
             adb_input_swipe,
             adb_input_keyevent,
             adb_input_text,
+            adb_list_files,
+            adb_make_directory,
+            adb_remove_path,
+            adb_move_path,
+            adb_copy_path,
+            adb_file_properties,
+            adb_search_files,
             adb_set_orientation,
             adb_rotate_orientation,
             create_instance,
