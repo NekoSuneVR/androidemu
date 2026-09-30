@@ -209,6 +209,16 @@ fn adb_input_text(port: u16, text: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_set_orientation(port: u16, orientation: String) -> Result<AdbResult, String> {
+    adb::set_orientation(port, orientation)
+}
+
+#[tauri::command]
+fn adb_rotate_orientation(port: u16, direction: String) -> Result<AdbResult, String> {
+    adb::rotate_orientation(port, direction)
+}
+
+#[tauri::command]
 fn list_device_profiles(state: State<'_, RuntimeState>) -> Result<Vec<DeviceProfile>, String> {
     profiles::list_profiles(&state.data_dir)
 }
@@ -320,6 +330,8 @@ pub fn run() {
             adb_input_swipe,
             adb_input_keyevent,
             adb_input_text,
+            adb_set_orientation,
+            adb_rotate_orientation,
             create_instance,
             update_instance,
             delete_instance,
