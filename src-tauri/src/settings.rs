@@ -10,6 +10,14 @@ pub struct AiSettings {
     pub model: String,
     pub vision_model: String,
     pub detector_model: String,
+    #[serde(default = "default_control_mode")]
+    pub control_mode: String,
+    #[serde(default = "default_helper_mode")]
+    pub helper_mode: String,
+    #[serde(default)]
+    pub enforce_package_allowlist: bool,
+    #[serde(default)]
+    pub allowed_packages: Vec<String>,
     pub max_actions_per_minute: u32,
     pub max_capture_fps: u32,
 }
@@ -23,11 +31,18 @@ impl Default for AiSettings {
             model: "qwen2.5:3b".into(),
             vision_model: "qwen2.5vl:3b".into(),
             detector_model: "yolov8n.onnx".into(),
+            control_mode: "manual".into(),
+            helper_mode: "ui".into(),
+            enforce_package_allowlist: false,
+            allowed_packages: Vec::new(),
             max_actions_per_minute: 60,
             max_capture_fps: 10,
         }
     }
 }
+
+fn default_control_mode() -> String { "manual".into() }
+fn default_helper_mode() -> String { "ui".into() }
 
 fn settings_path(data_dir: &Path) -> PathBuf {
     data_dir.join("ai-settings.json")
@@ -68,6 +83,15 @@ fn validate(settings: &AiSettings) -> Result<(), String> {
 
     if settings.model.trim().is_empty() {
         return Err("AI model cannot be empty".into());
+    }
+    if !matches!(settings.control_mode.as_str(), "manual" | "assistant" | "accessibility" | "full-automation") {
+        return Err("AI control mode must be manual, assistant, accessibility, or full-automation".into());
+    }
+    if !matches!(settings.helper_mode.as_str(), "inventory" | "quest" | "ui" | "repetitive-task") {
+        return Err("AI helper mode must be inventory, quest, ui, or repetitive-task".into());
+    }
+    if settings.allowed_packages.len() > 200 {
+        return Err("AI package allowlist is limited to 200 packages".into());
     }
 
     if !(1..=600).contains(&settings.max_actions_per_minute) {
