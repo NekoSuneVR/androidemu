@@ -211,6 +211,7 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <button className="ghost compact" disabled={busy} onClick={readRuntimeLogs}>Runtime logs</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_device_info", {})}>Device info</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_security_state", {})}>Security state</button>
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_media_codec_requests", {})}>MediaCodec requests</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_launch_package", { packageName: "com.android.vending" })}>Launch Play Store</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_reboot", { mode: null })}>Reboot Android</button>
                 <button className="ghost compact" disabled={busy} onClick={() => run("adb_reboot", { mode: "recovery" })}>Recovery</button>
