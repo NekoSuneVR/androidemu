@@ -134,7 +134,7 @@ pub fn run_media_job(
         .ok_or_else(|| "FFmpeg was not found in PATH".to_string())?;
 
     let operation = operation.trim().to_ascii_lowercase();
-    if !matches!(operation.as_str(), "video" | "audio" | "extract-audio" | "remux") {
+    if !matches!(operation.as_str(), "video" | "compress" | "audio" | "extract-audio" | "remux") {
         return Err("Unknown media operation".into());
     }
 
@@ -160,9 +160,12 @@ pub fn run_media_job(
             args.push("-vn".into());
             args.extend(["-c:a".into(), audio_codec]);
         }
-        "video" => {
+        "video" | "compress" => {
             args.extend(["-c:v".into(), video_codec]);
             args.extend(["-c:a".into(), audio_codec]);
+            if operation == "compress" {
+                args.extend(["-b:v".into(), "2500k".into(), "-maxrate".into(), "3500k".into(), "-bufsize".into(), "5000k".into()]);
+            }
 
             let mut filters = Vec::new();
             if let (Some(width), Some(height)) = (width, height) {
