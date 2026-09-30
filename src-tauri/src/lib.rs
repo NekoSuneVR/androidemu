@@ -15,6 +15,7 @@ mod keymaps;
 mod game_settings;
 mod performance;
 mod transfer;
+mod apk_bundle;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -31,6 +32,7 @@ use keymaps::{KeyBinding, KeymapProfile};
 use game_settings::GameSettings;
 use performance::PerformanceSettings;
 use transfer::TransferJob;
+use apk_bundle::ApkPackageInfo;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -172,6 +174,12 @@ fn adb_get_state(port: u16) -> Result<AdbResult, String> {
 fn adb_shell(port: u16, command: String) -> Result<AdbResult, String> {
     adb::shell(port, command)
 }
+
+
+#[tauri::command]
+fn inspect_apk_package(apk_path:String)->Result<ApkPackageInfo,String>{apk_bundle::inspect(apk_path)}
+#[tauri::command]
+fn install_apk_bundle(port:u16,bundle_path:String)->Result<Vec<AdbResult>,String>{apk_bundle::install_bundle(port,bundle_path)}
 
 #[tauri::command]
 fn inspect_apk(apk_path: String) -> Result<ApkCompatibility, String> {
@@ -899,6 +907,8 @@ pub fn run() {
             adb_root_shell,
             adb_get_state,
             adb_shell,
+            inspect_apk_package,
+            install_apk_bundle,
             inspect_apk,
             adb_install,
             adb_install_batch,
