@@ -13,6 +13,7 @@ mod ai;
 mod skills;
 mod keymaps;
 mod game_settings;
+mod performance;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -27,6 +28,7 @@ use ai::{AiAction, AiChatResult};
 use skills::{AiGameState, SkillManifest};
 use keymaps::{KeyBinding, KeymapProfile};
 use game_settings::GameSettings;
+use performance::PerformanceSettings;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -567,6 +569,15 @@ fn run_media_job(
 }
 
 #[tauri::command]
+fn get_performance_settings(state: State<'_, RuntimeState>) -> Result<PerformanceSettings, String> {
+    performance::load(&state.data_dir)
+}
+#[tauri::command]
+fn save_performance_settings(state: State<'_, RuntimeState>, settings: PerformanceSettings) -> Result<PerformanceSettings, String> {
+    performance::save(&state.data_dir, settings)
+}
+
+#[tauri::command]
 fn get_app_settings(state: State<'_, RuntimeState>) -> Result<AppSettings, String> {
     settings::load_app(&state.data_dir)
 }
@@ -902,6 +913,8 @@ pub fn run() {
             get_ffmpeg_info,
             run_media_job,
             run_media_batch,
+            get_performance_settings,
+            save_performance_settings,
             get_app_settings,
             save_app_settings,
             list_game_settings,
