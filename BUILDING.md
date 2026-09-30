@@ -215,3 +215,16 @@ NekoDroidData/
 ```
 
 beside the running executable.
+
+
+## Dynamically expanding instance storage
+
+Each NekoDroid instance uses a private QCOW2 runtime overlay backed by the registered Android base image.
+
+The overlay starts small and grows as the guest writes data, so separate instances do not duplicate the entire base image up front. The base image remains read-only from NekoDroid's point of view, while instance changes are stored under:
+
+```text
+instances/<instance-id>/disks/runtime.qcow2
+```
+
+Factory reset deletes this writable overlay and recreates it from the base image on the next start.
