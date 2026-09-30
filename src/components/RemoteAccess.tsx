@@ -295,6 +295,19 @@ export default function RemoteAccess({ instances, profiles }: Props) {
         setStatus(`Streaming · FPS ${settings.fpsPreset} · RTT ${rtt || "n/a"} · tx ${Math.round(outbound/1024)}KB · rx ${Math.round(inbound/1024)}KB`);
       }, 3000);
 
+      if (settings.fileTransfer) {
+        const fileChannel=peer.createDataChannel("file",{ordered:true});
+        fileChannel.addEventListener("message",async event=>{
+          try{
+            const payload=JSON.parse(String(event.data));
+            if(payload.kind!=="file"||!selected)return;
+            setStatus(`Receiving encrypted file ${payload.name}...`);
+            const message=await invoke<string>("receive_remote_file",{port:selected.adbPort,name:String(payload.name||"remote.bin"),dataBase64:String(payload.data||""),destination:"/sdcard/Download/"});
+            setStatus(message);
+          }catch(error){setStatus(`Remote file transfer failed: ${String(error)}`);}
+        });
+      }
+
       if (settings.control) {
         const channel = peer.createDataChannel("control", { ordered: true });
         channel.addEventListener("message", event => {
