@@ -266,6 +266,8 @@ fn adb_screen_record_advanced(port:u16,destination:String,seconds:u32,codec:Stri
 #[tauri::command]
 fn start_transfer(port:u16,direction:String,source:String,destination:String)->Result<TransferJob,String>{transfer::start(port,direction,source,destination)}
 #[tauri::command]
+fn start_apk_install(port:u16,apk_path:String)->Result<TransferJob,String>{transfer::install(port,apk_path)}
+#[tauri::command]
 fn list_transfers()->Result<Vec<TransferJob>,String>{transfer::list()}
 #[tauri::command]
 fn get_transfer(id:String)->Result<TransferJob,String>{transfer::get(&id)}
@@ -954,6 +956,7 @@ pub fn run() {
             adb_screenshot,
             adb_screen_record,
             start_transfer,
+            start_apk_install,
             list_transfers,
             get_transfer,
             cancel_transfer,
