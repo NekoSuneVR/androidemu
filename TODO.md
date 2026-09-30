@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **274/643 tasks complete (42.6%)**
+> Progress: **275/643 tasks complete (42.8%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -296,7 +296,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Cancel transfer
 - [ ] Transfer retry
 - [x] Large-file support
-- [ ] Multiple-file transfer
+- [x] Multiple-file transfer
 - [x] Folder upload
 - [x] Folder download
 - [x] ADB push backend
