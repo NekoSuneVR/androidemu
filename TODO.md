@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **108/643 tasks complete (16.8%)**
+> Progress: **114/643 tasks complete (17.7%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -123,17 +123,17 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Tablet profile
 - [x] Large tablet profile
 - [x] Foldable profile
-- [ ] Custom profile
+- [x] Custom profile
 
 ## Profile Settings
 
-- [ ] Resolution
-- [ ] DPI
-- [ ] Refresh rate
+- [x] Resolution
+- [x] DPI
+- [x] Refresh rate
 - [x] CPU count
 - [x] RAM
 - [ ] Storage size
-- [ ] Touch point count
+- [x] Touch point count
 - [ ] Wi-Fi capability
 - [ ] Bluetooth capability
 - [ ] GPS capability
@@ -146,7 +146,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Proximity sensor
 - [ ] Battery state
 - [ ] Charging state
-- [ ] Telephony availability
+- [x] Telephony availability
 - [ ] Tablet resource configuration
 
 ---
