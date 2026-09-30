@@ -246,3 +246,38 @@ export interface UpdateCheck {
   updateAvailable: boolean;
   releaseUrl: string;
 }
+
+export interface SkillControl {
+  id: string;
+  label: string;
+  action: string;
+  x?: number | null;
+  y?: number | null;
+  keycode?: string | null;
+}
+export interface SkillUiRegion {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+export interface SkillManifest {
+  schemaVersion: number;
+  id: string;
+  name: string;
+  version: string;
+  packages: string[];
+  orientations: string[];
+  controls: SkillControl[];
+  uiRegions: SkillUiRegion[];
+  systemPrompt: string;
+  repositoryUrl?: string | null;
+}
+export interface AiGameState {
+  packageName: string;
+  activity: string;
+  orientation: string;
+  displaySize: string;
+}
