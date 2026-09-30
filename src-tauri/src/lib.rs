@@ -730,6 +730,9 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let data_dir = resolve_data_dir(app)?;
+            if let Err(error) = adb::configure_adb_keys(&data_dir) {
+                eprintln!("Unable to configure dedicated ADB keys: {error}");
+            }
             let runtime = RuntimeState::new(data_dir).map_err(std::io::Error::other)?;
 
             match settings::load_app(&runtime.data_dir) {
