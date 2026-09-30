@@ -51,6 +51,28 @@ export default function SnapshotManager({ instances }: { instances: AndroidInsta
     }
   };
 
+  const rename = async (snapshot: SnapshotInfo) => {
+    if (!selected) return;
+    const nextName = window.prompt("Snapshot name", snapshot.name)?.trim();
+    if (!nextName) return;
+    const nextDescription = window.prompt("Snapshot description", snapshot.description) ?? snapshot.description;
+    setBusy(true);
+    try {
+      await invoke<SnapshotInfo>("rename_snapshot", {
+        instanceId: selected.id,
+        snapshotId: snapshot.id,
+        name: nextName,
+        description: nextDescription
+      });
+      setOutput(`Renamed snapshot to ${nextName}.`);
+      await refresh();
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const restore = async (snapshot: SnapshotInfo) => {
     if (!selected || !window.confirm(`Restore ${snapshot.name}? Current unsaved VM disk changes after this snapshot will be replaced.`)) return;
     setBusy(true);
@@ -109,6 +131,7 @@ export default function SnapshotManager({ instances }: { instances: AndroidInsta
                 {snapshot.description && <p>{snapshot.description}</p>}
                 <small>{snapshot.id}</small>
                 <div className="button-row">
+                  <button className="ghost compact" disabled={busy || selected?.status === "running"} onClick={() => rename(snapshot)}>Rename</button>
                   <button className="primary compact" disabled={busy || selected?.status === "running"} onClick={() => restore(snapshot)}>Restore</button>
                   <button className="danger compact" disabled={busy || selected?.status === "running"} onClick={() => remove(snapshot)}>Delete</button>
                 </div>
