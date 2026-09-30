@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **184/643 tasks complete (28.6%)**
+> Progress: **189/643 tasks complete (29.4%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -295,10 +295,10 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] File transfer progress
 - [ ] Cancel transfer
 - [ ] Transfer retry
-- [ ] Large-file support
+- [x] Large-file support
 - [ ] Multiple-file transfer
-- [ ] Folder upload
-- [ ] Folder download
+- [x] Folder upload
+- [x] Folder download
 - [x] ADB push backend
 - [x] ADB pull backend
 - [ ] Shared-folder alternative
@@ -308,8 +308,8 @@ This file tracks the planned implementation of NekoDroid.
 
 - [ ] Drag-and-drop APK install
 - [ ] Select APK from PC
-- [ ] Batch APK installation
-- [ ] Split APK support
+- [x] Batch APK installation
+- [x] Split APK support
 - [ ] APKS bundle support
 - [ ] XAPK support
 - [ ] OBB/data handling
