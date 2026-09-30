@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **275/643 tasks complete (42.8%)**
+> Progress: **276/643 tasks complete (42.9%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -307,7 +307,7 @@ This file tracks the planned implementation of NekoDroid.
 ## APK Installation
 
 - [x] Drag-and-drop APK install
-- [ ] Select APK from PC
+- [x] Select APK from PC
 - [x] Batch APK installation
 - [x] Split APK support
 - [ ] APKS bundle support
