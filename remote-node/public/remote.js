@@ -81,6 +81,21 @@ async function onMessage(message) {
   if (message.type === "webrtc-offer") {
     createPeer();
     await pc.setRemoteDescription(message.sdp);
+    if (permissions.microphone || permissions.camera) {
+      try {
+        const local = await navigator.mediaDevices.getUserMedia({
+          audio: Boolean(permissions.microphone),
+          video: Boolean(permissions.camera)
+        });
+        for (const track of local.getTracks()) {
+          const transceiver = pc.getTransceivers().find(item => item.receiver.track.kind === track.kind && !item.sender.track);
+          if (transceiver) await transceiver.sender.replaceTrack(track);
+          else pc.addTrack(track, local);
+        }
+      } catch (error) {
+        waiting.textContent = "Media permission denied: " + String(error);
+      }
+    }
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     ws.send(JSON.stringify({ type: "webrtc-answer", sdp: pc.localDescription }));
