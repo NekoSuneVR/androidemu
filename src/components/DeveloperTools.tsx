@@ -148,6 +148,15 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </form>
 
               <div className="tool-group">
+                <h4>ADB network exposure</h4>
+                <div className="warning-box">LAN ADB is off by default and requires root. Only enable it on a trusted network; it exposes Android debugging beyond localhost.</div>
+                <div className="button-row">
+                  <button className="danger compact" disabled={busy || !["adb-root","full-root"].includes(selected.rootMode)} onClick={()=>window.confirm("Enable ADB on the LAN at TCP 5555?")&&run("adb_set_lan",{enabled:true,lanPort:5555})}>Enable LAN ADB</button>
+                  <button className="ghost compact" disabled={busy || !["adb-root","full-root"].includes(selected.rootMode)} onClick={()=>run("adb_set_lan",{enabled:false,lanPort:5555})}>Disable LAN ADB</button>
+                </div>
+              </div>
+
+              <div className="tool-group">
                 <h4>Root tools · {selected.rootMode}</h4>
                 <small className="muted">
                   {selected.rootMode === "standard" ? "Standard mode: root controls are disabled." :
