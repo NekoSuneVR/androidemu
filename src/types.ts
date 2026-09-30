@@ -418,3 +418,10 @@ export interface PluginManifest {
   capabilities:string[];
   sourceUrl?:string|null;
 }
+
+export interface AiCaptureResult {
+  path:string;
+  changed:boolean;
+  sha256:string;
+  capturedAt:number;
+}
