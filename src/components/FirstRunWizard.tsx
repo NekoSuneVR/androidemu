@@ -87,8 +87,10 @@ export default function FirstRunWizard() {
             )}
             {check(
               readiness.qemuFound,
-              "QEMU is available.",
-              "QEMU is missing from PATH."
+              `${readiness.runtimeName} is available.`,
+              readiness.runtimeName === "MSYS2 Runtime"
+                ? "MSYS2 runtime is missing. Install it under C:\\msys64 or set MSYS2_ROOT."
+                : "QEMU is missing from PATH."
             )}
             {check(
               readiness.adbFound,
