@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **246/643 tasks complete (38.3%)**
+> Progress: **249/643 tasks complete (38.7%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -548,8 +548,8 @@ skills/
 - [x] Software encode
 - [ ] Progress reporting
 - [ ] Cancel jobs
-- [ ] Queue jobs
-- [ ] Batch processing
+- [x] Queue jobs
+- [x] Batch processing
 
 ---
 
@@ -591,7 +591,7 @@ skills/
 - [x] Resolution conversion
 - [x] Frame-rate conversion
 - [x] Hardware transcoding
-- [ ] Batch converter
+- [x] Batch converter
 - [ ] Drag-and-drop input
 
 ---
