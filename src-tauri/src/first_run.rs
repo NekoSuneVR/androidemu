@@ -19,6 +19,7 @@ pub struct SystemReadiness {
     pub vulkan_available: bool,
     pub vulkan_detail: String,
     pub hardware_encoders: Vec<String>,
+    pub free_disk_mb: Option<u64>,
     pub qemu_found: bool,
     pub adb_found: bool,
     pub ffmpeg_found: bool,
@@ -37,6 +38,7 @@ pub fn detect() -> SystemReadiness {
     let gpu_names = detect_gpus();
     let (vulkan_available, vulkan_detail) = detect_vulkan();
     let hardware_encoders = detect_hardware_encoders();
+    let free_disk_mb = detect_free_disk_mb();
     let qemu = runtime::detect_qemu();
     let adb_info = adb::detect_adb();
     let ffmpeg = media::detect_ffmpeg();
@@ -62,6 +64,7 @@ pub fn detect() -> SystemReadiness {
         vulkan_available,
         vulkan_detail,
         hardware_encoders,
+        free_disk_mb,
         qemu_found: qemu.found,
         adb_found: adb_info.found,
         ffmpeg_found: ffmpeg.found,
@@ -198,6 +201,37 @@ fn detect_vulkan() -> (bool, String) {
     }
 
     (false, "vulkaninfo was not found in PATH.".into())
+}
+
+fn detect_free_disk_mb() -> Option<u64> {
+    if cfg!(target_os = "linux") {
+        let cwd = env::current_dir().ok()?;
+        let output = Command::new("df")
+            .args(["-Pk", cwd.to_string_lossy().as_ref()])
+            .output()
+            .ok()?;
+        if !output.status.success() {
+            return None;
+        }
+        let text = String::from_utf8_lossy(&output.stdout);
+        let line = text.lines().nth(1)?;
+        let available_kb = line.split_whitespace().nth(3)?.parse::<u64>().ok()?;
+        return Some(available_kb / 1024);
+    }
+
+    if cfg!(windows) {
+        let exe = env::current_exe().ok()?;
+        let drive = exe.to_string_lossy().chars().take(2).collect::<String>();
+        let script = format!(
+            "(Get-CimInstance Win32_LogicalDisk -Filter \"DeviceID='{}'\").FreeSpace",
+            drive.replace('\\', "")
+        );
+        let output = powershell(&script)?;
+        let bytes = output.trim().parse::<u64>().ok()?;
+        return Some(bytes / 1024 / 1024);
+    }
+
+    None
 }
 
 fn detect_hardware_encoders() -> Vec<String> {
