@@ -19,6 +19,7 @@ mod apk_bundle;
 mod display;
 mod graphics;
 mod plugins;
+mod sensors;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -444,6 +445,18 @@ fn adb_search_files(port: u16, path: String, query: String) -> Result<AdbResult,
     adb::search_files(port, path, query)
 }
 
+
+
+#[tauri::command]
+fn set_battery_simulation(port:u16,level:u8,charging:bool)->Result<AdbResult,String>{sensors::battery(port,level,charging)}
+#[tauri::command]
+fn reset_battery_simulation(port:u16)->Result<AdbResult,String>{sensors::reset_battery(port)}
+#[tauri::command]
+fn set_gps_location(port:u16,latitude:f64,longitude:f64,altitude:f64)->Result<AdbResult,String>{sensors::gps(port,latitude,longitude,altitude)}
+#[tauri::command]
+fn clear_gps_location(port:u16)->Result<AdbResult,String>{sensors::clear_gps(port)}
+#[tauri::command]
+fn sensor_report(port:u16)->Result<AdbResult,String>{sensors::report(port)}
 
 #[tauri::command]
 fn get_display_state(port:u16)->Result<DisplayState,String>{display::state(port)}
@@ -1056,6 +1069,11 @@ pub fn run() {
             adb_copy_path,
             adb_file_properties,
             adb_search_files,
+            set_battery_simulation,
+            reset_battery_simulation,
+            set_gps_location,
+            clear_gps_location,
+            sensor_report,
             get_display_state,
             get_preferred_orientation,
             adb_set_refresh_rate,
