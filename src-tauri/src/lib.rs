@@ -31,6 +31,7 @@ mod cloud_nodes;
 mod frame_share;
 mod arm_compat;
 mod sdl_gamepad;
+mod prerequisites;
 
 use images::{AndroidImageManifest, DefaultImageSettings, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -59,6 +60,7 @@ use cloud_nodes::CloudAndroidNode;
 use frame_share::SharedFrameInfo;
 use android_validation::AndroidBootValidation;
 use sdl_gamepad::SdlControllerInfo;
+use prerequisites::PrerequisiteInstallResult;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -763,6 +765,11 @@ fn get_system_readiness() -> SystemReadiness {
     first_run::detect()
 }
 
+#[tauri::command]
+fn install_missing_windows_runtime() -> Result<PrerequisiteInstallResult, String> {
+    prerequisites::install_missing_windows_runtime()
+}
+
 
 
 #[tauri::command]
@@ -1312,6 +1319,7 @@ pub fn run() {
             delete_snapshot,
             repair_installation,
             get_system_readiness,
+            install_missing_windows_runtime,
             capture_android_audio_base64,
             capture_android_audio,
             mix_microphone,
