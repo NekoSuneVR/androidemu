@@ -35,7 +35,7 @@ const blankProfile: DeviceProfile = {
   tabletResources: false
 };
 
-const builtInIds = new Set(["phone", "gaming-phone", "tablet", "large-tablet", "foldable"]);
+const builtInIds = new Set(["phone", "gaming-phone", "tablet", "large-tablet", "foldable", "android-tv", "android-automotive"]);
 
 export default function DeviceProfiles({ profiles, onChanged }: Props) {
   const [profile, setProfile] = useState<DeviceProfile>(blankProfile);
@@ -122,6 +122,8 @@ export default function DeviceProfiles({ profiles, onChanged }: Props) {
                 <option value="phone">Phone</option>
                 <option value="tablet">Tablet</option>
                 <option value="foldable">Foldable</option>
+                <option value="tv">Android TV</option>
+                <option value="automotive">Android Automotive</option>
               </select>
             </label>
           </div>
