@@ -13,6 +13,7 @@ let pc;
 let controlChannel;
 let permissions = {};
 let inviteCode = "";
+let iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
 
 const params = new URLSearchParams(location.search);
 if (params.get("invite")) inviteInput.value = params.get("invite");
@@ -30,6 +31,11 @@ joinForm.addEventListener("submit", async event => {
   }
 
   const info = await response.json();
+  const configResponse = await fetch("/api/config");
+  if (configResponse.ok) {
+    const config = await configResponse.json();
+    if (Array.isArray(config.iceServers)) iceServers = config.iceServers;
+  }
   sessionName.textContent = info.name;
   permissions = info.permissions;
 
@@ -89,9 +95,7 @@ async function onMessage(message) {
 
 function createPeer() {
   if (pc) return pc;
-  pc = new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-  });
+  pc = new RTCPeerConnection({ iceServers });
   pc.ontrack = event => {
     video.srcObject = event.streams[0];
     waiting.classList.add("hidden");
