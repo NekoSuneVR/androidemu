@@ -741,6 +741,8 @@ fn get_system_readiness() -> SystemReadiness {
 
 
 #[tauri::command]
+fn capture_android_audio_base64(port:u16,seconds:u32)->Result<String,String>{host_media_io::android_audio_capture_base64(port,seconds)}
+#[tauri::command]
 fn capture_android_audio(port:u16,destination:String,seconds:u32)->Result<MediaResult,String>{host_media_io::android_audio_capture(port,destination,seconds)}
 #[tauri::command]
 fn mix_microphone(input:String,output:String,microphone:String)->Result<MediaResult,String>{host_media_io::mix_microphone(input,output,microphone)}
@@ -1278,6 +1280,7 @@ pub fn run() {
             delete_snapshot,
             repair_installation,
             get_system_readiness,
+            capture_android_audio_base64,
             capture_android_audio,
             mix_microphone,
             output_virtual_camera,
