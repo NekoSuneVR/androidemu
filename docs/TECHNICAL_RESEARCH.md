@@ -33,3 +33,8 @@ Spout is Windows/GPU focused. A future output module should share the emulator r
 ## GrapheneOS-derived testing images
 
 GrapheneOS security properties depend on supported Pixel hardware and hardware-backed features that a generic VM cannot reproduce. NekoDroid may support user-supplied compatible research/testing images through the generic secure-image/GSI path, but must display the actual verified-boot/security state and must not claim Pixel identity or hardware-backed attestation.
+
+
+## Native bridge architecture
+
+The native-bridge layer is an explicit compatibility boundary between APK ABI inspection and process launch. APK inspection prefers x86_64, then x86, before considering ARM ABIs. When only arm64-v8a or armeabi-v7a libraries are available, the compatibility diagnostic reports that an ARM bridge is required rather than pretending the APK is natively compatible. A future bridge provider must be selectable per app, must expose its legal/distribution status, and must not falsify Play Integrity or hardware identity.
