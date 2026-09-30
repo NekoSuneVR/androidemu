@@ -349,6 +349,23 @@ fn find_in_path(name: &str) -> Option<PathBuf> {
 }
 
 
+
+pub fn stream_media(input:String,url:String,video_codec:String,rotate:Option<String>)->Result<MediaResult,String>{
+    if !Path::new(&input).is_file(){return Err("Streaming input file does not exist".into());}
+    if !(url.starts_with("rtmp://")||url.starts_with("rtmps://")||url.starts_with("srt://")){return Err("Stream URL must use rtmp://, rtmps://, or srt://".into());}
+    validate_codec(&video_codec)?;
+    let executable=detect_ffmpeg().executable.ok_or_else(||"FFmpeg was not found in PATH".to_string())?;
+    let mut args=vec!["-hide_banner".into(),"-re".into(),"-i".into(),input,"-c:v".into(),video_codec,"-c:a".into(),"aac".into()];
+    if let Some(mode)=rotate{
+        let filter=match mode.as_str(){"left"=>"transpose=2","right"=>"transpose=1","flip"=>"hflip,vflip","none"=>"" ,_=>return Err("rotate must be left, right, flip, or none".into())};
+        if !filter.is_empty(){args.extend(["-vf".into(),filter.into()]);}
+    }
+    if url.starts_with("srt://"){args.extend(["-f".into(),"mpegts".into()]);}else{args.extend(["-f".into(),"flv".into()]);}
+    args.push(url.clone());
+    let result=Command::new(executable).args(&args).output().map_err(|e|format!("Failed to execute FFmpeg stream: {e}"))?;
+    Ok(MediaResult{success:result.status.success(),exit_code:result.status.code(),stdout:String::from_utf8_lossy(&result.stdout).trim().to_string(),stderr:String::from_utf8_lossy(&result.stderr).trim().to_string(),output_path:url})
+}
+
 pub fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, String> {
     if jobs.is_empty() {
         return Err("Media batch cannot be empty".into());
