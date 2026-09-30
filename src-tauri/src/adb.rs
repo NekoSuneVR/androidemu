@@ -1009,3 +1009,12 @@ fn find_in_path(name: &str) -> Option<PathBuf> {
             .find(|candidate| candidate.is_file())
     })
 }
+
+pub fn input_multitouch(port:u16,points:Vec<(i32,i32)>,duration_ms:u32)->Result<AdbResult,String>{
+    if points.len()<2||points.len()>10{return Err("Multi-touch requires 2..10 points".into());}
+    let coords=points.iter().map(|(x,y)|format!("{x},{y}")).collect::<Vec<_>>().join(";");
+    shell(port,format!("am broadcast -a uk.co.nekosunevr.nekodroid.bridge.MULTITOUCH --es points '{}' --ei duration {}",coords.replace(''',""),duration_ms.clamp(20,5000)))
+}
+pub fn input_pinch(port:u16,cx:i32,cy:i32,from_radius:i32,to_radius:i32,duration_ms:u32)->Result<AdbResult,String>{
+    shell(port,format!("am broadcast -a uk.co.nekosunevr.nekodroid.bridge.PINCH --ei cx {cx} --ei cy {cy} --ei fromRadius {from_radius} --ei toRadius {to_radius} --ei duration {}",duration_ms.clamp(20,5000)))
+}
