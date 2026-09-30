@@ -157,6 +157,16 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="tool-group">
+                <h4>ARM native bridge</h4>
+                <label>User-supplied native-bridge package path<input value={rootCommand} placeholder="C:\path\native-bridge.zip" onChange={e=>setRootCommand(e.target.value)}/></label>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy||!rootCommand||!["adb-root","full-root"].includes(selected.rootMode)} onClick={async()=>{try{setBusy(true);const results=await invoke<AdbResult[]>("install_arm_native_bridge",{port:selected.adbPort,archive:rootCommand});setOutput(results.map(r=>[r.success?"SUCCESS":"FAILED",r.stdout,r.stderr].filter(Boolean).join("\n")).join("\n\n"));}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Install native bridge</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("test_arm_compatibility",{abi:"arm64-v8a"})}>Test ARM64</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("test_arm_compatibility",{abi:"armeabi-v7a"})}>Test ARMv7</button>
+                </div>
+              </div>
+
+              <div className="tool-group">
                 <h4>Root tools · {selected.rootMode}</h4>
                 <small className="muted">
                   {selected.rootMode === "standard" ? "Standard mode: root controls are disabled." :
