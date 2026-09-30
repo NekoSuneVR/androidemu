@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **114/643 tasks complete (17.7%)**
+> Progress: **117/643 tasks complete (18.2%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -289,7 +289,7 @@ This file tracks the planned implementation of NekoDroid.
 
 - [x] Host-to-Android file transfer UI
 - [x] Android-to-host file transfer UI
-- [ ] Drag-and-drop into Android
+- [x] Drag-and-drop into Android
 - [x] Default drop folder `/sdcard/Download/`
 - [x] Custom destination selection
 - [ ] File transfer progress
@@ -361,8 +361,8 @@ This file tracks the planned implementation of NekoDroid.
 # Phase 16 - Virtual Touch
 
 - [x] Tap
-- [ ] Double tap
-- [ ] Hold
+- [x] Double tap
+- [x] Hold
 - [x] Swipe
 - [ ] Drag
 - [ ] Multi-touch
