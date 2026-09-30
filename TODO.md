@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **158/643 tasks complete (24.6%)**
+> Progress: **168/643 tasks complete (26.1%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -39,7 +39,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Create Game Library page
 - [x] Create Android Instances page
 - [x] Create Device Profiles page
-- [ ] Create Media Tools page
+- [x] Create Media Tools page
 - [x] Create Developer Tools page
 - [x] Create AI page
 - [ ] Create Settings page
@@ -541,11 +541,11 @@ skills/
 # Phase 26 - FFmpeg Engine
 
 - [ ] Bundle/manage FFmpeg
-- [ ] Detect FFmpeg capabilities
+- [x] Detect FFmpeg capabilities
 - [ ] Hardware decode
 - [ ] Hardware encode
-- [ ] Software decode
-- [ ] Software encode
+- [x] Software decode
+- [x] Software encode
 - [ ] Progress reporting
 - [ ] Cancel jobs
 - [ ] Queue jobs
@@ -583,13 +583,13 @@ skills/
 
 # Phase 28 - Built-In Media Tools
 
-- [ ] Video converter
-- [ ] Audio converter
+- [x] Video converter
+- [x] Audio converter
 - [ ] Video compressor
-- [ ] Audio extraction
-- [ ] Remux
-- [ ] Resolution conversion
-- [ ] Frame-rate conversion
+- [x] Audio extraction
+- [x] Remux
+- [x] Resolution conversion
+- [x] Frame-rate conversion
 - [ ] Hardware transcoding
 - [ ] Batch converter
 - [ ] Drag-and-drop input
