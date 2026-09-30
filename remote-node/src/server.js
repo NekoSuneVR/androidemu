@@ -150,8 +150,11 @@ const server = http.createServer(async (req, res) => {
           view: true,
           control: Boolean(body.control),
           clipboard: Boolean(body.clipboard),
-          fileTransfer: Boolean(body.fileTransfer)
+          fileTransfer: Boolean(body.fileTransfer),
+          gamepad: Boolean(body.gamepad)
         },
+        adaptiveBitrate: body.adaptiveBitrate !== false,
+        fpsPreset: [30,60,90,120].includes(Number(body.fpsPreset)) ? Number(body.fpsPreset) : 60,
         createdAt: Date.now(),
         expiresAt,
         hostTokenHash: sha256(hostToken),
@@ -181,7 +184,9 @@ const server = http.createServer(async (req, res) => {
         sessionId: session.id,
         name: session.name,
         expiresAt: new Date(session.expiresAt).toISOString(),
-        permissions: session.permissions
+        permissions: session.permissions,
+        adaptiveBitrate: session.adaptiveBitrate,
+        fpsPreset: session.fpsPreset
       });
     }
 
@@ -379,8 +384,14 @@ function handleViewerMessage(session, viewerId, message) {
   }
 
   if (message.type === "relay-data") {
-    if (!session.permissions.control) {
-      send(viewer.socket, { type: "error", error: "Control permission is disabled" });
+    const kind = String(message.payload?.kind || "");
+    const allowed =
+      (kind === "clipboard" && session.permissions.clipboard) ||
+      (kind === "file" && session.permissions.fileTransfer) ||
+      (kind === "gamepad" && session.permissions.gamepad && session.permissions.control) ||
+      (!["clipboard","file","gamepad"].includes(kind) && session.permissions.control);
+    if (!allowed) {
+      send(viewer.socket, { type: "error", error: "Permission is disabled for this remote action" });
       return;
     }
     send(session.hostSocket, { ...message, viewerId });
