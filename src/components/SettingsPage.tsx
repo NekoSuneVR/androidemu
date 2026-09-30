@@ -121,7 +121,7 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
           <button className="primary" disabled={busy}>{busy ? "Saving..." : "Save Settings"}</button>
 
           <div className="warning-box">
-            ADB remains localhost-only. Enabling ADB by default exposes a guest debugging port only to this host unless you later add an explicit LAN feature.
+            ADB, QMP, and the Automation API are designed to stay localhost-only by default. Do not expose ADB, QMP, or the Automation API directly to the internet or an untrusted LAN. Use authenticated remote-access features instead.
           </div>
         </form>
 
