@@ -47,3 +47,38 @@ export interface RuntimeActionResult {
   message: string;
   processId?: number | null;
 }
+
+export interface DeviceProfile {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+  dpi: number;
+  refreshRate: number;
+  defaultCpuCores: number;
+  defaultRamMb: number;
+  touchPoints: number;
+  telephony: boolean;
+  formFactor: string;
+}
+
+export interface AndroidImageManifest {
+  id: string;
+  name: string;
+  androidVersion: string;
+  api: number;
+  architecture: string;
+  imageType: string;
+  disk: string;
+  diskFormat: "qcow2" | "raw";
+  recommended: boolean;
+  notes?: string | null;
+}
+
+export interface InstalledImage {
+  manifest: AndroidImageManifest;
+  directory: string;
+  diskPath: string;
+  valid: boolean;
+  validationError?: string | null;
+}
