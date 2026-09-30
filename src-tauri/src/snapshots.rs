@@ -92,6 +92,36 @@ pub fn create(
     Ok(snapshot)
 }
 
+
+pub fn create_clean(data_dir:&Path, instance_id:&str) -> Result<SnapshotInfo,String> {
+    create(data_dir,instance_id,"Clean snapshot".into(),"Known-clean state created by NekoDroid.".into())
+}
+
+pub fn create_rooted(data_dir:&Path, instance_id:&str) -> Result<SnapshotInfo,String> {
+    create(data_dir,instance_id,"Rooted snapshot".into(),"Root-capable state created by NekoDroid.".into())
+}
+
+pub fn cleanup(data_dir:&Path, instance_id:&str, keep:usize) -> Result<usize,String> {
+    let keep=keep.clamp(1,100);
+    let all=list(data_dir,instance_id)?;
+    let mut removed=0;
+    for snap in all.into_iter().skip(keep) {
+        delete(data_dir,instance_id,&snap.id)?;
+        removed+=1;
+    }
+    Ok(removed)
+}
+
+pub fn auto_snapshot(data_dir:&Path, instance_id:&str, reason:&str) -> Result<Option<SnapshotInfo>,String> {
+    if !runtime_disk(data_dir,instance_id).is_file(){return Ok(None);}
+    let label=match reason {
+        "pre-root"=>"Before root",
+        "pre-update"=>"Before Android update",
+        _=>"Automatic snapshot",
+    };
+    create(data_dir,instance_id,label.into(),format!("Automatic safety snapshot: {reason}")).map(Some)
+}
+
 pub fn rename(
     data_dir: &Path,
     instance_id: &str,
