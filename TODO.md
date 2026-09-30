@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **313/643 tasks complete (48.7%)**
+> Progress: **327/643 tasks complete (50.9%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -132,22 +132,22 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Refresh rate
 - [x] CPU count
 - [x] RAM
-- [ ] Storage size
+- [x] Storage size
 - [x] Touch point count
-- [ ] Wi-Fi capability
-- [ ] Bluetooth capability
-- [ ] GPS capability
-- [ ] Camera configuration
-- [ ] Microphone
-- [ ] Accelerometer
-- [ ] Gyroscope
-- [ ] Compass
-- [ ] Light sensor
-- [ ] Proximity sensor
-- [ ] Battery state
-- [ ] Charging state
+- [x] Wi-Fi capability
+- [x] Bluetooth capability
+- [x] GPS capability
+- [x] Camera configuration
+- [x] Microphone
+- [x] Accelerometer
+- [x] Gyroscope
+- [x] Compass
+- [x] Light sensor
+- [x] Proximity sensor
+- [x] Battery state
+- [x] Charging state
 - [x] Telephony availability
-- [ ] Tablet resource configuration
+- [x] Tablet resource configuration
 
 ---
 
