@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **272/643 tasks complete (42.3%)**
+> Progress: **274/643 tasks complete (42.6%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -23,8 +23,8 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Create Windows build pipeline
 - [x] Create Android APK build pipeline
 - [x] Create Linux build pipeline
-- [ ] Decide minimum Windows version
-- [ ] Decide minimum Linux requirements
+- [x] Decide minimum Windows version
+- [x] Decide minimum Linux requirements
 - [ ] Create project branding/icons
 
 ---
