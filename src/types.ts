@@ -312,3 +312,13 @@ export interface KeymapProfile {
   overlayVisible: boolean;
   bindings: KeyBinding[];
 }
+
+export interface GameSettings {
+  packageName: string;
+  orientation?: "portrait"|"landscape"|"reverse-portrait"|"reverse-landscape"|"automatic"|null;
+  dpi?: number|null;
+  fps?: number|null;
+  keymapId?: string|null;
+  aiSkillId?: string|null;
+  notes: string;
+}
