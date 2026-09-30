@@ -165,7 +165,9 @@ const server = http.createServer(async (req, res) => {
           control: Boolean(body.control),
           clipboard: Boolean(body.clipboard),
           fileTransfer: Boolean(body.fileTransfer),
-          gamepad: Boolean(body.gamepad)
+          gamepad: Boolean(body.gamepad),
+          microphone: Boolean(body.microphone),
+          camera: Boolean(body.camera)
         },
         adaptiveBitrate: body.adaptiveBitrate !== false,
         fpsPreset: [30,60,90,120].includes(Number(body.fpsPreset)) ? Number(body.fpsPreset) : 60,
