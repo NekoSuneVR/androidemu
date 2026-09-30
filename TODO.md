@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **253/643 tasks complete (39.3%)**
+> Progress: **254/643 tasks complete (39.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -80,7 +80,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Add image update handling
 - [x] Add custom image import
 - [ ] Add custom GSI import
-- [ ] Add image repair
+- [x] Add image repair
 
 ## Android Versions
 
