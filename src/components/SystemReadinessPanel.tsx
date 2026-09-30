@@ -77,7 +77,7 @@ export default function SystemReadinessPanel() {
               {readiness.gpuNames.length ? readiness.gpuNames.map(name => <small key={name}>{name}</small>) : <small className="muted">No GPU name detected.</small>}
 
               <h4>Core tools</h4>
-              <small>QEMU: {readiness.qemuFound ? "detected" : "missing"}</small>
+              <small>{readiness.runtimeName}: {readiness.qemuFound ? "detected" : "missing"}</small>
               <small>ADB: {readiness.adbFound ? "detected" : "missing"}</small>
               <small>FFmpeg: {readiness.ffmpegFound ? "detected" : "missing"}</small>
 
