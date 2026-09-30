@@ -8,6 +8,7 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
   const [entries, setEntries] = useState<AndroidFileEntry[]>([]);
   const [search, setSearch] = useState("");
   const [hostUpload, setHostUpload] = useState("");
+  const [hostUploads, setHostUploads] = useState("");
   const [androidDownload, setAndroidDownload] = useState("/sdcard/Download/");
   const [hostDownload, setHostDownload] = useState("");
   const [output, setOutput] = useState("");
@@ -150,6 +151,22 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
     }
   };
 
+  const uploadMultiple = async () => {
+    if (!hostUploads.trim() || !selected) return;
+    setBusy(true);
+    try {
+      await run("adb_push_multiple", {
+        sources: hostUploads.split(/\r?\n/).map(value => value.trim()).filter(Boolean),
+        destination: path
+      });
+      await refresh();
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const download = async () => {
     if (!androidDownload || !hostDownload) return;
     setBusy(true);
@@ -221,6 +238,10 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
             <h4>Upload</h4>
             <label>Host file or folder<input value={hostUpload} onChange={e => setHostUpload(e.target.value)} /></label>
             <button className="ghost compact" disabled={busy || !hostUpload} onClick={upload}>Upload to current folder</button>
+            <label>Multiple host files/folders, one per line
+              <textarea value={hostUploads} onChange={e => setHostUploads(e.target.value)} />
+            </label>
+            <button className="ghost compact" disabled={busy || !hostUploads.trim()} onClick={uploadMultiple}>Upload multiple</button>
           </div>
 
           <div className="tool-group">
