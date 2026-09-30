@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **102/643 tasks complete (15.9%)**
+> Progress: **106/643 tasks complete (16.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -689,12 +689,12 @@ skills/
 - [x] ADB terminal
 - [ ] Root terminal
 - [x] Logcat
-- [ ] Kernel log
+- [x] Kernel log
 - [x] Package viewer
-- [ ] Activity viewer
+- [x] Activity viewer
 - [ ] Process viewer
-- [ ] Service viewer
-- [ ] Network connections
+- [x] Service viewer
+- [x] Network connections
 - [x] Port forwarding
 - [x] Android property viewer
 - [x] Build property viewer
