@@ -10,6 +10,7 @@ mod media;
 mod first_run;
 mod automation_api;
 mod ai;
+mod skills;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -21,6 +22,7 @@ use snapshots::SnapshotInfo;
 use media::{FfmpegInfo, MediaJobRequest, MediaResult};
 use first_run::SystemReadiness;
 use ai::{AiAction, AiChatResult};
+use skills::{AiGameState, SkillManifest};
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -546,6 +548,32 @@ fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, Strin
     media::run_media_batch(jobs)
 }
 
+
+#[tauri::command]
+fn list_ai_skills(state: State<'_, RuntimeState>) -> Result<Vec<SkillManifest>, String> {
+    skills::list(&state.data_dir)
+}
+
+#[tauri::command]
+fn save_ai_skill(state: State<'_, RuntimeState>, skill: SkillManifest) -> Result<SkillManifest, String> {
+    skills::save(&state.data_dir, skill)
+}
+
+#[tauri::command]
+fn import_ai_skill(state: State<'_, RuntimeState>, source: String) -> Result<SkillManifest, String> {
+    skills::import_file(&state.data_dir, source)
+}
+
+#[tauri::command]
+fn export_ai_skill(state: State<'_, RuntimeState>, id: String, destination: String) -> Result<String, String> {
+    skills::export_file(&state.data_dir, id, destination)
+}
+
+#[tauri::command]
+fn get_ai_game_state(port: u16) -> Result<AiGameState, String> {
+    skills::game_state(port)
+}
+
 #[tauri::command]
 fn ai_execute_actions(
     state: State<'_, RuntimeState>,
@@ -777,6 +805,11 @@ pub fn run() {
             run_media_batch,
             get_app_settings,
             save_app_settings,
+            list_ai_skills,
+            save_ai_skill,
+            import_ai_skill,
+            export_ai_skill,
+            get_ai_game_state,
             ai_execute_actions,
             ai_cancel_actions,
             ai_execute_action,
