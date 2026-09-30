@@ -260,7 +260,7 @@ export default function App() {
 
         {active === "Instances" && instancesPanel}
         {active === "Android Images" && <ImageManager images={images} onChanged={refresh} />}
-        {active === "Device Profiles" && <DeviceProfiles profiles={profiles} />}
+        {active === "Device Profiles" && <DeviceProfiles profiles={profiles} onChanged={refresh} />}
         {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
 
