@@ -85,3 +85,17 @@ input,select { width:100%; border:1px solid #244735; border-radius:9px; padding:
 input:focus,select:focus { border-color:#42df8b; box-shadow:0 0 0 3px rgba(66,223,139,.08); }
 .warning-box { padding:12px; margin-bottom:18px; border:1px solid #554b24; background:#1b1809; border-radius:10px; color:#cabe82; font-size:12px; line-height:1.5; }
 @media (max-width: 650px) { .form-grid { grid-template-columns:1fr; } .form-grid .wide { grid-column:auto; } }
+
+.profile-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; margin-top:18px; }
+.instance-card small { display:block; margin-top:5px; }
+.pill-warn { color:#ffd28c; border-color:#665123; background:#261d09; }
+.developer-grid { display:grid; grid-template-columns:minmax(320px,.9fr) minmax(360px,1.1fr); gap:18px; margin-top:18px; }
+.tool-column { display:grid; gap:14px; }
+.tool-column label { display:grid; gap:7px; color:#93ad9f; font-size:12px; }
+.tool-column form,.tool-group { display:grid; gap:9px; padding:14px; border:1px solid #183726; border-radius:12px; background:#07100b; }
+.button-row { display:flex; flex-wrap:wrap; gap:8px; }
+.terminal { min-height:420px; border:1px solid #1b3b29; border-radius:12px; overflow:hidden; background:#020604; }
+.terminal-title { padding:10px 12px; border-bottom:1px solid #153222; color:#75a98d; font-size:12px; }
+.terminal pre { margin:0; padding:16px; white-space:pre-wrap; word-break:break-word; color:#9ff5c5; font:12px/1.55 "Cascadia Code","SFMono-Regular",Consolas,monospace; }
+.muted { color:#718d7e; }
+@media (max-width: 980px) { .developer-grid { grid-template-columns:1fr; } }
