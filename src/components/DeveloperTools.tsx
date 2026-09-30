@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { AdbInfo, AdbResult, AndroidInstance, ApkCompatibility, RuntimeLogs } from "../types";
+import type { AdbInfo, AdbResult, AndroidInstance, ApkCompatibility, ApkPackageInfo, RuntimeLogs } from "../types";
 
 type Props = {
   instances: AndroidInstance[];
@@ -171,13 +172,25 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <label>APK path<input placeholder="C:\\Downloads\\game.apk" value={apkPath} onChange={e => setApkPath(e.target.value)} /></label>
                 <div className="button-row">
                   <button className="ghost compact" disabled={busy} onClick={selectApk}>Select APK from PC</button>
-                  <button className="ghost compact" disabled={busy || !apkPath} onClick={async () => {
+                  <button className="ghost compact" disabled={busy || !apkPath || !/\.apk$/i.test(apkPath)} onClick={async () => {
                     try {
                       const info = await invoke<ApkCompatibility>("inspect_apk", { apkPath });
                       setOutput([`Preferred ABI: ${info.preferredAbi}`, `ABIs: ${info.abis.join(", ") || "none"}`, info.diagnostic].join("\n"));
                     } catch (error) { setOutput(String(error)); }
                   }}>Inspect APK ABI</button>
-                  <button className="ghost compact" disabled={busy || !apkPath} onClick={() => run("adb_install", { apkPath })}>Install APK</button>
+                  <button className="ghost compact" disabled={busy || !apkPath || !/\.apk$/i.test(apkPath)} onClick={async()=>{
+                    try{
+                      const info=await invoke<ApkPackageInfo>("inspect_apk_package",{apkPath});
+                      setOutput([`Package: ${info.packageName ?? "unknown (aapt not found)"}`,`Version: ${info.versionName ?? "unknown"} (${info.versionCode ?? "?"})`,`ABIs: ${info.abis.join(", ")||"none"}`,`Size: ${Math.round(info.sizeBytes/1024/1024*10)/10} MB`].join("\n"));
+                    }catch(error){setOutput(String(error));}
+                  }}>Package info</button>
+                  <button className="ghost compact" disabled={busy || !apkPath} onClick={async()=>{
+                    try{
+                      setBusy(true);
+                      const results=await invoke<AdbResult[]>("install_apk_bundle",{port:selected.adbPort,bundlePath:apkPath});
+                      setOutput(results.map((r,i)=>`Step ${i+1}: ${r.success?"SUCCESS":"FAILED"}\n${r.stdout}\n${r.stderr}`).join("\n\n"));
+                    }catch(error){setOutput(String(error));}finally{setBusy(false);}
+                  }}>Install APK/APKS/XAPK</button>
                 </div>
               </div>
 
