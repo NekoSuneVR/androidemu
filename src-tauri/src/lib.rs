@@ -218,6 +218,9 @@ fn adb_uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_timezone(port:u16,timezone:Option<String>)->Result<AdbResult,String>{adb::timezone(port,timezone)}
+
+#[tauri::command]
 fn adb_shutdown(port: u16) -> Result<AdbResult, String> { adb::shutdown(port) }
 
 #[tauri::command]
@@ -1057,6 +1060,7 @@ pub fn run() {
             adb_install_batch,
             adb_install_multiple,
             adb_uninstall,
+            adb_timezone,
             adb_shutdown,
             adb_boot_status,
             adb_crash_diagnostics,
