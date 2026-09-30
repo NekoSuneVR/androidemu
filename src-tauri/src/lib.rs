@@ -4,11 +4,13 @@ mod models;
 mod profiles;
 mod runtime;
 mod storage;
+mod settings;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, UpdateInstanceRequest};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
+use settings::AiSettings;
 use tauri::{Manager, State};
 
 #[tauri::command]
@@ -262,6 +264,24 @@ fn register_android_image(
 }
 
 #[tauri::command]
+fn get_ai_settings(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
+    settings::load(&state.data_dir)
+}
+
+#[tauri::command]
+fn save_ai_settings(
+    state: State<'_, RuntimeState>,
+    settings: AiSettings,
+) -> Result<AiSettings, String> {
+    settings::save(&state.data_dir, settings)
+}
+
+#[tauri::command]
+fn ai_emergency_stop(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
+    settings::emergency_stop(&state.data_dir)
+}
+
+#[tauri::command]
 fn get_host_capabilities() -> HostCapabilities {
     runtime::detect_host()
 }
@@ -341,6 +361,9 @@ pub fn run() {
             list_android_images,
             remove_android_image,
             register_android_image,
+            get_ai_settings,
+            save_ai_settings,
+            ai_emergency_stop,
             get_host_capabilities,
             start_instance,
             stop_instance,
