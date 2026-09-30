@@ -92,6 +92,31 @@ pub fn create(
     Ok(snapshot)
 }
 
+pub fn rename(
+    data_dir: &Path,
+    instance_id: &str,
+    snapshot_id: &str,
+    name: String,
+    description: String,
+) -> Result<SnapshotInfo, String> {
+    validate_snapshot_id(snapshot_id)?;
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("Snapshot name cannot be empty".into());
+    }
+
+    let path = snapshots_dir(data_dir, instance_id).join(format!("{snapshot_id}.json"));
+    let bytes = fs::read(&path).map_err(|e| format!("Unable to read snapshot metadata: {e}"))?;
+    let mut snapshot: SnapshotInfo = serde_json::from_slice(&bytes)
+        .map_err(|e| format!("Invalid snapshot metadata: {e}"))?;
+
+    snapshot.name = name.to_string();
+    snapshot.description = description.trim().to_string();
+    let encoded = serde_json::to_vec_pretty(&snapshot).map_err(|e| e.to_string())?;
+    fs::write(path, encoded).map_err(|e| e.to_string())?;
+    Ok(snapshot)
+}
+
 pub fn restore(data_dir: &Path, instance_id: &str, snapshot_id: &str) -> Result<(), String> {
     validate_snapshot_id(snapshot_id)?;
     let disk = runtime_disk(data_dir, instance_id);
