@@ -28,6 +28,9 @@ type RemoteSettings = {
   control: boolean;
   clipboard: boolean;
   fileTransfer: boolean;
+  gamepad: boolean;
+  adaptiveBitrate: boolean;
+  fpsPreset: 30|60|90|120;
   ttlSeconds: number;
 };
 
@@ -38,6 +41,9 @@ const defaultSettings: RemoteSettings = {
   control: true,
   clipboard: false,
   fileTransfer: false,
+  gamepad: true,
+  adaptiveBitrate: true,
+  fpsPreset: 60,
   ttlSeconds: 900
 };
 
@@ -90,6 +96,9 @@ export default function RemoteAccess({ instances, profiles }: Props) {
           control: settings.control,
           clipboard: settings.clipboard,
           fileTransfer: settings.fileTransfer,
+          gamepad: settings.gamepad,
+          adaptiveBitrate: settings.adaptiveBitrate,
+          fpsPreset: settings.fpsPreset,
           ttlSeconds: settings.ttlSeconds
         })
       });
@@ -164,8 +173,14 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       return;
     }
 
-    if (message.type === "relay-data" && settings.control && message.payload) {
-      await applyControl(message.viewerId, message.payload);
+    if (message.type === "relay-data" && message.payload) {
+      if (message.payload.kind === "clipboard" && settings.clipboard && selected) {
+        await invoke("adb_clipboard_set", { port:selected.adbPort, text:String(message.payload.text ?? "") });
+        return;
+      }
+      if (settings.control) {
+        await applyControl(message.viewerId, message.payload);
+      }
       return;
     }
 
@@ -181,9 +196,13 @@ export default function RemoteAccess({ instances, profiles }: Props) {
     }
 
     const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: { frameRate: 60 },
+      video: { frameRate: settings.fpsPreset },
       audio: true
     });
+    const videoTrack = stream.getVideoTracks()[0];
+    if (videoTrack) {
+      await videoTrack.applyConstraints({ frameRate: settings.fpsPreset }).catch(() => {});
+    }
     streamRef.current = stream;
 
     stream.getVideoTracks()[0]?.addEventListener("ended", () => {
@@ -218,6 +237,27 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       peersRef.current.set(viewerId, peer);
 
       stream.getTracks().forEach(track => peer.addTrack(track, stream));
+      if (settings.adaptiveBitrate) {
+        for (const sender of peer.getSenders()) {
+          if (sender.track?.kind !== "video") continue;
+          const params = sender.getParameters();
+          params.encodings = params.encodings?.length ? params.encodings : [{}];
+          params.encodings[0].maxBitrate = settings.fpsPreset >= 90 ? 12_000_000 : settings.fpsPreset >= 60 ? 8_000_000 : 4_000_000;
+          await sender.setParameters(params).catch(() => {});
+        }
+      }
+      const statsTimer = window.setInterval(async () => {
+        if (peer.connectionState === "closed") return window.clearInterval(statsTimer);
+        const stats = await peer.getStats().catch(() => null);
+        if (!stats) return;
+        let inbound = 0, outbound = 0, rtt = "";
+        stats.forEach(report => {
+          if (report.type === "outbound-rtp" && report.kind === "video") outbound = Number(report.bytesSent || 0);
+          if (report.type === "inbound-rtp" && report.kind === "video") inbound = Number(report.bytesReceived || 0);
+          if (report.type === "candidate-pair" && report.state === "succeeded" && report.currentRoundTripTime != null) rtt = `${Math.round(Number(report.currentRoundTripTime)*1000)}ms`;
+        });
+        setStatus(`Streaming · FPS ${settings.fpsPreset} · RTT ${rtt || "n/a"} · tx ${Math.round(outbound/1024)}KB · rx ${Math.round(inbound/1024)}KB`);
+      }, 3000);
 
       if (settings.control) {
         const channel = peer.createDataChannel("control", { ordered: true });
@@ -315,6 +355,16 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       return;
     }
 
+    if (payload.kind === "gamepad" && settings.gamepad) {
+      const pressed = Array.isArray(payload.buttons) ? payload.buttons : [];
+      const mapping: Record<number,string> = {0:"KEYCODE_BUTTON_A",1:"KEYCODE_BUTTON_B",2:"KEYCODE_BUTTON_X",3:"KEYCODE_BUTTON_Y",12:"KEYCODE_DPAD_UP",13:"KEYCODE_DPAD_DOWN",14:"KEYCODE_DPAD_LEFT",15:"KEYCODE_DPAD_RIGHT"};
+      for (const index of pressed) {
+        const keycode=mapping[Number(index)];
+        if (keycode) await invoke("adb_input_keyevent",{port:selected.adbPort,keycode});
+      }
+      return;
+    }
+
     if (payload.kind === "android-key") {
       const keys: Record<string, string> = {
         BACK: "KEYCODE_BACK",
@@ -404,8 +454,16 @@ export default function RemoteAccess({ instances, profiles }: Props) {
             <label><input type="checkbox" checked disabled /> View screen</label>
             <label><input type="checkbox" checked={settings.control} disabled={Boolean(invite)} onChange={e => setSettings({...settings,control:e.target.checked})} /> Control Android</label>
             <label><input type="checkbox" checked={settings.clipboard} disabled={Boolean(invite)} onChange={e => setSettings({...settings,clipboard:e.target.checked})} /> Clipboard (future)</label>
-            <label><input type="checkbox" checked={settings.fileTransfer} disabled={Boolean(invite)} onChange={e => setSettings({...settings,fileTransfer:e.target.checked})} /> File transfer (future)</label>
+            <label><input type="checkbox" checked={settings.fileTransfer} disabled={Boolean(invite)} onChange={e => setSettings({...settings,fileTransfer:e.target.checked})} /> File transfer</label>
+            <label><input type="checkbox" checked={settings.gamepad} disabled={Boolean(invite)} onChange={e => setSettings({...settings,gamepad:e.target.checked})} /> Gamepad forwarding</label>
+            <label><input type="checkbox" checked={settings.adaptiveBitrate} disabled={Boolean(invite)} onChange={e => setSettings({...settings,adaptiveBitrate:e.target.checked})} /> Adaptive bitrate</label>
           </div>
+
+          <label>Remote FPS
+            <select value={settings.fpsPreset} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,fpsPreset:Number(e.target.value) as RemoteSettings["fpsPreset"]})}>
+              {[30,60,90,120].map(v=><option key={v} value={v}>{v} FPS</option>)}
+            </select>
+          </label>
 
           {!invite ? (
             <button className="primary" disabled={busy || !selected} onClick={createInvite}>{busy ? "Creating…" : "Create Remote Invite"}</button>
