@@ -191,6 +191,11 @@ fn adb_device_info(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_security_state(port: u16) -> Result<AdbResult, String> {
+    adb::security_state(port)
+}
+
+#[tauri::command]
 fn adb_screenshot(port: u16, destination: String) -> Result<AdbResult, String> {
     adb::screenshot(port, destination)
 }
@@ -747,6 +752,7 @@ pub fn run() {
             adb_uninstall,
             adb_reboot,
             adb_device_info,
+            adb_security_state,
             adb_screenshot,
             adb_screen_record,
             adb_push,
