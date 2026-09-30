@@ -20,6 +20,7 @@ use snapshots::SnapshotInfo;
 use media::{FfmpegInfo, MediaResult};
 use first_run::SystemReadiness;
 use tauri::{Manager, State};
+use std::{env, path::PathBuf};
 
 #[tauri::command]
 fn list_instances(state: State<'_, RuntimeState>) -> Result<Vec<AndroidInstance>, String> {
@@ -510,11 +511,26 @@ fn get_instance_status(
     runtime::runtime_status(&state, &id)
 }
 
+fn resolve_data_dir(app: &tauri::App) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let portable = env::var("NEKODROID_PORTABLE")
+        .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
+        .unwrap_or(false);
+
+    if portable {
+        let exe = env::current_exe()?;
+        let base = exe.parent()
+            .ok_or_else(|| std::io::Error::other("Unable to determine executable directory"))?;
+        return Ok(base.join("NekoDroidData"));
+    }
+
+    Ok(app.path().app_data_dir()?)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            let data_dir = app.path().app_data_dir()?;
+            let data_dir = resolve_data_dir(app)?;
             let runtime = RuntimeState::new(data_dir).map_err(std::io::Error::other)?;
 
             match settings::load_app(&runtime.data_dir) {
