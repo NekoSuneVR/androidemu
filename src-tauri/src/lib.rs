@@ -172,6 +172,33 @@ fn adb_kernel_log(port: u16, lines: u32) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_input_tap(port: u16, x: i32, y: i32) -> Result<AdbResult, String> {
+    adb::input_tap(port, x, y)
+}
+
+#[tauri::command]
+fn adb_input_swipe(
+    port: u16,
+    x1: i32,
+    y1: i32,
+    x2: i32,
+    y2: i32,
+    duration_ms: u32,
+) -> Result<AdbResult, String> {
+    adb::input_swipe(port, x1, y1, x2, y2, duration_ms)
+}
+
+#[tauri::command]
+fn adb_input_keyevent(port: u16, keycode: String) -> Result<AdbResult, String> {
+    adb::input_keyevent(port, keycode)
+}
+
+#[tauri::command]
+fn adb_input_text(port: u16, text: String) -> Result<AdbResult, String> {
+    adb::input_text(port, text)
+}
+
+#[tauri::command]
 fn list_device_profiles() -> Vec<DeviceProfile> {
     profiles::builtin_profiles()
 }
@@ -261,6 +288,10 @@ pub fn run() {
             adb_services,
             adb_network_connections,
             adb_kernel_log,
+            adb_input_tap,
+            adb_input_swipe,
+            adb_input_keyevent,
+            adb_input_text,
             create_instance,
             update_instance,
             delete_instance,
