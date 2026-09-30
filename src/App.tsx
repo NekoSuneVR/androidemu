@@ -117,7 +117,10 @@ export default function App() {
     }));
   };
 
-  const runtimeAction = async (id: string, action: "start_instance" | "stop_instance") => {
+  const runtimeAction = async (
+    id: string,
+    action: "start_instance" | "pause_instance" | "resume_instance" | "stop_instance"
+  ) => {
     setBusyId(id);
     try {
       const result = await invoke<RuntimeActionResult>(action, { id });
@@ -243,7 +246,15 @@ export default function App() {
                   {instance.headless ? "Use Window" : "Use Headless"}
                 </button>
                 {instance.status === "running" ? (
-                  <button className="danger" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "stop_instance")}>Stop</button>
+                  <>
+                    <button className="ghost compact" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "pause_instance")}>Pause</button>
+                    <button className="danger" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "stop_instance")}>Stop</button>
+                  </>
+                ) : instance.status === "paused" ? (
+                  <>
+                    <button className="primary compact" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "resume_instance")}>Resume</button>
+                    <button className="danger" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "stop_instance")}>Stop</button>
+                  </>
                 ) : (
                   <button className="primary compact" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "start_instance")}>Start</button>
                 )}
