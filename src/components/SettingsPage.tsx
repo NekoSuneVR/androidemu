@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, DeviceProfile } from "../types";
+import type { AppSettings, DeviceProfile, UpdateCheck } from "../types";
 
 const defaults: AppSettings = {
   defaultAndroidVersion: "16",
@@ -18,6 +18,7 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
   const [settings, setSettings] = useState<AppSettings>(defaults);
   const [status, setStatus] = useState("Settings are stored locally on this PC.");
   const [busy, setBusy] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheck | null>(null);
 
   useEffect(() => {
     invoke<AppSettings>("get_app_settings")
@@ -119,6 +120,25 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
           </div>
 
           <button className="primary" disabled={busy}>{busy ? "Saving..." : "Save Settings"}</button>
+
+          <div className="tool-group">
+            <h4>Updates</h4>
+            <button type="button" className="ghost compact" disabled={busy} onClick={async () => {
+              setBusy(true);
+              try {
+                const info = await invoke<UpdateCheck>("check_for_updates");
+                setUpdateInfo(info);
+                setStatus(info.updateAvailable
+                  ? `NekoDroid ${info.latestVersion} is available (current ${info.currentVersion}).`
+                  : `NekoDroid ${info.currentVersion} is up to date.`);
+              } catch (error) {
+                setStatus(String(error));
+              } finally {
+                setBusy(false);
+              }
+            }}>Check GitHub Releases</button>
+            {updateInfo && <small className="muted">Current {updateInfo.currentVersion} · Latest {updateInfo.latestVersion}</small>}
+          </div>
 
           <div className="warning-box">
             ADB, QMP, and the Automation API are designed to stay localhost-only by default. Do not expose ADB, QMP, or the Automation API directly to the internet or an untrusted LAN. Use authenticated remote-access features instead.
