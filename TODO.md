@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **175/643 tasks complete (27.2%)**
+> Progress: **184/643 tasks complete (28.6%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -799,18 +799,18 @@ skills/
 
 # Phase 40 - First-Run Wizard
 
-- [ ] Detect CPU
-- [ ] Detect VT-x/AMD-V
+- [x] Detect CPU
+- [x] Detect VT-x/AMD-V
 - [x] Detect Hyper-V/WHPX
 - [x] Detect KVM
-- [ ] Detect GPU
-- [ ] Detect Vulkan
-- [ ] Detect hardware codecs
-- [ ] Recommend RAM allocation
-- [ ] Recommend CPU allocation
+- [x] Detect GPU
+- [x] Detect Vulkan
+- [x] Detect hardware codecs
+- [x] Recommend RAM allocation
+- [x] Recommend CPU allocation
 - [ ] Recommend renderer
-- [ ] Recommend Android version
-- [ ] Create gaming profile
+- [x] Recommend Android version
+- [x] Create gaming profile
 
 ---
 
