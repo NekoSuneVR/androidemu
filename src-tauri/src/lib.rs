@@ -20,7 +20,7 @@ use settings::{AiSettings, AppSettings};
 use snapshots::SnapshotInfo;
 use media::{FfmpegInfo, MediaJobRequest, MediaResult};
 use first_run::SystemReadiness;
-use ai::AiChatResult;
+use ai::{AiAction, AiChatResult};
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 
@@ -500,6 +500,15 @@ fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, Strin
 }
 
 #[tauri::command]
+fn ai_execute_action(
+    state: State<'_, RuntimeState>,
+    port: u16,
+    action: AiAction,
+) -> Result<AdbResult, String> {
+    ai::execute_action(&state.data_dir, port, action)
+}
+
+#[tauri::command]
 fn ai_chat(
     state: State<'_, RuntimeState>,
     prompt: String,
@@ -704,6 +713,7 @@ pub fn run() {
             run_media_batch,
             get_app_settings,
             save_app_settings,
+            ai_execute_action,
             ai_chat,
             get_ai_logs,
             clear_ai_logs,
