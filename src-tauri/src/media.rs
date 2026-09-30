@@ -17,6 +17,20 @@ pub struct FfmpegInfo {
     pub hardware_decoders: Vec<String>,
 }
 
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaJobRequest {
+    pub input: String,
+    pub output: String,
+    pub operation: String,
+    pub video_codec: String,
+    pub audio_codec: String,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+    pub fps: Option<u32>,
+    pub hardware_decode: bool,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaResult {
@@ -220,4 +234,35 @@ fn find_in_path(name: &str) -> Option<PathBuf> {
             .map(|dir| dir.join(name))
             .find(|candidate| candidate.is_file())
     })
+}
+
+
+pub fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, String> {
+    if jobs.is_empty() {
+        return Err("Media batch cannot be empty".into());
+    }
+    if jobs.len() > 100 {
+        return Err("Media batch is limited to 100 jobs".into());
+    }
+
+    let mut results = Vec::with_capacity(jobs.len());
+    for job in jobs {
+        let result = run_media_job(
+            job.input,
+            job.output,
+            job.operation,
+            job.video_codec,
+            job.audio_codec,
+            job.width,
+            job.height,
+            job.fps,
+            job.hardware_decode,
+        )?;
+        let failed = !result.success;
+        results.push(result);
+        if failed {
+            break;
+        }
+    }
+    Ok(results)
 }
