@@ -1,48 +1,85 @@
 mod models;
+mod runtime;
+mod storage;
 
-use models::{AndroidInstance, HostCapabilities};
+use models::{AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult};
+use runtime::RuntimeState;
+use tauri::{Manager, State};
 
 #[tauri::command]
-fn list_instances() -> Vec<AndroidInstance> {
-    // Persistent instance storage lands next. Returning an empty list is intentional:
-    // the UI can already distinguish "backend online" from "instance exists".
-    Vec::new()
+fn list_instances(state: State<'_, RuntimeState>) -> Result<Vec<AndroidInstance>, String> {
+    runtime::refresh_processes(&state)?;
+    storage::load_instances(&state.data_dir)
+}
+
+#[tauri::command]
+fn create_instance(
+    state: State<'_, RuntimeState>,
+    request: CreateInstanceRequest,
+) -> Result<AndroidInstance, String> {
+    storage::create_instance(&state.data_dir, request)
+}
+
+#[tauri::command]
+fn delete_instance(state: State<'_, RuntimeState>, id: String) -> Result<(), String> {
+    let running = state
+        .processes
+        .lock()
+        .map_err(|_| "Runtime process lock poisoned")?
+        .contains_key(&id);
+
+    if running {
+        return Err("Stop the instance before deleting it".into());
+    }
+
+    storage::delete_instance(&state.data_dir, &id)
 }
 
 #[tauri::command]
 fn get_host_capabilities() -> HostCapabilities {
-    let os = std::env::consts::OS.to_string();
-    let arch = std::env::consts::ARCH.to_string();
+    runtime::detect_host()
+}
 
-    let (accelerator, virtualization_note) = match std::env::consts::OS {
-        "windows" => (
-            "WHPX / Hyper-V".to_string(),
-            "Runtime probe not implemented yet".to_string(),
-        ),
-        "linux" => (
-            "KVM".to_string(),
-            "Runtime probe not implemented yet".to_string(),
-        ),
-        other => (
-            "Software fallback".to_string(),
-            format!("No native accelerator selected for {other}"),
-        ),
-    };
+#[tauri::command]
+fn start_instance(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<RuntimeActionResult, String> {
+    runtime::start_instance(&state, &id)
+}
 
-    HostCapabilities {
-        os,
-        arch,
-        accelerator,
-        virtualization_note,
-    }
+#[tauri::command]
+fn stop_instance(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<RuntimeActionResult, String> {
+    runtime::stop_instance(&state, &id)
+}
+
+#[tauri::command]
+fn get_instance_status(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<AndroidInstance, String> {
+    runtime::runtime_status(&state, &id)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            let data_dir = app.path().app_data_dir()?;
+            app.manage(RuntimeState::new(data_dir).map_err(std::io::Error::other)?);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             list_instances,
-            get_host_capabilities
+            create_instance,
+            delete_instance,
+            get_host_capabilities,
+            start_instance,
+            stop_instance,
+            get_instance_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running NekoDroid");
