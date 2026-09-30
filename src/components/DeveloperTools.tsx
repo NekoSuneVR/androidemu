@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 import type { AdbInfo, AdbResult, AndroidInstance, RuntimeLogs } from "../types";
 
 type Props = {
@@ -77,6 +78,20 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   });
+  const selectApk = async () => {
+    try {
+      const selectedPath = await open({
+        multiple: false,
+        directory: false,
+        title: "Select APK",
+        filters: [{ name: "Android Package", extensions: ["apk"] }]
+      });
+      if (selectedPath) setApkPath(selectedPath);
+    } catch (error) {
+      setOutput(String(error));
+    }
+  };
+
   const shell = (event: FormEvent) => {
     event.preventDefault();
     run("adb_shell", { command });
@@ -146,7 +161,10 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
 
               <div className="tool-group">
                 <label>APK path<input placeholder="C:\\Downloads\\game.apk" value={apkPath} onChange={e => setApkPath(e.target.value)} /></label>
-                <button className="ghost compact" disabled={busy || !apkPath} onClick={() => run("adb_install", { apkPath })}>Install APK</button>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy} onClick={selectApk}>Select APK from PC</button>
+                  <button className="ghost compact" disabled={busy || !apkPath} onClick={() => run("adb_install", { apkPath })}>Install APK</button>
+                </div>
               </div>
 
               <div className="tool-group">
