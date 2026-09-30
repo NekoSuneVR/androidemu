@@ -10,6 +10,7 @@ export interface AndroidInstance {
   ramMb: number;
   adbPort: number;
   adbEnabled: boolean;
+  headless: boolean;
   rootMode: "standard" | "developer" | "adb-root" | "full-root";
   imagePath?: string | null;
   processId?: number | null;
@@ -23,6 +24,7 @@ export interface CreateInstanceRequest {
   ramMb: number;
   adbPort: number;
   adbEnabled: boolean;
+  headless: boolean;
   rootMode: AndroidInstance["rootMode"];
   imagePath?: string | null;
 }
@@ -30,6 +32,7 @@ export interface CreateInstanceRequest {
 export interface UpdateInstanceRequest {
   name: string;
   adbEnabled: boolean;
+  headless: boolean;
 }
 
 export interface QemuInfo {
