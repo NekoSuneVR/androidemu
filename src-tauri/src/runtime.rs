@@ -336,6 +336,7 @@ fn ensure_runtime_overlay(
     }
     .ok_or_else(|| "qemu-img was not found in PATH; it is required to create per-instance writable disks".to_string())?;
 
+    let overlay_path = overlay.to_string_lossy().to_string();
     let output = Command::new(qemu_img)
         .args([
             "create",
@@ -345,7 +346,7 @@ fn ensure_runtime_overlay(
             base_format,
             "-b",
             base_image,
-            overlay.to_string_lossy().as_ref(),
+            overlay_path.as_str(),
         ])
         .output()
         .map_err(|e| format!("Failed to execute qemu-img: {e}"))?;
@@ -357,7 +358,7 @@ fn ensure_runtime_overlay(
         ));
     }
 
-    Ok(overlay.to_string_lossy().to_string())
+    Ok(overlay_path)
 }
 
 pub fn build_qemu_args(
