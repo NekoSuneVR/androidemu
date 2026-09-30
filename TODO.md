@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **97/643 tasks complete (15.1%)**
+> Progress: **102/643 tasks complete (15.9%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -280,7 +280,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Screen recording
 - [x] Device information
 - [ ] Package manager GUI
-- [ ] Process viewer
+- [x] Process viewer
 - [x] Logcat viewer
 
 ---
@@ -690,15 +690,15 @@ skills/
 - [ ] Root terminal
 - [x] Logcat
 - [ ] Kernel log
-- [ ] Package viewer
+- [x] Package viewer
 - [ ] Activity viewer
 - [ ] Process viewer
 - [ ] Service viewer
 - [ ] Network connections
 - [x] Port forwarding
-- [ ] Android property viewer
-- [ ] Build property viewer
-- [ ] Storage inspector
+- [x] Android property viewer
+- [x] Build property viewer
+- [x] Storage inspector
 - [ ] SurfaceFlinger information
 
 ---
