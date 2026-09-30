@@ -9,6 +9,7 @@ mod snapshots;
 mod media;
 mod first_run;
 mod automation_api;
+mod ai;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -19,6 +20,7 @@ use settings::{AiSettings, AppSettings};
 use snapshots::SnapshotInfo;
 use media::{FfmpegInfo, MediaJobRequest, MediaResult};
 use first_run::SystemReadiness;
+use ai::AiChatResult;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 
@@ -498,6 +500,24 @@ fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, Strin
 }
 
 #[tauri::command]
+fn ai_chat(
+    state: State<'_, RuntimeState>,
+    prompt: String,
+) -> Result<AiChatResult, String> {
+    ai::chat(&state.data_dir, prompt)
+}
+
+#[tauri::command]
+fn get_ai_logs(state: State<'_, RuntimeState>) -> Result<String, String> {
+    ai::read_logs(&state.data_dir)
+}
+
+#[tauri::command]
+fn clear_ai_logs(state: State<'_, RuntimeState>) -> Result<(), String> {
+    ai::clear_logs(&state.data_dir)
+}
+
+#[tauri::command]
 fn get_ai_settings(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
     settings::load(&state.data_dir)
 }
@@ -684,6 +704,9 @@ pub fn run() {
             run_media_batch,
             get_app_settings,
             save_app_settings,
+            ai_chat,
+            get_ai_logs,
+            clear_ai_logs,
             get_ai_settings,
             save_ai_settings,
             ai_emergency_stop,
