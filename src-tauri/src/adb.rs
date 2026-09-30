@@ -253,6 +253,16 @@ pub fn reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
     run_for_device(port, &args)
 }
 
+pub fn set_lan_adb(port:u16,enabled:bool,lan_port:u16)->Result<AdbResult,String>{
+    if lan_port==0{return Err("LAN ADB port must be 1..65535".into());}
+    let command=if enabled{
+        format!("setprop service.adb.tcp.port {lan_port}; stop adbd; start adbd; echo 'ADB LAN enabled on port {lan_port}'; ip -4 addr show 2>/dev/null | grep -E 'inet '")
+    }else{
+        "setprop service.adb.tcp.port -1; stop adbd; start adbd; echo 'ADB LAN disabled'".into()
+    };
+    root_shell(port,command)
+}
+
 pub fn clipboard_set(port: u16, text: String) -> Result<AdbResult, String> {
     if text.len() > 100_000 { return Err("Clipboard text is limited to 100,000 characters".into()); }
     run_for_device(port, &["shell".into(), "cmd".into(), "clipboard".into(), "set".into(), text])
