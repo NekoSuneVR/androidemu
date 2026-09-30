@@ -1,5 +1,6 @@
 use crate::{adb,media::MediaResult};
-use std::{env,path::Path,process::Command};
+use base64::Engine as _;
+use std::{env,fs,path::Path,process::Command,time::{SystemTime,UNIX_EPOCH}};
 
 fn ffmpeg()->Result<String,String>{
     let name=if cfg!(windows){"ffmpeg.exe"}else{"ffmpeg"};
@@ -38,4 +39,14 @@ pub fn virtual_camera(input:String,device:String)->Result<MediaResult,String>{
     let exe=ffmpeg()?;
     let out=Command::new(exe).args(["-hide_banner","-re","-i",&input,"-vf","format=yuv420p","-f","v4l2",&device]).output().map_err(|e|e.to_string())?;
     Ok(MediaResult{success:out.status.success(),exit_code:out.status.code(),stdout:String::from_utf8_lossy(&out.stdout).trim().to_string(),stderr:String::from_utf8_lossy(&out.stderr).trim().to_string(),output_path:device})
+}
+
+pub fn android_audio_capture_base64(port:u16,seconds:u32)->Result<String,String>{
+    let stamp=SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis();
+    let path=env::temp_dir().join(format!("nekodroid-audio-{stamp}.wav"));
+    let result=android_audio_capture(port,path.to_string_lossy().to_string(),seconds)?;
+    if !result.success{return Err(result.stderr);}
+    let bytes=fs::read(&path).map_err(|e|e.to_string())?;
+    let _=fs::remove_file(path);
+    Ok(base64::engine::general_purpose::STANDARD.encode(bytes))
 }
