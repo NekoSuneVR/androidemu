@@ -141,6 +141,10 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_properties", {})}>Properties</button>
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_build_properties", {})}>Build props</button>
                   <button className="ghost compact" disabled={busy} onClick={() => run("adb_storage_info", {})}>Storage</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_activities", {})}>Activities</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_services", {})}>Services</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_network_connections", {})}>Network</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_kernel_log", { lines: logcatLines })}>Kernel log</button>
                 </div>
               </div>
             </>
