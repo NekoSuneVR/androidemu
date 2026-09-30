@@ -154,6 +154,43 @@ pub fn pull(port: u16, source: String, destination: String) -> Result<AdbResult,
     run_for_device(port, &["pull".into(), source, destination])
 }
 
+pub fn forward(port: u16, local: String, remote: String) -> Result<AdbResult, String> {
+    validate_socket_spec(&local, "Local forward")?;
+    validate_socket_spec(&remote, "Remote forward")?;
+    run_for_device(port, &["forward".into(), local, remote])
+}
+
+pub fn reverse(port: u16, remote: String, local: String) -> Result<AdbResult, String> {
+    validate_socket_spec(&remote, "Remote reverse")?;
+    validate_socket_spec(&local, "Local reverse")?;
+    run_for_device(port, &["reverse".into(), remote, local])
+}
+
+pub fn logcat(port: u16, lines: u32) -> Result<AdbResult, String> {
+    let lines = lines.clamp(1, 5000);
+    run_for_device(port, &[
+        "logcat".into(),
+        "-d".into(),
+        "-t".into(),
+        lines.to_string(),
+    ])
+}
+
+fn validate_socket_spec(value: &str, label: &str) -> Result<(), String> {
+    let value = value.trim();
+    if value.is_empty() {
+        return Err(format!("{label} cannot be empty"));
+    }
+    let valid = value.starts_with("tcp:")
+        || value.starts_with("localabstract:")
+        || value.starts_with("localfilesystem:")
+        || value.starts_with("localreserved:");
+    if !valid {
+        return Err(format!("{label} must use tcp: or a local* ADB socket spec"));
+    }
+    Ok(())
+}
+
 fn run_for_device(port: u16, args: &[String]) -> Result<AdbResult, String> {
     let mut full = vec!["-s".into(), format!("127.0.0.1:{port}")];
     full.extend_from_slice(args);
