@@ -1,12 +1,13 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { FfmpegInfo, MediaJobRequest, MediaResult } from "../types";
 
 export default function MediaTools() {
   const [info, setInfo] = useState<FfmpegInfo | null>(null);
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  const [operation, setOperation] = useState<"video" | "audio" | "extract-audio" | "remux">("video");
+  const [operation, setOperation] = useState<"video" | "compress" | "audio" | "extract-audio" | "remux">("video");
   const [videoCodec, setVideoCodec] = useState("libx264");
   const [audioCodec, setAudioCodec] = useState("aac");
   const [width, setWidth] = useState(1920);
@@ -25,6 +26,17 @@ export default function MediaTools() {
       .catch(error => setResult(String(error)));
   }, []);
 
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    getCurrentWindow().onDragDropEvent(event => {
+      if (event.payload.type === "drop" && event.payload.paths.length > 0) {
+        setInput(event.payload.paths[0]);
+        setResult(`Dropped input: ${event.payload.paths[0]}`);
+      }
+    }).then(fn => { unlisten = fn; }).catch(error => setResult(String(error)));
+    return () => unlisten?.();
+  }, []);
+
   const run = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
@@ -35,9 +47,9 @@ export default function MediaTools() {
         operation,
         videoCodec,
         audioCodec,
-        width: useResize && operation === "video" ? width : null,
-        height: useResize && operation === "video" ? height : null,
-        fps: useFps && operation === "video" ? fps : null,
+        width: useResize && (operation === "video" || operation === "compress") ? width : null,
+        height: useResize && (operation === "video" || operation === "compress") ? height : null,
+        fps: useFps && (operation === "video" || operation === "compress") ? fps : null,
         hardwareDecode
       });
 
@@ -76,9 +88,9 @@ export default function MediaTools() {
         operation,
         videoCodec,
         audioCodec,
-        width: useResize && operation === "video" ? width : null,
-        height: useResize && operation === "video" ? height : null,
-        fps: useFps && operation === "video" ? fps : null,
+        width: useResize && (operation === "video" || operation === "compress") ? width : null,
+        height: useResize && (operation === "video" || operation === "compress") ? height : null,
+        fps: useFps && (operation === "video" || operation === "compress") ? fps : null,
         hardwareDecode
       };
     });
@@ -117,6 +129,7 @@ export default function MediaTools() {
           <label>Operation
             <select value={operation} onChange={e => setOperation(e.target.value as typeof operation)}>
               <option value="video">Video convert</option>
+              <option value="compress">Video compress</option>
               <option value="audio">Audio convert</option>
               <option value="extract-audio">Extract audio</option>
               <option value="remux">Remux without re-encoding</option>
@@ -125,7 +138,7 @@ export default function MediaTools() {
 
           {operation !== "remux" && (
             <>
-              {operation === "video" && (
+              {(operation === "video" || operation === "compress") && (
                 <label>Video codec
                   <input list="video-codecs" value={videoCodec} onChange={e => setVideoCodec(e.target.value)} />
                   <datalist id="video-codecs">
@@ -155,7 +168,7 @@ export default function MediaTools() {
             </>
           )}
 
-          {operation === "video" && (
+          {(operation === "video" || operation === "compress") && (
             <>
               <label className="checkbox-line">
                 <input type="checkbox" checked={hardwareDecode} onChange={e => setHardwareDecode(e.target.checked)} />
