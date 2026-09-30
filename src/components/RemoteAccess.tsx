@@ -13,17 +13,21 @@ type Invite = {
   inviteCode: string;
   inviteUrl: string;
   expiresAt: string;
+  nodeUrl: string;
 };
 
 type ViewerRequest = {
   viewerId: string;
   userAgent?: string;
   approved?: boolean;
+  trusted?: boolean;
 };
 
 type RemoteSettings = {
   nodeUrl: string;
   nodeSecret: string;
+  fallbackNodeUrls: string;
+  unattendedTrusted: boolean;
   instanceId: string;
   control: boolean;
   clipboard: boolean;
@@ -37,6 +41,8 @@ type RemoteSettings = {
 const defaultSettings: RemoteSettings = {
   nodeUrl: "http://localhost:8096",
   nodeSecret: "",
+  fallbackNodeUrls: "",
+  unattendedTrusted: false,
   instanceId: "",
   control: true,
   clipboard: false,
@@ -83,34 +89,33 @@ export default function RemoteAccess({ instances, profiles }: Props) {
 
     setBusy(true);
     try {
-      const node = settings.nodeUrl.replace(/\/$/, "");
-      const response = await fetch(`${node}/api/sessions`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${settings.nodeSecret}`
-        },
-        body: JSON.stringify({
-          name: selected.name,
-          instanceId: selected.id,
-          control: settings.control,
-          clipboard: settings.clipboard,
-          fileTransfer: settings.fileTransfer,
-          gamepad: settings.gamepad,
-          adaptiveBitrate: settings.adaptiveBitrate,
-          fpsPreset: settings.fpsPreset,
-          ttlSeconds: settings.ttlSeconds
-        })
-      });
-
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || `Remote node returned ${response.status}`);
-
-      const created = body as Invite;
-      setInvite(created);
-      setViewers([]);
-      setStatus("Invite created. Waiting for viewers.");
-      connectHostSocket(node, created);
+      const nodes=[settings.nodeUrl,...settings.fallbackNodeUrls.split(/\r?\n|,/).map(v=>v.trim()).filter(Boolean)]
+        .map(v=>v.replace(/\/$/,""))
+        .filter((v,i,a)=>a.indexOf(v)===i);
+      let lastError="";
+      for (const node of nodes) {
+        try {
+          const response = await fetch(`${node}/api/sessions`, {
+            method: "POST",
+            headers: {"content-type":"application/json",authorization:`Bearer ${settings.nodeSecret}`},
+            body: JSON.stringify({
+              name:selected.name, instanceId:selected.id, control:settings.control,
+              clipboard:settings.clipboard, fileTransfer:settings.fileTransfer, gamepad:settings.gamepad,
+              adaptiveBitrate:settings.adaptiveBitrate, fpsPreset:settings.fpsPreset,
+              unattendedTrusted:settings.unattendedTrusted, ttlSeconds:settings.ttlSeconds
+            })
+          });
+          const body=await response.json();
+          if(!response.ok) throw new Error(body.error||`Remote node returned ${response.status}`);
+          const created={...(body as Omit<Invite,"nodeUrl">),nodeUrl:node};
+          setInvite(created);setViewers([]);setStatus(`Invite created on ${node}. Waiting for viewers.`);
+          connectHostSocket(node,created);
+          return;
+        } catch(error) {
+          lastError=String(error);
+        }
+      }
+      throw new Error(`All signalling nodes failed. ${lastError}`);
     } catch (error) {
       setStatus(String(error));
     } finally {
@@ -151,7 +156,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
     if (message.type === "viewer-request") {
       setViewers(current => current.some(v => v.viewerId === message.viewerId)
         ? current
-        : [...current, { viewerId: message.viewerId, userAgent: message.userAgent }]);
+        : [...current, { viewerId: message.viewerId, userAgent: message.userAgent, trusted:Boolean(message.trusted), approved:Boolean(message.approved) }]);
       return;
     }
 
@@ -228,7 +233,8 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       }
 
       const stream = await ensureCapture();
-      const configResponse = await fetch(`${settings.nodeUrl.replace(/\/$/, "")}/api/config`, {
+      const activeNode=invite?.nodeUrl ?? settings.nodeUrl.replace(/\/$/, "");
+      const configResponse = await fetch(`${activeNode}/api/config`, {
         headers: { authorization: `Bearer ${settings.nodeSecret}` }
       });
       const config = configResponse.ok ? await configResponse.json() : { iceServers: [] };
@@ -409,7 +415,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
 
     if (revokeOnServer && current) {
       try {
-        await fetch(`${settings.nodeUrl.replace(/\/$/, "")}/api/sessions/${encodeURIComponent(current.sessionId)}`, {
+        await fetch(`${current.nodeUrl}/api/sessions/${encodeURIComponent(current.sessionId)}`, {
           method: "DELETE",
           headers: { authorization: `Bearer ${current.hostToken}` }
         });
@@ -431,6 +437,9 @@ export default function RemoteAccess({ instances, profiles }: Props) {
         <div className="tool-column">
           <label>Remote node URL
             <input value={settings.nodeUrl} disabled={Boolean(invite)} onChange={e => setSettings({...settings,nodeUrl:e.target.value})} />
+          </label>
+          <label>Fallback signalling node URLs
+            <textarea value={settings.fallbackNodeUrls} disabled={Boolean(invite)} placeholder={"https://remote-eu.example.com\nhttps://remote-us.example.com"} onChange={e=>setSettings({...settings,fallbackNodeUrls:e.target.value})}/>
           </label>
           <label>Node secret
             <input type="password" value={settings.nodeSecret} disabled={Boolean(invite)} onChange={e => setSettings({...settings,nodeSecret:e.target.value})} />
@@ -456,6 +465,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
             <label><input type="checkbox" checked={settings.clipboard} disabled={Boolean(invite)} onChange={e => setSettings({...settings,clipboard:e.target.checked})} /> Clipboard (future)</label>
             <label><input type="checkbox" checked={settings.fileTransfer} disabled={Boolean(invite)} onChange={e => setSettings({...settings,fileTransfer:e.target.checked})} /> File transfer</label>
             <label><input type="checkbox" checked={settings.gamepad} disabled={Boolean(invite)} onChange={e => setSettings({...settings,gamepad:e.target.checked})} /> Gamepad forwarding</label>
+            <label><input type="checkbox" checked={settings.unattendedTrusted} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,unattendedTrusted:e.target.checked})} /> Allow trusted devices to reconnect without manual approval</label>
             <label><input type="checkbox" checked={settings.adaptiveBitrate} disabled={Boolean(invite)} onChange={e => setSettings({...settings,adaptiveBitrate:e.target.checked})} /> Adaptive bitrate</label>
           </div>
 
@@ -472,7 +482,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
           )}
 
           <div className="warning-box">
-            Remote viewers never gain access silently. Each viewer must use an unexpired invite and must be approved from this NekoDroid window.
+            Remote viewers require an invite. Manual approval remains the default; optional unattended access only auto-approves devices you explicitly trusted before.
           </div>
         </div>
 
@@ -488,13 +498,14 @@ export default function RemoteAccess({ instances, profiles }: Props) {
               {viewers.length === 0 ? <p className="muted">Nobody is waiting yet.</p> : viewers.map(viewer => (
                 <div className="viewer-request" key={viewer.viewerId}>
                   <div>
-                    <strong>{viewer.approved ? "Connected viewer" : "Approval requested"}</strong>
+                    <strong>{viewer.approved ? "Connected viewer" : "Approval requested"}{viewer.trusted ? " · trusted" : ""}</strong>
                     <small>{viewer.userAgent || viewer.viewerId}</small>
                   </div>
                   <div className="button-row">
                     {!viewer.approved ? (
                       <>
                         <button className="primary compact" onClick={() => approveViewer(viewer.viewerId)}>Approve</button>
+                        <button className="ghost compact" onClick={() => {socketRef.current?.send(JSON.stringify({type:"viewer-trust",viewerId:viewer.viewerId}));setViewers(current=>current.map(v=>v.viewerId===viewer.viewerId?{...v,trusted:true}:v));}}>Trust device</button>
                         <button className="ghost compact" onClick={() => denyViewer(viewer.viewerId)}>Deny</button>
                       </>
                     ) : (
