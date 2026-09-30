@@ -161,6 +161,7 @@ export interface AppSettings {
   apiEnabled: boolean;
   apiPort: number;
   apiToken: string;
+  firstRunCompleted: boolean;
 }
 
 
@@ -174,6 +175,7 @@ export interface SystemReadiness {
   vulkanAvailable: boolean;
   vulkanDetail: string;
   hardwareEncoders: string[];
+  freeDiskMb?: number | null;
   qemuFound: boolean;
   adbFound: boolean;
   ffmpegFound: boolean;
