@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **235/643 tasks complete (36.5%)**
+> Progress: **236/643 tasks complete (36.7%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -74,7 +74,7 @@ This file tracks the planned implementation of NekoDroid.
 
 - [x] Design image manifest format
 - [ ] Add Android image downloader
-- [ ] Add checksum verification
+- [x] Add checksum verification
 - [x] Add image installation
 - [x] Add image removal
 - [ ] Add image update handling
