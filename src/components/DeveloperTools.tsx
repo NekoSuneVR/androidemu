@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { AdbInfo, AdbResult, AndroidInstance, RuntimeLogs } from "../types";
 
@@ -13,6 +13,8 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
   const [apkPath, setApkPath] = useState("");
   const [packageName, setPackageName] = useState("");
   const [screenshotPath, setScreenshotPath] = useState("nekodroid-screenshot.png");
+  const [recordingPath, setRecordingPath] = useState("nekodroid-recording.mp4");
+  const [recordingSeconds, setRecordingSeconds] = useState(15);
   const [pushSource, setPushSource] = useState("");
   const [pushDestination, setPushDestination] = useState("/sdcard/Download/");
   const [pullSource, setPullSource] = useState("/sdcard/Download/");
@@ -34,6 +36,16 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
     () => instances.find(instance => instance.id === selectedId) ?? instances[0],
     [instances, selectedId]
   );
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "F9" || !selected || busy || !screenshotPath) return;
+      event.preventDefault();
+      run("adb_screenshot", { destination: screenshotPath });
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
 
   const run = async (name: string, args: Record<string, unknown>) => {
     if (!selected) return;
@@ -126,7 +138,17 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
 
               <div className="tool-group">
                 <label>Screenshot host path<input value={screenshotPath} onChange={e => setScreenshotPath(e.target.value)} /></label>
-                <button className="ghost compact" disabled={busy || !screenshotPath} onClick={() => run("adb_screenshot", { destination: screenshotPath })}>Save screenshot</button>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy || !screenshotPath} onClick={() => run("adb_screenshot", { destination: screenshotPath })}>Save screenshot</button>
+                  <span className="pill">F9 hotkey</span>
+                </div>
+              </div>
+
+              <div className="tool-group">
+                <h4>Screen recording</h4>
+                <label>Recording host path<input value={recordingPath} onChange={e => setRecordingPath(e.target.value)} /></label>
+                <label>Seconds<input type="number" min="1" max="180" value={recordingSeconds} onChange={e => setRecordingSeconds(Number(e.target.value))} /></label>
+                <button className="ghost compact" disabled={busy || !recordingPath} onClick={() => run("adb_screen_record", { destination: recordingPath, seconds: recordingSeconds })}>Record Android screen</button>
               </div>
 
               <div className="tool-group">
