@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { AndroidImageManifest, DefaultImageSettings, InstalledImage } from "../types";
 
@@ -41,7 +41,7 @@ export default function ImageManager({ images, onChanged }: Props) {
   const [defaultImages,setDefaultImages]=useState<DefaultImageSettings>({url:"",sha256:null,rootDeveloperUrl:null,rootDeveloperSha256:null});
   const [gsi,setGsi]=useState({system:"",kernel:"",initrd:"",vendor:"",androidVersion:"16",rootCapable:false});
 
-  useState(()=>{invoke<DefaultImageSettings>("get_default_image_settings").then(setDefaultImages).catch(()=>{});});
+  useEffect(()=>{invoke<DefaultImageSettings>("get_default_image_settings").then(setDefaultImages).catch(()=>{});},[]);
   const updateImage = async (id: string, name: string) => {
     if (!window.confirm(`Update ${name} from its saved source URL? The downloaded image is verified before replacing the installed disk.`)) return;
     setBusy(true);
