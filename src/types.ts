@@ -213,6 +213,7 @@ export interface SystemReadiness {
   hardwareEncoders: string[];
   freeDiskMb?: number | null;
   qemuFound: boolean;
+  runtimeName: string;
   adbFound: boolean;
   ffmpegFound: boolean;
   recommendedCpuCores: number;
