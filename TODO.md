@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **269/643 tasks complete (41.8%)**
+> Progress: **272/643 tasks complete (42.3%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -22,7 +22,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Set up release builds
 - [x] Create Windows build pipeline
 - [x] Create Android APK build pipeline
-- [ ] Create Linux build pipeline
+- [x] Create Linux build pipeline
 - [ ] Decide minimum Windows version
 - [ ] Decide minimum Linux requirements
 - [ ] Create project branding/icons
@@ -783,8 +783,8 @@ skills/
 
 # Phase 39 - Installer
 
-- [ ] Windows installer
-- [ ] Linux installer
+- [x] Windows installer
+- [x] Linux installer
 - [x] Dependency checks
 - [x] Virtualization capability check
 - [x] GPU capability check
