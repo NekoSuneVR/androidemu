@@ -37,16 +37,6 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
     [instances, selectedId]
   );
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "F9" || !selected || busy || !screenshotPath) return;
-      event.preventDefault();
-      run("adb_screenshot", { destination: screenshotPath });
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  });
-
   const run = async (name: string, args: Record<string, unknown>) => {
     if (!selected) return;
     setBusy(true);
@@ -63,6 +53,16 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "F9" || !selected || busy || !screenshotPath) return;
+      event.preventDefault();
+      run("adb_screenshot", { destination: screenshotPath });
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
 
   const shell = (event: FormEvent) => {
     event.preventDefault();
