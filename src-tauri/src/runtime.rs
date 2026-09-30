@@ -5,6 +5,7 @@ use crate::{
     graphics,
     adb,
 };
+use base64::Engine as _;
 use std::{
     collections::HashMap,
     env,
@@ -432,6 +433,16 @@ pub fn capture_framebuffer(state:&RuntimeState,id:&str,destination:String)->Resu
     Ok(path.to_string_lossy().to_string())
 }
 
+
+
+pub fn capture_framebuffer_base64(state:&RuntimeState,id:&str)->Result<String,String>{
+    let stamp=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis();
+    let temp=env::temp_dir().join(format!("nekodroid-webrtc-{stamp}.ppm"));
+    capture_framebuffer(state,id,temp.to_string_lossy().to_string())?;
+    let bytes=fs::read(&temp).map_err(|e|e.to_string())?;
+    let _=fs::remove_file(&temp);
+    Ok(base64::engine::general_purpose::STANDARD.encode(bytes))
+}
 
 pub fn record_framebuffer(state:&RuntimeState,id:&str,destination:String,seconds:u32,fps:u32)->Result<String,String>{
     let seconds=seconds.clamp(1,120);
