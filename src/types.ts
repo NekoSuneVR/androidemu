@@ -231,7 +231,7 @@ export interface AndroidFileEntry {
 export interface MediaJobRequest {
   input: string;
   output: string;
-  operation: "video" | "audio" | "extract-audio" | "remux";
+  operation: "video" | "compress" | "audio" | "extract-audio" | "remux";
   videoCodec: string;
   audioCodec: string;
   width?: number | null;
