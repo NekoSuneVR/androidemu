@@ -130,6 +130,10 @@ export interface AiSettings {
   model: string;
   visionModel: string;
   detectorModel: string;
+  controlMode: "manual" | "assistant" | "accessibility" | "full-automation";
+  helperMode: "inventory" | "quest" | "ui" | "repetitive-task";
+  enforcePackageAllowlist: boolean;
+  allowedPackages: string[];
   maxActionsPerMinute: number;
   maxCaptureFps: number;
 }
