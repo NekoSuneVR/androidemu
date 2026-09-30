@@ -59,3 +59,20 @@ pub struct RuntimeActionResult {
     pub message: String,
     pub process_id: Option<u32>,
 }
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdbInfo {
+    pub found: bool,
+    pub executable: Option<String>,
+    pub version: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdbResult {
+    pub success: bool,
+    pub exit_code: Option<i32>,
+    pub stdout: String,
+    pub stderr: String,
+}
