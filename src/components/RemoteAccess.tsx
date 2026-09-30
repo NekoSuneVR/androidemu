@@ -72,6 +72,8 @@ export default function RemoteAccess({ instances, profiles }: Props) {
   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const pointerState = useRef<Map<string, { x: number; y: number; at: number }>>(new Map());
   const framebufferTimerRef=useRef<number|null>(null);
+  const audioContextRef=useRef<AudioContext|null>(null);
+  const audioPumpStopRef=useRef(false);
 
   const selected = useMemo(
     () => instances.find(instance => instance.id === settings.instanceId) ?? instances[0],
@@ -88,6 +90,8 @@ export default function RemoteAccess({ instances, profiles }: Props) {
     socketRef.current?.close();
     streamRef.current?.getTracks().forEach(track => track.stop());
     if(framebufferTimerRef.current) window.clearInterval(framebufferTimerRef.current);
+    audioPumpStopRef.current=true;
+    audioContextRef.current?.close().catch(()=>{});
     peersRef.current.forEach(peer => peer.close());
   }, []);
 
@@ -232,6 +236,29 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       await refresh();
       framebufferTimerRef.current=window.setInterval(refresh,Math.max(50,Math.round(1000/settings.fpsPreset)));
       const stream=(canvas as HTMLCanvasElement & {captureStream:(fps:number)=>MediaStream}).captureStream(settings.fpsPreset);
+      if(settings.directAndroidAudio){
+        const AudioContextCtor=window.AudioContext || (window as any).webkitAudioContext;
+        const audioContext=new AudioContextCtor();
+        audioContextRef.current=audioContext;
+        const destination=audioContext.createMediaStreamDestination();
+        destination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));
+        audioPumpStopRef.current=false;
+        const pump=async()=>{
+          while(!audioPumpStopRef.current){
+            try{
+              const base64=await invoke<string>("capture_android_audio_base64",{port:selected.adbPort,seconds:1});
+              const raw=atob(base64);const bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+              const buffer=await audioContext.decodeAudioData(bytes.buffer.slice(0));
+              const source=audioContext.createBufferSource();source.buffer=buffer;source.connect(destination);source.start();
+              await new Promise(resolve=>setTimeout(resolve,Math.max(250,buffer.duration*800)));
+            }catch(error){
+              setStatus(`Direct Android audio unavailable: ${String(error)}`);
+              await new Promise(resolve=>setTimeout(resolve,1500));
+            }
+          }
+        };
+        void pump();
+      }
       streamRef.current=stream;
       return stream;
     }
@@ -470,6 +497,8 @@ export default function RemoteAccess({ instances, profiles }: Props) {
     streamRef.current?.getTracks().forEach(track => track.stop());
     streamRef.current = null;
     if(framebufferTimerRef.current){window.clearInterval(framebufferTimerRef.current);framebufferTimerRef.current=null;}
+    audioPumpStopRef.current=true;
+    audioContextRef.current?.close().catch(()=>{});audioContextRef.current=null;
     socketRef.current?.close();
     socketRef.current = null;
 
