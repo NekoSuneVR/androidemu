@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, DeviceProfile, UpdateCheck } from "../types";
+import type { AppSettings, DeviceProfile, PerformanceSettings, UpdateCheck } from "../types";
 
 const defaults: AppSettings = {
   defaultAndroidVersion: "16",
@@ -19,10 +19,14 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
   const [status, setStatus] = useState("Settings are stored locally on this PC.");
   const [busy, setBusy] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateCheck | null>(null);
+  const [performance, setPerformance] = useState<PerformanceSettings | null>(null);
 
   useEffect(() => {
     invoke<AppSettings>("get_app_settings")
       .then(setSettings)
+      .catch(error => setStatus(String(error)));
+    invoke<PerformanceSettings>("get_performance_settings")
+      .then(setPerformance)
       .catch(error => setStatus(String(error)));
   }, []);
 
@@ -139,6 +143,31 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
             }}>Check GitHub Releases</button>
             {updateInfo && <small className="muted">Current {updateInfo.currentVersion} · Latest {updateInfo.latestVersion}</small>}
           </div>
+
+          {performance && <div className="tool-group">
+            <h4>Performance tuning</h4>
+            <label>CPU affinity (Linux taskset syntax)<input value={performance.cpuAffinity} placeholder="0-7" onChange={e=>setPerformance({...performance,cpuAffinity:e.target.value})}/></label>
+            <label className="checkbox-line"><input type="checkbox" checked={performance.hugePages} onChange={e=>setPerformance({...performance,hugePages:e.target.checked})}/>Use Linux huge pages when /dev/hugepages is available</label>
+            <div className="split-fields">
+              <label>I/O mode<select value={performance.ioMode} onChange={e=>setPerformance({...performance,ioMode:e.target.value as PerformanceSettings["ioMode"]})}><option value="native">native</option><option value="threads">threads</option></select></label>
+              <label>Disk cache<select value={performance.diskCache} onChange={e=>setPerformance({...performance,diskCache:e.target.value as PerformanceSettings["diskCache"]})}><option value="none">none</option><option value="writeback">writeback</option><option value="writethrough">writethrough</option><option value="directsync">directsync</option></select></label>
+            </div>
+            <label className="checkbox-line"><input type="checkbox" checked={performance.ramCompression} onChange={e=>setPerformance({...performance,ramCompression:e.target.checked})}/>Prefer host RAM compression when available</label>
+            <label className="checkbox-line"><input type="checkbox" checked={performance.shaderCache} onChange={e=>setPerformance({...performance,shaderCache:e.target.checked})}/>Enable Mesa shader cache</label>
+            <div className="split-fields">
+              <label>Audio latency ms<input type="number" min="10" max="250" value={performance.audioLatencyMs} onChange={e=>setPerformance({...performance,audioLatencyMs:Number(e.target.value)})}/></label>
+              <label>Input latency<select value={performance.inputLatencyMode} onChange={e=>setPerformance({...performance,inputLatencyMode:e.target.value as PerformanceSettings["inputLatencyMode"]})}><option value="balanced">balanced</option><option value="low-latency">low-latency</option></select></label>
+            </div>
+            <label>Frame pacing<select value={performance.framePacing} onChange={e=>setPerformance({...performance,framePacing:e.target.value as PerformanceSettings["framePacing"]})}><option value="balanced">balanced</option><option value="smooth">smooth</option><option value="low-latency">low-latency</option></select></label>
+            <label className="checkbox-line"><input type="checkbox" checked={performance.startupOptimization} onChange={e=>setPerformance({...performance,startupOptimization:e.target.checked})}/>Startup optimization</label>
+            <label className="checkbox-line"><input type="checkbox" checked={performance.minimizeBackgroundServices} onChange={e=>setPerformance({...performance,minimizeBackgroundServices:e.target.checked})}/>Minimize guest background services</label>
+            <div className="permission-grid">
+              <label><input type="checkbox" checked={performance.cpuOverlay} onChange={e=>setPerformance({...performance,cpuOverlay:e.target.checked})}/>CPU overlay</label>
+              <label><input type="checkbox" checked={performance.gpuOverlay} onChange={e=>setPerformance({...performance,gpuOverlay:e.target.checked})}/>GPU overlay</label>
+              <label><input type="checkbox" checked={performance.ramOverlay} onChange={e=>setPerformance({...performance,ramOverlay:e.target.checked})}/>RAM overlay</label>
+            </div>
+            <button type="button" className="ghost compact" onClick={async()=>{try{const saved=await invoke<PerformanceSettings>("save_performance_settings",{settings:performance});setPerformance(saved);setStatus("Performance settings saved; launch-affecting changes apply to new emulator starts.");}catch(error){setStatus(String(error));}}}>Save performance settings</button>
+          </div>}
 
           <div className="warning-box">
             ADB, QMP, and the Automation API are designed to stay localhost-only by default. Do not expose ADB, QMP, or the Automation API directly to the internet or an untrusted LAN. Use authenticated remote-access features instead.
