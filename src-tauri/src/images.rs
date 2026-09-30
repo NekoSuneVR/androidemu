@@ -19,6 +19,8 @@ pub struct AndroidImageManifest {
     pub notes: Option<String>,
     #[serde(default)]
     pub sha256: Option<String>,
+    #[serde(default)]
+    pub source_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -155,11 +157,87 @@ pub fn download_image(
 
         let mut stored_manifest = manifest;
         stored_manifest.disk = file_name.to_string_lossy().to_string();
+        stored_manifest.source_url = Some(url.clone());
         let encoded = serde_json::to_vec_pretty(&stored_manifest).map_err(|e| e.to_string())?;
         fs::write(target_dir.join("manifest.json"), encoded).map_err(|e| e.to_string())?;
 
         Ok(InstalledImage {
             manifest: stored_manifest,
+            directory: target_dir.to_string_lossy().to_string(),
+            disk_path: target_disk.to_string_lossy().to_string(),
+            valid: true,
+            validation_error: None,
+        })
+    })();
+
+    if result.is_err() && temp_path.exists() {
+        let _ = fs::remove_file(&temp_path);
+    }
+    result
+}
+
+pub fn repair_image(data_dir: &Path, id: &str) -> Result<InstalledImage, String> {
+    ensure_layout(data_dir)?;
+    validate_id(id)?;
+    let target_dir = images_dir(data_dir).join(id);
+    let manifest_path = target_dir.join("manifest.json");
+    if !manifest_path.is_file() {
+        return Err(format!("Image manifest is missing: {}", manifest_path.display()));
+    }
+
+    let bytes = fs::read(&manifest_path).map_err(|e| e.to_string())?;
+    let manifest: AndroidImageManifest = serde_json::from_slice(&bytes)
+        .map_err(|e| format!("Invalid image manifest: {e}"))?;
+    let url = manifest.source_url.clone()
+        .filter(|value| value.starts_with("https://") || value.starts_with("http://"))
+        .ok_or_else(|| "This image has no downloadable source URL for repair".to_string())?;
+
+    let file_name = Path::new(&manifest.disk)
+        .file_name()
+        .ok_or_else(|| "Manifest disk must contain a file name".to_string())?
+        .to_owned();
+    let target_disk = target_dir.join(&file_name);
+    let temp_path = target_dir.join(format!(".{}.repair.part", file_name.to_string_lossy()));
+
+    let result = (|| -> Result<InstalledImage, String> {
+        let mut response = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(60 * 30))
+            .build()
+            .map_err(|e| format!("Unable to create image downloader: {e}"))?
+            .get(&url)
+            .send()
+            .map_err(|e| format!("Image repair download failed: {e}"))?
+            .error_for_status()
+            .map_err(|e| format!("Image server returned an error: {e}"))?;
+
+        let mut output = fs::File::create(&temp_path)
+            .map_err(|e| format!("Unable to create repair file: {e}"))?;
+        let mut buffer = [0u8; 1024 * 1024];
+        loop {
+            let read = response.read(&mut buffer)
+                .map_err(|e| format!("Image repair read failed: {e}"))?;
+            if read == 0 {
+                break;
+            }
+            output.write_all(&buffer[..read])
+                .map_err(|e| format!("Unable to write repair image: {e}"))?;
+        }
+        output.sync_all().map_err(|e| format!("Unable to flush repair image: {e}"))?;
+        verify_checksum(&manifest, &temp_path)?;
+
+        if target_disk.exists() {
+            fs::remove_file(&target_disk)
+                .map_err(|e| format!("Unable to replace damaged image: {e}"))?;
+        }
+        fs::rename(&temp_path, &target_disk)
+            .or_else(|_| {
+                fs::copy(&temp_path, &target_disk)?;
+                fs::remove_file(&temp_path)
+            })
+            .map_err(|e| format!("Unable to install repaired image: {e}"))?;
+
+        Ok(InstalledImage {
+            manifest,
             directory: target_dir.to_string_lossy().to_string(),
             disk_path: target_disk.to_string_lossy().to_string(),
             valid: true,
