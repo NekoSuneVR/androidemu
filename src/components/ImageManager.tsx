@@ -26,6 +26,20 @@ export default function ImageManager({ images, onChanged }: Props) {
   const [output, setOutput] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const removeImage = async (id: string, name: string) => {
+    if (!window.confirm(`Remove ${name} from NekoDroid? This deletes its copied image files.`)) return;
+    setBusy(true);
+    try {
+      await invoke("remove_android_image", { id });
+      setOutput(`Removed ${name}.`);
+      await onChanged();
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
@@ -68,6 +82,15 @@ export default function ImageManager({ images, onChanged }: Props) {
                   <small>{image.manifest.imageType} · {image.manifest.diskFormat}</small>
                   <small className="image-path">{image.diskPath}</small>
                   {image.validationError && <small>{image.validationError}</small>}
+                  <div className="button-row">
+                    <button
+                      className="danger compact"
+                      disabled={busy}
+                      onClick={() => removeImage(image.manifest.id, image.manifest.name)}
+                    >
+                      Remove image
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
