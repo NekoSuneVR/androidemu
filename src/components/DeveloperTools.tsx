@@ -313,6 +313,16 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="tool-group">
+                <h4>Desktop / secondary displays</h4>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_desktop_mode",{enabled:true})}>Enable desktop mode</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_desktop_mode",{enabled:false})}>Disable desktop mode</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_overlay_display",{spec:"1280x720/240"})}>Add 1280×720 display</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_overlay_display",{spec:null})}>Clear secondary displays</button>
+                </div>
+              </div>
+
+              <div className="tool-group">
                 <h4>Frame rate</h4>
                 <div className="button-row">
                   {[30,60,90,120,144,165,240].map(fps => (
