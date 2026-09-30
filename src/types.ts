@@ -386,3 +386,24 @@ export interface DisplayState {
   orientation:"portrait"|"landscape";
   rotation:number;
 }
+
+export interface GraphicsSettings {
+  renderer:"auto"|"vulkan"|"opengl"|"directx"|"virgl"|"software";
+  vsync:boolean;
+  tripleBuffer:boolean;
+  dynamicResolution:boolean;
+  shaderCache:boolean;
+  astcCache:boolean;
+  fpsOverlay:boolean;
+  frameTimeGraph:boolean;
+  usageOverlay:boolean;
+}
+export interface GraphicsCapabilities {
+  virgl:boolean;
+  angle:boolean;
+  vulkan:boolean;
+  opengl:boolean;
+  directx:boolean;
+  software:boolean;
+  astcTools:string[];
+}
