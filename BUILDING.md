@@ -228,3 +228,34 @@ instances/<instance-id>/disks/runtime.qcow2
 ```
 
 Factory reset deletes this writable overlay and recreates it from the base image on the next start.
+
+
+## Supported desktop baseline
+
+### Windows
+
+NekoDroid's current Windows baseline is:
+
+- Windows 10 version 2004 or newer
+- x86_64 CPU
+- Windows Hypervisor Platform enabled for WHPX acceleration
+- WebView2 runtime
+- QEMU with WHPX support
+- Android platform-tools for ADB features
+- FFmpeg for Media Tools
+
+Older Windows versions may be able to launch the Tauri shell, but they are outside the supported NekoDroid virtualization baseline because this project relies on the WHPX path.
+
+### Linux
+
+NekoDroid's current Linux baseline is:
+
+- x86_64 Linux
+- Ubuntu 22.04 / Debian 12 or newer as the packaging baseline, or an equivalent distribution with WebKitGTK 4.1
+- KVM with access to `/dev/kvm`
+- QEMU x86_64
+- Android platform-tools for ADB features
+- FFmpeg for Media Tools
+- WebKitGTK 4.1 and the desktop libraries required by Tauri 2
+
+The Linux release workflow produces Debian and AppImage bundles. Building on significantly newer distributions can raise the required glibc version, so release builds should stay on the oldest supported baseline when compatibility matters.
