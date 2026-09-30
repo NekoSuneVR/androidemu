@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **384/643 tasks complete (59.7%)**
+> Progress: **400/643 tasks complete (62.2%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -77,7 +77,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Add checksum verification
 - [x] Add image installation
 - [x] Add image removal
-- [ ] Add image update handling
+- [x] Add image update handling
 - [x] Add custom image import
 - [ ] Add custom GSI import
 - [x] Add image repair
@@ -321,15 +321,15 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 14 - Root
 
-- [ ] Standard mode
-- [ ] Developer mode
+- [x] Standard mode
+- [x] Developer mode
 - [x] ADB root mode
-- [ ] Full root mode
+- [x] Full root mode
 - [x] Root warning UI
 - [x] Root shell
 - [x] `su` support for compatible images
 - [ ] Writable system overlay
-- [ ] Root filesystem browser
+- [x] Root filesystem browser
 - [ ] Root-on-next-boot
 - [ ] Separate rooted snapshot
 - [ ] Separate clean snapshot
@@ -353,7 +353,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] File properties
 - [x] Storage usage
 - [x] Permissions viewer
-- [ ] Root filesystem mode
+- [x] Root filesystem mode
 - [x] Search files
 
 ---
@@ -585,14 +585,14 @@ skills/
 
 - [x] Video converter
 - [x] Audio converter
-- [ ] Video compressor
+- [x] Video compressor
 - [x] Audio extraction
 - [x] Remux
 - [x] Resolution conversion
 - [x] Frame-rate conversion
 - [x] Hardware transcoding
 - [x] Batch converter
-- [ ] Drag-and-drop input
+- [x] Drag-and-drop input
 
 ---
 
@@ -623,7 +623,7 @@ skills/
 # Phase 30 - Recording
 
 - [ ] Direct framebuffer recording
-- [ ] H.264 recording
+- [x] H.264 recording
 - [ ] HEVC recording
 - [ ] Hardware encoder selection
 - [ ] Audio recording
@@ -735,13 +735,13 @@ skills/
 - [x] AI control off by default
 - [x] LAN ADB off by default
 - [x] API localhost-only by default
-- [ ] Require user approval for dangerous actions
+- [x] Require user approval for dangerous actions
 - [x] Root warning
 - [x] Network exposure warning
-- [ ] Instance isolation
-- [ ] Secure ADB keys
-- [ ] Secure configuration storage
-- [ ] Sensitive log filtering
+- [x] Instance isolation
+- [x] Secure ADB keys
+- [x] Secure configuration storage
+- [x] Sensitive log filtering
 
 ---
 
@@ -875,8 +875,8 @@ skills/
 - [ ] Multiple virtual displays
 - [ ] Foldable hinge simulation
 - [ ] Desktop mode support
-- [ ] Android Automotive profile
-- [ ] Android TV profile
+- [x] Android Automotive profile
+- [x] Android TV profile
 
 ---
 
