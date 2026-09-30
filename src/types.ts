@@ -469,3 +469,9 @@ export interface SharedFrameInfo {
   updatedAt:number;
   format:string;
 }
+
+export interface SdlControllerInfo {
+  index:number;
+  name:string;
+  isGameController:boolean;
+}
