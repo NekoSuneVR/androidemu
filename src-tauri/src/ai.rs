@@ -22,6 +22,8 @@ pub enum AiAction {
     Drag { x1: i32, y1: i32, x2: i32, y2: i32, duration_ms: u32 },
     Key { keycode: String },
     Text { text: String },
+    Joystick { center_x:i32, center_y:i32, dx:i32, dy:i32, duration_ms:u32 },
+    Gamepad { button:String },
 }
 
 static ACTION_TIMES: OnceLock<Mutex<VecDeque<Instant>>> = OnceLock::new();
@@ -244,6 +246,20 @@ pub fn execute_action(
         }
         AiAction::Key { keycode } => adb::input_keyevent(port, keycode)?,
         AiAction::Text { text } => adb::input_text(port, text)?,
+        AiAction::Joystick { center_x, center_y, dx, dy, duration_ms } => {
+            let (x1,y1,x2,y2)=display::transform_swipe(port,center_x,center_y,center_x+dx,center_y+dy)?;
+            adb::input_swipe(port,x1,y1,x2,y2,duration_ms)?
+        }
+        AiAction::Gamepad { button } => {
+            let key=match button.to_ascii_lowercase().as_str(){
+                "a"=>"KEYCODE_BUTTON_A","b"=>"KEYCODE_BUTTON_B","x"=>"KEYCODE_BUTTON_X","y"=>"KEYCODE_BUTTON_Y",
+                "l1"=>"KEYCODE_BUTTON_L1","r1"=>"KEYCODE_BUTTON_R1","l2"=>"KEYCODE_BUTTON_L2","r2"=>"KEYCODE_BUTTON_R2",
+                "start"=>"KEYCODE_BUTTON_START","select"=>"KEYCODE_BUTTON_SELECT",
+                "up"=>"KEYCODE_DPAD_UP","down"=>"KEYCODE_DPAD_DOWN","left"=>"KEYCODE_DPAD_LEFT","right"=>"KEYCODE_DPAD_RIGHT",
+                _=>return Err("Unsupported AI gamepad button".into())
+            };
+            adb::input_keyevent(port,key.into())?
+        },
     };
 
     append_control_log(data_dir, port, result.success)?;
