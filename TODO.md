@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **226/643 tasks complete (35.1%)**
+> Progress: **228/643 tasks complete (35.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -36,7 +36,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Add Rust backend
 - [x] Create dark modern UI
 - [x] Create Home page
-- [ ] Create Game Library page
+- [x] Create Game Library page
 - [x] Create Android Instances page
 - [x] Create Device Profiles page
 - [x] Create Media Tools page
@@ -279,7 +279,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Screenshot
 - [x] Screen recording
 - [x] Device information
-- [ ] Package manager GUI
+- [x] Package manager GUI
 - [x] Process viewer
 - [x] Logcat viewer
 
