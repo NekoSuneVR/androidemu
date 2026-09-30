@@ -7,7 +7,7 @@ use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 pub fn start(state: RuntimeState, settings: AppSettings) -> Result<(), String> {
@@ -23,6 +23,19 @@ pub fn start(state: RuntimeState, settings: AppSettings) -> Result<(), String> {
         .map_err(|e| format!("Unable to bind localhost automation API: {e}"))?;
 
     let token = settings.api_token;
+    let ws_state = state.clone();
+    let ws_token = token.clone();
+    let ws_port = settings.api_port.saturating_add(1);
+    thread::spawn(move || {
+        if let Ok(listener)=TcpListener::bind(("127.0.0.1",ws_port)) {
+            for stream in listener.incoming().flatten() {
+                let state=ws_state.clone();
+                let token=ws_token.clone();
+                thread::spawn(move||{let _=handle_websocket(stream,&state,&token);});
+            }
+        }
+    });
+
     thread::spawn(move || {
         for incoming in listener.incoming() {
             match incoming {
@@ -40,6 +53,55 @@ pub fn start(state: RuntimeState, settings: AppSettings) -> Result<(), String> {
         }
     });
 
+    Ok(())
+}
+
+
+fn handle_websocket(stream:TcpStream,state:&RuntimeState,token:&str)->Result<(),String>{
+    stream.set_read_timeout(Some(Duration::from_millis(500))).map_err(|e|e.to_string())?;
+    let mut ws=tungstenite::accept(stream).map_err(|e|format!("WebSocket handshake failed: {e}"))?;
+    let auth=ws.read().map_err(|e|e.to_string())?;
+    let auth_text=auth.into_text().map_err(|e|e.to_string())?;
+    let value:Value=serde_json::from_str(&auth_text).map_err(|e|e.to_string())?;
+    if value.get("token").and_then(Value::as_str)!=Some(token){
+        let _=ws.send(tungstenite::Message::Text(json!({"type":"error","error":"unauthorized"}).to_string().into()));
+        return Err("WebSocket unauthorized".into());
+    }
+    ws.send(tungstenite::Message::Text(json!({"type":"ready","service":"nekodroid-automation-ws"}).to_string().into())).map_err(|e|e.to_string())?;
+    let mut log_subscription:Option<String>=None;
+    let mut last_log=Instant::now()-Duration::from_secs(2);
+    loop{
+        match ws.read(){
+            Ok(message)=>{
+                if message.is_close(){break;}
+                if !message.is_text(){continue;}
+                let req:Value=serde_json::from_str(message.to_text().map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+                match req.get("type").and_then(Value::as_str).unwrap_or(""){
+                    "subscribe-logs"=>{log_subscription=req.get("instanceId").and_then(Value::as_str).map(str::to_string);}
+                    "unsubscribe-logs"=>{log_subscription=None;}
+                    "gamepad"=>{
+                        let port=req.get("port").and_then(Value::as_u64).and_then(|v|u16::try_from(v).ok()).ok_or("gamepad port required")?;
+                        let button=req.get("button").and_then(Value::as_str).ok_or("gamepad button required")?;
+                        let key=match button{"a"=>"KEYCODE_BUTTON_A","b"=>"KEYCODE_BUTTON_B","x"=>"KEYCODE_BUTTON_X","y"=>"KEYCODE_BUTTON_Y","up"=>"KEYCODE_DPAD_UP","down"=>"KEYCODE_DPAD_DOWN","left"=>"KEYCODE_DPAD_LEFT","right"=>"KEYCODE_DPAD_RIGHT","start"=>"KEYCODE_BUTTON_START","select"=>"KEYCODE_BUTTON_SELECT",_=>return Err("unsupported gamepad button".into())};
+                        let result=adb::input_keyevent(port,key.into())?;
+                        ws.send(tungstenite::Message::Text(json!({"type":"gamepad-result","result":result}).to_string().into())).map_err(|e|e.to_string())?;
+                    }
+                    "ping"=>{ws.send(tungstenite::Message::Text(json!({"type":"pong"}).to_string().into())).map_err(|e|e.to_string())?;}
+                    _=>{}
+                }
+            }
+            Err(tungstenite::Error::Io(ref e)) if matches!(e.kind(),std::io::ErrorKind::WouldBlock|std::io::ErrorKind::TimedOut)=>{}
+            Err(tungstenite::Error::ConnectionClosed)=>break,
+            Err(e)=>return Err(e.to_string()),
+        }
+        if let Some(id)=log_subscription.as_deref(){
+            if last_log.elapsed()>=Duration::from_secs(1){
+                let logs=runtime::read_logs(state,id)?;
+                ws.send(tungstenite::Message::Text(json!({"type":"logs","instanceId":id,"logs":logs}).to_string().into())).map_err(|e|e.to_string())?;
+                last_log=Instant::now();
+            }
+        }
+    }
     Ok(())
 }
 
