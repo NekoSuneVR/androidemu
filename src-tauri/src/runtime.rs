@@ -514,7 +514,7 @@ fn qmp_execute(port: u16, command: &str) -> Result<(), String> {
     let mut reader = BufReader::new(reader_stream);
     let mut line = String::new();
     reader.read_line(&mut line).map_err(|e| format!("Failed to read QMP greeting: {e}"))?;
-    if !line.contains(""QMP"") {
+    if !line.contains("\"QMP\"") {
         return Err("Invalid QMP greeting".into());
     }
 
@@ -536,10 +536,10 @@ fn read_qmp_response(reader: &mut BufReader<TcpStream>) -> Result<(), String> {
         if count == 0 {
             return Err("QMP connection closed unexpectedly".into());
         }
-        if line.contains(""error"") {
+        if line.contains("\"error\"") {
             return Err(format!("QMP returned an error: {}", line.trim()));
         }
-        if line.contains(""return"") {
+        if line.contains("\"return\"") {
             return Ok(());
         }
     }
