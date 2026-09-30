@@ -194,3 +194,16 @@ export interface AndroidFileEntry {
   permissions: string;
   modified: number;
 }
+
+
+export interface MediaJobRequest {
+  input: string;
+  output: string;
+  operation: "video" | "audio" | "extract-audio" | "remux";
+  videoCodec: string;
+  audioCodec: string;
+  width?: number | null;
+  height?: number | null;
+  fps?: number | null;
+  hardwareDecode: boolean;
+}
