@@ -211,6 +211,11 @@ fn adb_device_info(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_clipboard_set(port: u16, text: String) -> Result<AdbResult, String> { adb::clipboard_set(port, text) }
+#[tauri::command]
+fn adb_clipboard_get(port: u16) -> Result<AdbResult, String> { adb::clipboard_get(port) }
+
+#[tauri::command]
 fn adb_media_codec_requests(port: u16) -> Result<AdbResult, String> { adb::media_codec_requests(port) }
 
 #[tauri::command]
@@ -860,6 +865,8 @@ pub fn run() {
             adb_crash_diagnostics,
             adb_reboot,
             adb_device_info,
+            adb_clipboard_set,
+            adb_clipboard_get,
             adb_media_codec_requests,
             adb_security_state,
             adb_screenshot,
