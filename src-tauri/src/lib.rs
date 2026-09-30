@@ -594,6 +594,8 @@ fn save_default_image_settings(state:State<'_,RuntimeState>,settings:DefaultImag
 #[tauri::command]
 fn download_default_android_image(state:State<'_,RuntimeState>,root:bool)->Result<InstalledImage,String>{images::download_default(&state.data_dir,root)}
 #[tauri::command]
+fn ensure_default_android_image(state:State<'_,RuntimeState>)->Result<InstalledImage,String>{images::ensure_default_image_installed(&state.data_dir)}
+#[tauri::command]
 fn register_gsi_boot_bundle(state:State<'_,RuntimeState>,android_version:String,system:String,kernel:String,initrd:String,vendor:Option<String>,root_capable:bool)->Result<InstalledImage,String>{
     images::register_gsi_bundle(&state.data_dir,android_version,system,kernel,initrd,vendor,root_capable)
 }
@@ -1322,6 +1324,7 @@ pub fn run() {
             get_default_image_settings,
             save_default_image_settings,
             download_default_android_image,
+            ensure_default_android_image,
             register_gsi_boot_bundle,
             supported_android_versions,
             import_custom_gsi,
