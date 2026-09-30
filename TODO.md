@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **357/643 tasks complete (55.5%)**
+> Progress: **371/643 tasks complete (57.7%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -231,29 +231,29 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 10 - Google Services
 
-- [ ] Create modular GMS provider interface
-- [ ] Support legally obtained Google-compatible images
-- [ ] Play Store launch support
+- [x] Create modular GMS provider interface
+- [x] Support legally obtained Google-compatible images
+- [x] Play Store launch support
 - [ ] Google account login testing
 - [ ] Google Play Services testing
-- [ ] microG profile
-- [ ] Custom GApps profile
-- [ ] Explain certification status in UI
-- [ ] Display Play Integrity/security limitations
-- [ ] Never falsely report hardware-backed attestation
+- [x] microG profile
+- [x] Custom GApps profile
+- [x] Explain certification status in UI
+- [x] Display Play Integrity/security limitations
+- [x] Never falsely report hardware-backed attestation
 
 ---
 
 # Phase 11 - GrapheneOS / Custom Secure Images
 
 - [x] Investigate technically compatible GrapheneOS-derived testing images
-- [ ] Add generic custom secure-image profile
+- [x] Add generic custom secure-image profile
 - [ ] Add custom GSI boot support
-- [ ] Display actual verified boot state
-- [ ] Display actual security state
-- [ ] Display missing hardware-backed features
-- [ ] Do not claim genuine Pixel hardware identity
-- [ ] Do not spoof hardware-backed attestation
+- [x] Display actual verified boot state
+- [x] Display actual security state
+- [x] Display missing hardware-backed features
+- [x] Do not claim genuine Pixel hardware identity
+- [x] Do not spoof hardware-backed attestation
 
 ---
 
