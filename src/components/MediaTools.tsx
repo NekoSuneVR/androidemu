@@ -19,6 +19,8 @@ export default function MediaTools() {
   const [busy, setBusy] = useState(false);
   const [batchLines, setBatchLines] = useState("");
   const [result, setResult] = useState("FFmpeg job output will appear here.");
+  const [streamUrl,setStreamUrl]=useState("");
+  const [streamRotate,setStreamRotate]=useState<"none"|"left"|"right"|"flip">("none");
   const [codecReport, setCodecReport] = useState<MediaCodecCapabilityReport | null>(null);
 
   useEffect(() => {
@@ -202,6 +204,13 @@ export default function MediaTools() {
           <button className="primary" disabled={busy || !info?.found || !input || !output}>
             {busy ? "Processing..." : "Run FFmpeg Job"}
           </button>
+
+          <div className="tool-group">
+            <h4>RTMP / SRT streaming</h4>
+            <label>Stream URL<input placeholder="rtmp://server/app/key or srt://host:port" value={streamUrl} onChange={e=>setStreamUrl(e.target.value)}/></label>
+            <label>Rotation<select value={streamRotate} onChange={e=>setStreamRotate(e.target.value as typeof streamRotate)}><option value="none">none</option><option value="left">left</option><option value="right">right</option><option value="flip">flip</option></select></label>
+            <button type="button" className="ghost compact" disabled={busy||!input||!streamUrl} onClick={async()=>{try{setBusy(true);const response=await invoke<MediaResult>("stream_media",{input,url:streamUrl,videoCodec,rotate:streamRotate});setResult([response.success?"STREAM ENDED":"STREAM FAILED",response.stderr||response.stdout].join("\n"));}catch(error){setResult(String(error));}finally{setBusy(false);}}}>Start stream</button>
+          </div>
 
           <div className="tool-group">
             <h4>Batch queue</h4>
