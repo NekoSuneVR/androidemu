@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import DeviceProfiles from "./components/DeviceProfiles";
 import ImageManager from "./components/ImageManager";
+import RemoteAccess from "./components/RemoteAccess";
 import DeveloperTools from "./components/DeveloperTools";
 import type {
   AdbInfo,
@@ -13,7 +14,7 @@ import type {
   RuntimeActionResult
 } from "./types";
 
-const nav = ["Home", "Instances", "Android Images", "Device Profiles", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
+const nav = ["Home", "Instances", "Android Images", "Device Profiles", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
 
 const defaultRequest: CreateInstanceRequest = {
   name: "Gaming",
@@ -226,6 +227,7 @@ export default function App() {
         {active === "Instances" && instancesPanel}
         {active === "Android Images" && <ImageManager images={images} onChanged={refresh} />}
         {active === "Device Profiles" && <DeviceProfiles profiles={profiles} />}
+        {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
 
         {["Media Tools", "NekoAI", "Settings"].includes(active) && (
