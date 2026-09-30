@@ -112,6 +112,21 @@ fn adb_pull(port: u16, source: String, destination: String) -> Result<AdbResult,
 }
 
 #[tauri::command]
+fn adb_forward(port: u16, local: String, remote: String) -> Result<AdbResult, String> {
+    adb::forward(port, local, remote)
+}
+
+#[tauri::command]
+fn adb_reverse(port: u16, remote: String, local: String) -> Result<AdbResult, String> {
+    adb::reverse(port, remote, local)
+}
+
+#[tauri::command]
+fn adb_logcat(port: u16, lines: u32) -> Result<AdbResult, String> {
+    adb::logcat(port, lines)
+}
+
+#[tauri::command]
 fn list_device_profiles() -> Vec<DeviceProfile> {
     profiles::builtin_profiles()
 }
@@ -189,6 +204,9 @@ pub fn run() {
             adb_screenshot,
             adb_push,
             adb_pull,
+            adb_forward,
+            adb_reverse,
+            adb_logcat,
             create_instance,
             update_instance,
             delete_instance,
