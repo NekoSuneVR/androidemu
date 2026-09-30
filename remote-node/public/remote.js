@@ -156,6 +156,31 @@ document.addEventListener("keyup", event => {
   event.preventDefault();
 });
 
+document.querySelector("#clipboardSend")?.addEventListener("click", async () => {
+  if (!permissions.clipboard) return;
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) sendControl({ kind: "clipboard", text });
+  } catch {
+    const text = prompt("Clipboard text to send to Android");
+    if (text) sendControl({ kind: "clipboard", text });
+  }
+});
+
+let lastGamepadPacket = "";
+setInterval(() => {
+  if (!permissions.gamepad || !permissions.control) return;
+  const pads = navigator.getGamepads?.() || [];
+  const pad = [...pads].find(Boolean);
+  if (!pad) return;
+  const buttons = pad.buttons.map((b,i)=>b.pressed?i:null).filter(v=>v!==null);
+  const packet = JSON.stringify({ kind:"gamepad", buttons, axes:pad.axes.map(v=>Math.round(v*1000)/1000) });
+  if (packet !== lastGamepadPacket) {
+    lastGamepadPacket = packet;
+    sendControl(JSON.parse(packet));
+  }
+}, 100);
+
 document.querySelectorAll("[data-key]").forEach(button => {
   button.addEventListener("click", () => sendControl({ kind: "android-key", key: button.dataset.key }));
 });
