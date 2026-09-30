@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{fs, io::Read, path::{Path, PathBuf}};
+use std::{fs, io::{Read, Write}, path::{Path, PathBuf}, time::{SystemTime, UNIX_EPOCH}};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -83,6 +83,94 @@ pub fn remove_image(data_dir: &Path, id: &str) -> Result<(), String> {
     }
     fs::remove_dir_all(&target_dir)
         .map_err(|e| format!("Failed to remove image {id}: {e}"))
+}
+
+pub fn download_image(
+    data_dir: &Path,
+    manifest: AndroidImageManifest,
+    url: String,
+) -> Result<InstalledImage, String> {
+    ensure_layout(data_dir)?;
+    validate_id(&manifest.id)?;
+
+    if !matches!(manifest.disk_format.as_str(), "qcow2" | "raw") {
+        return Err("diskFormat must be qcow2 or raw".into());
+    }
+    if !(url.starts_with("https://") || url.starts_with("http://")) {
+        return Err("Image URL must use http:// or https://".into());
+    }
+
+    let file_name = Path::new(&manifest.disk)
+        .file_name()
+        .ok_or_else(|| "Manifest disk must contain a file name".to_string())?
+        .to_owned();
+
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_millis();
+    let temp_path = images_dir(data_dir).join(format!(".{}-{stamp}.part", manifest.id));
+
+    let result = (|| -> Result<InstalledImage, String> {
+        let mut response = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(60 * 30))
+            .build()
+            .map_err(|e| format!("Unable to create image downloader: {e}"))?
+            .get(&url)
+            .send()
+            .map_err(|e| format!("Image download failed: {e}"))?
+            .error_for_status()
+            .map_err(|e| format!("Image server returned an error: {e}"))?;
+
+        let mut output = fs::File::create(&temp_path)
+            .map_err(|e| format!("Unable to create temporary image file: {e}"))?;
+        let mut buffer = [0u8; 1024 * 1024];
+
+        loop {
+            let read = response.read(&mut buffer)
+                .map_err(|e| format!("Image download read failed: {e}"))?;
+            if read == 0 {
+                break;
+            }
+            output.write_all(&buffer[..read])
+                .map_err(|e| format!("Unable to write downloaded image: {e}"))?;
+        }
+        output.sync_all().map_err(|e| format!("Unable to flush downloaded image: {e}"))?;
+
+        verify_checksum(&manifest, &temp_path)?;
+
+        let target_dir = images_dir(data_dir).join(&manifest.id);
+        if target_dir.exists() {
+            return Err(format!("Image id is already installed: {}", manifest.id));
+        }
+        fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
+
+        let target_disk = target_dir.join(&file_name);
+        fs::rename(&temp_path, &target_disk)
+            .or_else(|_| {
+                fs::copy(&temp_path, &target_disk)?;
+                fs::remove_file(&temp_path)
+            })
+            .map_err(|e| format!("Unable to install downloaded image: {e}"))?;
+
+        let mut stored_manifest = manifest;
+        stored_manifest.disk = file_name.to_string_lossy().to_string();
+        let encoded = serde_json::to_vec_pretty(&stored_manifest).map_err(|e| e.to_string())?;
+        fs::write(target_dir.join("manifest.json"), encoded).map_err(|e| e.to_string())?;
+
+        Ok(InstalledImage {
+            manifest: stored_manifest,
+            directory: target_dir.to_string_lossy().to_string(),
+            disk_path: target_disk.to_string_lossy().to_string(),
+            valid: true,
+            validation_error: None,
+        })
+    })();
+
+    if result.is_err() && temp_path.exists() {
+        let _ = fs::remove_file(&temp_path);
+    }
+    result
 }
 
 pub fn register_image(
