@@ -14,6 +14,7 @@ import GameLibrary from "./components/GameLibrary";
 import FirstRunWizard from "./components/FirstRunWizard";
 import KeymapManager from "./components/KeymapManager";
 import ControllerPanel from "./components/ControllerPanel";
+import SensorPanel from "./components/SensorPanel";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -344,6 +345,7 @@ export default function App() {
         {active === "File Manager" && <FileManager instances={instances} />}
         {active === "Keymaps" && <KeymapManager instances={instances} />}
         {active === "Controllers" && <ControllerPanel instances={instances} />}
+        {active === "Sensors" && <SensorPanel instances={instances} />}
         {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
         {active === "NekoAI" && <NekoAI instances={instances} />}
