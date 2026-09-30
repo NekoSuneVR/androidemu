@@ -361,7 +361,7 @@ export interface MediaCodecCapabilityReport {
 
 export interface TransferJob {
   id:string;
-  direction:"push"|"pull";
+  direction:"push"|"pull"|"install";
   source:string;
   destination:string;
   port:number;
