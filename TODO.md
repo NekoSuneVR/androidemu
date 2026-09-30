@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **276/643 tasks complete (42.9%)**
+> Progress: **288/643 tasks complete (44.8%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -54,7 +54,7 @@ This file tracks the planned implementation of NekoDroid.
 
 - [x] Integrate QEMU
 - [x] Add Windows WHPX support
-- [ ] Investigate Hyper-V-compatible acceleration
+- [x] Investigate Hyper-V-compatible acceleration
 - [x] Add Linux KVM support
 - [x] Add VirtIO block devices
 - [x] Add VirtIO networking
@@ -177,9 +177,9 @@ This file tracks the planned implementation of NekoDroid.
 # Phase 7 - Graphics Acceleration
 
 - [x] Vulkan host detection
-- [ ] OpenGL host detection
-- [ ] DirectX capability detection
-- [ ] gfxstream investigation
+- [x] OpenGL host detection
+- [x] DirectX capability detection
+- [x] gfxstream investigation
 - [ ] ANGLE integration
 - [ ] VirGL integration
 - [ ] Vulkan mode
@@ -193,7 +193,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] VSync
 - [ ] Triple buffering
 - [ ] Dynamic resolution
-- [ ] GPU capability page
+- [x] GPU capability page
 
 ---
 
@@ -223,7 +223,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Investigate `libndk_translation`
 - [ ] ARM64 application compatibility
 - [ ] ARMv7 compatibility
-- [ ] ARM64 guest mode research
+- [x] ARM64 guest mode research
 - [ ] Per-app compatibility mode
 - [ ] Compatibility diagnostics
 
@@ -246,7 +246,7 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 11 - GrapheneOS / Custom Secure Images
 
-- [ ] Investigate technically compatible GrapheneOS-derived testing images
+- [x] Investigate technically compatible GrapheneOS-derived testing images
 - [ ] Add generic custom secure-image profile
 - [ ] Add custom GSI boot support
 - [ ] Display actual verified boot state
@@ -302,7 +302,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] ADB push backend
 - [x] ADB pull backend
 - [ ] Shared-folder alternative
-- [ ] Clipboard file transfer research
+- [x] Clipboard file transfer research
 
 ## APK Installation
 
@@ -642,8 +642,8 @@ skills/
 - [ ] RTMP output
 - [ ] SRT output
 - [ ] WebRTC output
-- [ ] NDI-style output research
-- [ ] Spout-style output research
+- [x] NDI-style output research
+- [x] Spout-style output research
 - [ ] Audio streaming
 - [ ] Rotated-stream handling
 
@@ -674,7 +674,7 @@ skills/
 - [x] Create snapshot
 - [x] Restore snapshot
 - [x] Delete snapshot
-- [ ] Rename snapshot
+- [x] Rename snapshot
 - [x] Snapshot description
 - [ ] Auto snapshot before root
 - [ ] Auto snapshot before Android update
@@ -750,7 +750,7 @@ skills/
 - [ ] CPU affinity
 - [ ] Huge pages
 - [ ] I/O tuning
-- [ ] Memory ballooning research
+- [x] Memory ballooning research
 - [ ] RAM compression
 - [ ] Disk cache
 - [ ] Shader cache tuning
