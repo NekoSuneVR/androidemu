@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AndroidImageManifest, InstalledImage } from "../types";
+import type { AndroidImageManifest, DefaultImageSettings, InstalledImage } from "../types";
 
 type Props = {
   images: InstalledImage[];
@@ -25,7 +25,11 @@ const defaultManifest: AndroidImageManifest = {
   secureImage: false,
   verifiedBootState: "unknown",
   securityState: "virtualized / unknown",
-  missingHardwareFeatures: ["hardware-backed attestation", "Pixel secure element"]
+  missingHardwareFeatures: ["hardware-backed attestation", "Pixel secure element"],
+  bootKernel:null,
+  bootInitrd:null,
+  vendorDisk:null,
+  rootCapable:false
 };
 
 export default function ImageManager({ images, onChanged }: Props) {
@@ -34,7 +38,10 @@ export default function ImageManager({ images, onChanged }: Props) {
   const [downloadUrl, setDownloadUrl] = useState("");
   const [output, setOutput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [defaultImages,setDefaultImages]=useState<DefaultImageSettings>({url:"",sha256:null,rootDeveloperUrl:null,rootDeveloperSha256:null});
+  const [gsi,setGsi]=useState({system:"",kernel:"",initrd:"",vendor:"",androidVersion:"16",rootCapable:false});
 
+  useState(()=>{invoke<DefaultImageSettings>("get_default_image_settings").then(setDefaultImages).catch(()=>{});});
   const updateImage = async (id: string, name: string) => {
     if (!window.confirm(`Update ${name} from its saved source URL? The downloaded image is verified before replacing the installed disk.`)) return;
     setBusy(true);
@@ -173,6 +180,26 @@ export default function ImageManager({ images, onChanged }: Props) {
         </div>
 
         <form className="image-register-form" onSubmit={submit}>
+          <h4>Default Android 16 images</h4>
+          <label>Default image URL<input value={defaultImages.url} onChange={e=>setDefaultImages({...defaultImages,url:e.target.value})}/></label>
+          <label>Default SHA-256<input value={defaultImages.sha256??""} onChange={e=>setDefaultImages({...defaultImages,sha256:e.target.value||null})}/></label>
+          <label>Root developer image URL<input value={defaultImages.rootDeveloperUrl??""} onChange={e=>setDefaultImages({...defaultImages,rootDeveloperUrl:e.target.value||null})}/></label>
+          <label>Root developer SHA-256<input value={defaultImages.rootDeveloperSha256??""} onChange={e=>setDefaultImages({...defaultImages,rootDeveloperSha256:e.target.value||null})}/></label>
+          <div className="button-row">
+            <button type="button" className="ghost compact" onClick={async()=>{try{setDefaultImages(await invoke<DefaultImageSettings>("save_default_image_settings",{settings:defaultImages}));setOutput("Default image sources saved.");}catch(error){setOutput(String(error));}}}>Save sources</button>
+            <button type="button" className="primary compact" disabled={busy||!defaultImages.url} onClick={async()=>{try{setBusy(true);const image=await invoke<InstalledImage>("download_default_android_image",{root:false});setOutput(`Installed ${image.manifest.name}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Download default Android 16</button>
+            <button type="button" className="danger compact" disabled={busy||!defaultImages.rootDeveloperUrl} onClick={async()=>{try{setBusy(true);const image=await invoke<InstalledImage>("download_default_android_image",{root:true});setOutput(`Installed ${image.manifest.name}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Download root developer image</button>
+          </div>
+
+          <h4>Custom GSI boot bundle</h4>
+          <label>Android version<input value={gsi.androidVersion} onChange={e=>setGsi({...gsi,androidVersion:e.target.value})}/></label>
+          <label>System GSI image<input value={gsi.system} onChange={e=>setGsi({...gsi,system:e.target.value})}/></label>
+          <label>Kernel<input value={gsi.kernel} onChange={e=>setGsi({...gsi,kernel:e.target.value})}/></label>
+          <label>Initrd / ramdisk<input value={gsi.initrd} onChange={e=>setGsi({...gsi,initrd:e.target.value})}/></label>
+          <label>Vendor image (optional)<input value={gsi.vendor} onChange={e=>setGsi({...gsi,vendor:e.target.value})}/></label>
+          <label className="checkbox-line"><input type="checkbox" checked={gsi.rootCapable} onChange={e=>setGsi({...gsi,rootCapable:e.target.checked})}/>Root-capable bundle</label>
+          <button type="button" className="ghost compact" disabled={busy||!gsi.system||!gsi.kernel||!gsi.initrd} onClick={async()=>{try{setBusy(true);const image=await invoke<InstalledImage>("register_gsi_boot_bundle",{androidVersion:gsi.androidVersion,system:gsi.system,kernel:gsi.kernel,initrd:gsi.initrd,vendor:gsi.vendor||null,rootCapable:gsi.rootCapable});setOutput(`Registered GSI boot bundle ${image.manifest.name}`);await onChanged();}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Register GSI boot bundle</button>
+
           <h4>Register local image</h4>
           <label>Image ID<input value={manifest.id} onChange={e => setManifest({...manifest,id:e.target.value})} /></label>
           <label>Name<input value={manifest.name} onChange={e => setManifest({...manifest,name:e.target.value})} /></label>
