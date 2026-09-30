@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **244/643 tasks complete (37.9%)**
+> Progress: **246/643 tasks complete (38.3%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -160,7 +160,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Reverse landscape
 - [x] Rotate-left button
 - [x] Rotate-right button
-- [ ] Rotation hotkey
+- [x] Rotation hotkey
 - [x] Update Android orientation at runtime
 - [ ] Resize emulator window after rotation
 - [ ] Update touch coordinate transforms
@@ -699,7 +699,7 @@ skills/
 - [x] Android property viewer
 - [x] Build property viewer
 - [x] Storage inspector
-- [ ] SurfaceFlinger information
+- [x] SurfaceFlinger information
 
 ---
 
