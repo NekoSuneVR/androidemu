@@ -24,6 +24,7 @@ mod ai_capture;
 mod media_jobs;
 mod platform_tools;
 mod android_validation;
+mod remote_transfer;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -265,6 +266,11 @@ fn adb_reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
 #[tauri::command]
 fn adb_device_info(port: u16) -> Result<AdbResult, String> {
     adb::device_info(port)
+}
+
+#[tauri::command]
+fn receive_remote_file(port:u16,name:String,data_base64:String,destination:Option<String>)->Result<String,String>{
+    remote_transfer::receive_and_push(port,name,data_base64,destination)
 }
 
 #[tauri::command]
@@ -1123,6 +1129,7 @@ pub fn run() {
             adb_crash_diagnostics,
             adb_reboot,
             adb_device_info,
+            receive_remote_file,
             adb_set_lan,
             adb_clipboard_set,
             adb_clipboard_get,
