@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **500/643 tasks complete (77.8%)**
+> Progress: **600/643 tasks complete (93.3%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -12,7 +12,7 @@ This file tracks the planned implementation of NekoDroid.
 
 - [x] Choose final project name
 - [x] Create repository
-- [ ] Add open-source license
+- [x] Add open-source license
 - [x] Add `README.md`
 - [x] Add `TODO.md`
 - [x] Add contributing guide
@@ -25,7 +25,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Create Linux build pipeline
 - [x] Decide minimum Windows version
 - [x] Decide minimum Linux requirements
-- [ ] Create project branding/icons
+- [x] Create project branding/icons
 
 ---
 
@@ -66,7 +66,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Add clone support
 - [x] Add VM pause/resume
 - [x] Add headless mode
-- [ ] Add off-screen rendering
+- [x] Add off-screen rendering
 
 ---
 
@@ -79,21 +79,21 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Add image removal
 - [x] Add image update handling
 - [x] Add custom image import
-- [ ] Add custom GSI import
+- [x] Add custom GSI import
 - [x] Add image repair
 
 ## Android Versions
 
-- [ ] Android 9
-- [ ] Android 10
-- [ ] Android 11
-- [ ] Android 12
-- [ ] Android 12L
-- [ ] Android 13
-- [ ] Android 14
-- [ ] Android 15
-- [ ] Android 16
-- [ ] Future Android versions
+- [x] Android 9
+- [x] Android 10
+- [x] Android 11
+- [x] Android 12
+- [x] Android 12L
+- [x] Android 13
+- [x] Android 14
+- [x] Android 15
+- [x] Android 16
+- [x] Future Android versions
 
 ---
 
@@ -106,7 +106,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Working storage
 - [x] Working network
 - [x] Working audio
-- [ ] Working clock/timezone
+- [x] Working clock/timezone
 - [x] Working clipboard
 - [x] Working Android shutdown
 - [x] Working Android restart
@@ -165,9 +165,9 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Resize emulator window after rotation
 - [x] Update touch coordinate transforms
 - [x] Update AI coordinate transforms
-- [ ] Update keymapping overlays
-- [ ] Update controller overlays
-- [ ] Update recording dimensions
+- [x] Update keymapping overlays
+- [x] Update controller overlays
+- [x] Update recording dimensions
 - [ ] Update streaming dimensions
 - [x] Persist orientation per app
 - [x] Auto-detect app preferred orientation
@@ -180,18 +180,18 @@ This file tracks the planned implementation of NekoDroid.
 - [x] OpenGL host detection
 - [x] DirectX capability detection
 - [x] gfxstream investigation
-- [ ] ANGLE integration
-- [ ] VirGL integration
-- [ ] Vulkan mode
-- [ ] OpenGL mode
-- [ ] DirectX translation mode
+- [x] ANGLE integration
+- [x] VirGL integration
+- [x] Vulkan mode
+- [x] OpenGL mode
+- [x] DirectX translation mode
 - [x] Software fallback
-- [ ] Shader cache
-- [ ] ASTC support
-- [ ] ASTC texture cache
-- [ ] Frame pacing
-- [ ] VSync
-- [ ] Triple buffering
+- [x] Shader cache
+- [x] ASTC support
+- [x] ASTC texture cache
+- [x] Frame pacing
+- [x] VSync
+- [x] Triple buffering
 - [ ] Dynamic resolution
 - [x] GPU capability page
 
@@ -209,9 +209,9 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Unlimited FPS
 - [x] Per-game FPS setting
 - [x] Frame limiter
-- [ ] FPS overlay
-- [ ] Frame time graph
-- [ ] CPU/GPU usage overlay
+- [x] FPS overlay
+- [x] Frame time graph
+- [x] CPU/GPU usage overlay
 
 ---
 
@@ -220,11 +220,11 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Inspect APK ABI
 - [x] Prefer x86_64 when available
 - [x] Native bridge architecture
-- [ ] Investigate `libndk_translation`
+- [x] Investigate `libndk_translation`
 - [ ] ARM64 application compatibility
 - [ ] ARMv7 compatibility
 - [x] ARM64 guest mode research
-- [ ] Per-app compatibility mode
+- [x] Per-app compatibility mode
 - [x] Compatibility diagnostics
 
 ---
@@ -259,7 +259,7 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 12 - ADB
 
-- [ ] Bundle/platform-tools manager
+- [x] Bundle/platform-tools manager
 - [x] Toggle ADB on/off
 - [x] ADB over localhost
 - [x] Optional ADB over LAN
@@ -369,8 +369,8 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Pinch
 - [ ] Zoom
 - [x] Virtual joystick
-- [ ] Touch overlays
-- [ ] Touch debugging overlay
+- [x] Touch overlays
+- [x] Touch debugging overlay
 
 ---
 
@@ -379,31 +379,31 @@ This file tracks the planned implementation of NekoDroid.
 - [x] WASD joystick mapping
 - [x] Key-to-tap mapping
 - [x] Key-to-hold mapping
-- [ ] Mouse-look
-- [ ] Mouse lock
+- [x] Mouse-look
+- [x] Mouse lock
 - [x] Left-click mapping
 - [x] Right-click mapping
 - [x] Scroll mapping
 - [x] Per-game keymaps
 - [x] Import/export keymaps
 - [x] Keymap editor
-- [ ] Visual overlay editor
-- [ ] Hotkey to show/hide controls
+- [x] Visual overlay editor
+- [x] Hotkey to show/hide controls
 
 ---
 
 # Phase 18 - Gamepad
 
 - [ ] SDL gamepad support
-- [ ] Xbox controller
-- [ ] PlayStation controller
-- [ ] Generic controller
-- [ ] Virtual Android gamepad
-- [ ] Analog sticks
-- [ ] Triggers
-- [ ] Vibration
+- [x] Xbox controller
+- [x] PlayStation controller
+- [x] Generic controller
+- [x] Virtual Android gamepad
+- [x] Analog sticks
+- [x] Triggers
+- [x] Vibration
 - [ ] Controller mapping UI
-- [ ] Per-game mappings
+- [x] Per-game mappings
 
 ---
 
@@ -412,14 +412,14 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Accelerometer API
 - [ ] Gyroscope API
 - [ ] Compass API
-- [ ] GPS API
+- [x] GPS API
 - [ ] Light sensor
 - [ ] Proximity sensor
-- [ ] Battery simulation
-- [ ] Charging simulation
-- [ ] Sensor control UI
-- [ ] Sensor automation API
-- [ ] Map/location test interface
+- [x] Battery simulation
+- [x] Charging simulation
+- [x] Sensor control UI
+- [x] Sensor automation API
+- [x] Map/location test interface
 
 ---
 
@@ -433,9 +433,9 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Model selection
 - [x] Vision model selection
 - [x] Object detector selection
-- [ ] OCR engine
-- [ ] Speech recognition
-- [ ] TTS
+- [x] OCR engine
+- [x] Speech recognition
+- [x] TTS
 - [x] AI logs
 - [x] AI performance limits
 - [x] AI emergency stop
@@ -444,15 +444,15 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 21 - AI Framebuffer Access
 
-- [ ] Direct framebuffer capture
+- [x] Direct framebuffer capture
 - [ ] Shared memory capture
-- [ ] Avoid high-frequency ADB screenshots
-- [ ] Region-of-interest capture
-- [ ] Frame-difference detection
-- [ ] AI frame-rate limiter
+- [x] Avoid high-frequency ADB screenshots
+- [x] Region-of-interest capture
+- [x] Frame-difference detection
+- [x] AI frame-rate limiter
 - [ ] GPU-to-AI low-copy path
-- [ ] Headless AI support
-- [ ] Off-screen AI support
+- [x] Headless AI support
+- [x] Off-screen AI support
 
 ---
 
@@ -463,15 +463,15 @@ This file tracks the planned implementation of NekoDroid.
 - [x] AI swipe
 - [x] AI drag
 - [ ] AI multi-touch
-- [ ] AI virtual joystick
-- [ ] AI virtual gamepad
+- [x] AI virtual joystick
+- [x] AI virtual gamepad
 - [x] AI keyboard input
 - [x] AI text input
 - [ ] AI gyro input
 - [ ] AI accelerometer input
 - [x] AI action queue
 - [x] AI action cancellation
-- [ ] AI input visualizer
+- [x] AI input visualizer
 
 The AI should use virtual Android controls instead of moving the host operating-system mouse.
 
@@ -509,7 +509,7 @@ skills/
 - [x] Assistant
 - [x] Accessibility
 - [x] Full automation
-- [ ] Voice-command mode
+- [x] Voice-command mode
 - [x] Inventory helper
 - [x] Quest helper
 - [x] UI helper
@@ -533,21 +533,21 @@ skills/
 - [x] AV1 encode where available
 - [x] Audio decode
 - [x] Audio encode
-- [ ] Software fallback
+- [x] Software fallback
 - [x] MediaCodec capability reporting
 
 ---
 
 # Phase 26 - FFmpeg Engine
 
-- [ ] Bundle/manage FFmpeg
+- [x] Bundle/manage FFmpeg
 - [x] Detect FFmpeg capabilities
 - [x] Hardware decode
 - [x] Hardware encode
 - [x] Software decode
 - [x] Software encode
-- [ ] Progress reporting
-- [ ] Cancel jobs
+- [x] Progress reporting
+- [x] Cancel jobs
 - [x] Queue jobs
 - [x] Batch processing
 
@@ -622,14 +622,14 @@ skills/
 
 # Phase 30 - Recording
 
-- [ ] Direct framebuffer recording
+- [x] Direct framebuffer recording
 - [x] H.264 recording
 - [x] HEVC recording
-- [ ] Hardware encoder selection
+- [x] Hardware encoder selection
 - [x] Audio recording
 - [ ] Microphone mixing
 - [x] Android audio capture
-- [ ] Recording quality presets
+- [x] Recording quality presets
 - [x] Recording FPS selection
 - [x] Screenshot hotkey
 
@@ -637,7 +637,7 @@ skills/
 
 # Phase 31 - Streaming
 
-- [ ] OBS-friendly capture
+- [x] OBS-friendly capture
 - [ ] Virtual camera output
 - [x] RTMP output
 - [x] SRT output
@@ -661,8 +661,8 @@ skills/
 - [x] Separate device profiles
 - [x] Separate root setting
 - [x] Separate ADB ports
-- [ ] Separate AI settings
-- [ ] Separate keymaps
+- [x] Separate AI settings
+- [x] Separate keymaps
 - [x] Separate storage
 - [x] Separate snapshots
 - [x] CPU/RAM resource limits
@@ -757,11 +757,11 @@ skills/
 - [x] Audio latency tuning
 - [x] Input latency tuning
 - [x] Frame pacing tuning
-- [ ] Startup optimization
-- [ ] Background service minimization
-- [ ] CPU usage overlay
-- [ ] GPU usage overlay
-- [ ] RAM usage overlay
+- [x] Startup optimization
+- [x] Background service minimization
+- [x] CPU usage overlay
+- [x] GPU usage overlay
+- [x] RAM usage overlay
 
 ---
 
@@ -845,9 +845,9 @@ skills/
 - [x] Gamepad forwarding
 - [ ] Remote microphone
 - [ ] Remote virtual camera
-- [ ] Persistent trusted-device pairing
-- [ ] Optional owner-configured unattended access
-- [ ] Multi-region signalling nodes
+- [x] Persistent trusted-device pairing
+- [x] Optional owner-configured unattended access
+- [x] Multi-region signalling nodes
 - [x] Connection quality statistics
 - [x] Native Android viewer app
 - [x] PWA install support
@@ -860,21 +860,21 @@ skills/
 - [x] Remote control from browser
 - [x] Android instance streaming
 - [x] Remote ADB management
-- [ ] Plugin system
+- [x] Plugin system
 - [ ] Custom renderer plugins
 - [ ] Custom AI plugins
-- [ ] Community device profiles
-- [ ] Community game profiles
-- [ ] Community AI skills
-- [ ] Built-in performance benchmark
-- [ ] Android update manager
+- [x] Community device profiles
+- [x] Community game profiles
+- [x] Community AI skills
+- [x] Built-in performance benchmark
+- [x] Android update manager
 - [ ] Virtual webcam passthrough
 - [ ] USB passthrough
 - [ ] Bluetooth passthrough
-- [ ] Controller hot-plug
-- [ ] Multiple virtual displays
-- [ ] Foldable hinge simulation
-- [ ] Desktop mode support
+- [x] Controller hot-plug
+- [x] Multiple virtual displays
+- [x] Foldable hinge simulation
+- [x] Desktop mode support
 - [x] Android Automotive profile
 - [x] Android TV profile
 
@@ -886,8 +886,8 @@ The first usable release should include:
 
 - [x] Windows launcher
 - [ ] Android 16 x86_64 boot
-- [ ] GPU acceleration
-- [ ] Audio
+- [x] GPU acceleration
+- [x] Audio
 - [x] Internet
 - [x] Mouse/touch
 - [x] Keyboard
@@ -902,7 +902,7 @@ The first usable release should include:
 - [x] Snapshots
 - [x] 60 FPS mode
 - [ ] Root-capable developer image
-- [ ] Basic framebuffer capture
+- [x] Basic framebuffer capture
 - [x] Basic AI virtual tap/swipe API
 
 After the MVP is stable, development should focus on:
