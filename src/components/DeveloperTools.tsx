@@ -139,6 +139,19 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="tool-group">
+                <h4>Orientation</h4>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_set_orientation", { orientation: "auto" })}>Auto</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_set_orientation", { orientation: "portrait" })}>Portrait</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_set_orientation", { orientation: "landscape" })}>Landscape</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_set_orientation", { orientation: "reverse-portrait" })}>Reverse portrait</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_set_orientation", { orientation: "reverse-landscape" })}>Reverse landscape</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_rotate_orientation", { direction: "left" })}>Rotate left</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_rotate_orientation", { direction: "right" })}>Rotate right</button>
+                </div>
+              </div>
+
+              <div className="tool-group">
                 <h4>Virtual touch test</h4>
                 <div className="split-fields">
                   <label>X<input type="number" min="0" max="32767" value={touchX} onChange={e => setTouchX(Number(e.target.value))} /></label>
