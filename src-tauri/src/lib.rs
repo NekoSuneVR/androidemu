@@ -25,6 +25,7 @@ mod media_jobs;
 mod platform_tools;
 mod android_validation;
 mod remote_transfer;
+mod host_media_io;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -732,6 +733,14 @@ fn get_system_readiness() -> SystemReadiness {
 }
 
 
+
+#[tauri::command]
+fn capture_android_audio(port:u16,destination:String,seconds:u32)->Result<MediaResult,String>{host_media_io::android_audio_capture(port,destination,seconds)}
+#[tauri::command]
+fn mix_microphone(input:String,output:String,microphone:String)->Result<MediaResult,String>{host_media_io::mix_microphone(input,output,microphone)}
+#[tauri::command]
+fn output_virtual_camera(input:String,device:String)->Result<MediaResult,String>{host_media_io::virtual_camera(input,device)}
+
 #[tauri::command]
 fn get_ffmpeg_settings(state:State<'_,RuntimeState>)->Result<FfmpegSettings,String>{media_jobs::load_settings(&state.data_dir)}
 #[tauri::command]
@@ -1238,6 +1247,9 @@ pub fn run() {
             delete_snapshot,
             repair_installation,
             get_system_readiness,
+            capture_android_audio,
+            mix_microphone,
+            output_virtual_camera,
             get_ffmpeg_settings,
             save_ffmpeg_settings,
             start_media_job,
