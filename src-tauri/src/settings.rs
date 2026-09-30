@@ -44,6 +44,23 @@ impl Default for AiSettings {
 fn default_control_mode() -> String { "manual".into() }
 fn default_helper_mode() -> String { "ui".into() }
 
+
+fn instance_ai_settings_path(data_dir:&Path,instance_id:&str)->PathBuf{
+    data_dir.join("instances").join(instance_id).join("ai-settings.json")
+}
+pub fn load_for_instance(data_dir:&Path,instance_id:&str)->Result<AiSettings,String>{
+    let path=instance_ai_settings_path(data_dir,instance_id);
+    if !path.exists(){return load(data_dir);}
+    serde_json::from_slice(&fs::read(&path).map_err(|e|e.to_string())?).map_err(|e|format!("Invalid instance AI settings: {e}"))
+}
+pub fn save_for_instance(data_dir:&Path,instance_id:&str,settings:AiSettings)->Result<AiSettings,String>{
+    validate(&settings)?;
+    let path=instance_ai_settings_path(data_dir,instance_id);
+    if let Some(parent)=path.parent(){fs::create_dir_all(parent).map_err(|e|e.to_string())?;}
+    write_private(path,&serde_json::to_vec_pretty(&settings).map_err(|e|e.to_string())?)?;
+    Ok(settings)
+}
+
 fn settings_path(data_dir: &Path) -> PathBuf {
     data_dir.join("ai-settings.json")
 }
