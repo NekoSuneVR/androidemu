@@ -113,6 +113,14 @@ fn list_android_images(state: State<'_, RuntimeState>) -> Result<Vec<InstalledIm
 }
 
 #[tauri::command]
+fn remove_android_image(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<(), String> {
+    images::remove_image(&state.data_dir, &id)
+}
+
+#[tauri::command]
 fn register_android_image(
     state: State<'_, RuntimeState>,
     manifest: AndroidImageManifest,
@@ -176,6 +184,7 @@ pub fn run() {
             delete_instance,
             list_device_profiles,
             list_android_images,
+            remove_android_image,
             register_android_image,
             get_host_capabilities,
             start_instance,
