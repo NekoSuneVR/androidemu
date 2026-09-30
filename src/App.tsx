@@ -328,7 +328,7 @@ export default function App() {
 
             <section className="stats">
               <article><span>Instances</span><strong>{instances.length}</strong><small>Persistent Android environments</small></article>
-              <article><span>{host?.os === "windows" ? "MSYS2 Runtime" : "QEMU"}</span><strong>{host?.qemu.found ? "Ready" : "Missing"}</strong><small>{host?.qemu.executable ?? (host?.os === "windows" ? "Install MSYS2 runtime under C:\\msys64 or set MSYS2_ROOT" : "Install qemu-system-x86_64")}</small></article>
+              <article><span>{host?.os === "windows" ? "MSYS2 Runtime" : "QEMU"}</span><strong>{host?.qemu.found ? "Ready" : "Missing"}</strong><small>{host?.qemu.executable ?? (host?.os === "windows" ? "MSYS2 is auto-detected from standard installs; custom paths can use MSYS2_ROOT" : "Install qemu-system-x86_64")}</small></article>
               <article><span>Acceleration</span><strong>{host?.accelerator ?? "Unknown"}</strong><small>{host?.virtualizationNote ?? "Capability scan pending"}</small></article>
               <article><span>ADB</span><strong>{adbInfo?.found ? "Ready" : "Missing"}</strong><small>{adbInfo?.version ?? "Android platform-tools not detected"}</small></article>
             </section>
