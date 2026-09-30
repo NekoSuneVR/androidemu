@@ -11,6 +11,7 @@ mod first_run;
 mod automation_api;
 mod ai;
 mod skills;
+mod keymaps;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -23,6 +24,7 @@ use media::{FfmpegInfo, MediaJobRequest, MediaResult};
 use first_run::SystemReadiness;
 use ai::{AiAction, AiChatResult};
 use skills::{AiGameState, SkillManifest};
+use keymaps::{KeyBinding, KeymapProfile};
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -572,6 +574,32 @@ fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, Strin
 }
 
 
+
+#[tauri::command]
+fn list_keymaps(state: State<'_, RuntimeState>) -> Result<Vec<KeymapProfile>, String> {
+    keymaps::list(&state.data_dir)
+}
+#[tauri::command]
+fn save_keymap(state: State<'_, RuntimeState>, profile: KeymapProfile) -> Result<KeymapProfile, String> {
+    keymaps::save(&state.data_dir, profile)
+}
+#[tauri::command]
+fn remove_keymap(state: State<'_, RuntimeState>, id: String) -> Result<(), String> {
+    keymaps::remove(&state.data_dir, &id)
+}
+#[tauri::command]
+fn import_keymap(state: State<'_, RuntimeState>, source: String) -> Result<KeymapProfile, String> {
+    keymaps::import_file(&state.data_dir, source)
+}
+#[tauri::command]
+fn export_keymap(state: State<'_, RuntimeState>, id: String, destination: String) -> Result<String, String> {
+    keymaps::export_file(&state.data_dir, id, destination)
+}
+#[tauri::command]
+fn execute_key_binding(port: u16, binding: KeyBinding) -> Result<AdbResult, String> {
+    keymaps::execute(port, binding)
+}
+
 #[tauri::command]
 fn list_ai_skills(state: State<'_, RuntimeState>) -> Result<Vec<SkillManifest>, String> {
     skills::list(&state.data_dir)
@@ -835,6 +863,12 @@ pub fn run() {
             run_media_batch,
             get_app_settings,
             save_app_settings,
+            list_keymaps,
+            save_keymap,
+            remove_keymap,
+            import_keymap,
+            export_keymap,
+            execute_key_binding,
             list_ai_skills,
             save_ai_skill,
             import_ai_skill,
