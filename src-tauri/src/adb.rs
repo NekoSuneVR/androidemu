@@ -253,6 +253,13 @@ pub fn reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
     run_for_device(port, &args)
 }
 
+pub fn media_codec_requests(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(), "sh".into(), "-c".into(),
+        "echo '--- codec services ---'; dumpsys media.codec 2>/dev/null | head -n 300; echo '--- recent codec log ---'; logcat -d -t 500 2>/dev/null | grep -Ei 'MediaCodec|Codec2|CCodec|OMX' | tail -n 200".into()
+    ])
+}
+
 pub fn security_state(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &[
         "shell".into(),
