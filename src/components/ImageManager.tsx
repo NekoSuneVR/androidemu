@@ -17,7 +17,8 @@ const defaultManifest: AndroidImageManifest = {
   disk: "android16.qcow2",
   diskFormat: "qcow2",
   recommended: true,
-  notes: ""
+  notes: "",
+  sha256: ""
 };
 
 export default function ImageManager({ images, onChanged }: Props) {
@@ -123,6 +124,13 @@ export default function ImageManager({ images, onChanged }: Props) {
           </div>
           <label>Stored disk filename<input value={manifest.disk} onChange={e => setManifest({...manifest,disk:e.target.value})} /></label>
           <label>Source disk path<input placeholder="C:\\Android\\android16.qcow2" value={sourceDisk} onChange={e => setSourceDisk(e.target.value)} /></label>
+          <label>SHA-256 checksum (optional)
+            <input
+              placeholder="64 hexadecimal characters"
+              value={manifest.sha256 ?? ""}
+              onChange={e => setManifest({...manifest,sha256:e.target.value})}
+            />
+          </label>
           <button className="primary" disabled={busy || !sourceDisk}>{busy ? "Copying..." : "Register Image"}</button>
           {output && <pre className="inline-output">{output}</pre>}
         </form>
