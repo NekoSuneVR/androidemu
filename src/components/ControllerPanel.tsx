@@ -19,7 +19,7 @@ export default function ControllerPanel({instances}:{instances:AndroidInstance[]
   useEffect(()=>{
     if(!enabled||!selected)return;
     let raf=0;
-    const map:Record<number,string>={0:"KEYCODE_BUTTON_A",1:"KEYCODE_BUTTON_B",2:"KEYCODE_BUTTON_X",3:"KEYCODE_BUTTON_Y",4:"KEYCODE_BUTTON_L1",5:"KEYCODE_BUTTON_R1",8:"KEYCODE_BUTTON_SELECT",9:"KEYCODE_BUTTON_START",12:"KEYCODE_DPAD_UP",13:"KEYCODE_DPAD_DOWN",14:"KEYCODE_DPAD_LEFT",15:"KEYCODE_DPAD_RIGHT"};
+    const map:Record<number,string>={0:"KEYCODE_BUTTON_A",1:"KEYCODE_BUTTON_B",2:"KEYCODE_BUTTON_X",3:"KEYCODE_BUTTON_Y",4:"KEYCODE_BUTTON_L1",5:"KEYCODE_BUTTON_R1",6:"KEYCODE_BUTTON_L2",7:"KEYCODE_BUTTON_R2",8:"KEYCODE_BUTTON_SELECT",9:"KEYCODE_BUTTON_START",12:"KEYCODE_DPAD_UP",13:"KEYCODE_DPAD_DOWN",14:"KEYCODE_DPAD_LEFT",15:"KEYCODE_DPAD_RIGHT"};
     const tick=()=>{
       const pad=[...navigator.getGamepads()].find(Boolean);
       if(pad){
@@ -55,7 +55,7 @@ export default function ControllerPanel({instances}:{instances:AndroidInstance[]
       {pads.map(p=><article className="instance-card" key={p.index}><strong>{p.id}</strong><small>{p.mapping||"generic mapping"} · index {p.index}</small></article>)}
       <label className="checkbox-line"><input type="checkbox" checked={enabled} onChange={e=>{setEnabled(e.target.checked);setStatus(e.target.checked?"Controller forwarding enabled.":"Controller forwarding disabled.");}}/>Forward controller buttons/sticks to Android</label>
       <button className="ghost compact" onClick={vibrate}>Test vibration</button>
-      <small className="muted">Uses the browser Gamepad API, so Xbox, PlayStation and generic controllers supported by the host browser/WebView can be forwarded as Android gamepad key events.</small>
+      <small className="muted">Uses the browser Gamepad API, so Xbox, PlayStation and generic controllers supported by the host browser/WebView can be forwarded as Android gamepad key events, including shoulder triggers. Per-game controller/touch mappings can be linked through the Keymaps and Game Library pages.</small>
       <pre className="inline-output">{status}</pre>
     </div>
   </section>;
