@@ -921,6 +921,11 @@ fn clear_ai_logs(state: State<'_, RuntimeState>) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn get_instance_ai_settings(state:State<'_,RuntimeState>,instance_id:String)->Result<AiSettings,String>{settings::load_for_instance(&state.data_dir,&instance_id)}
+#[tauri::command]
+fn save_instance_ai_settings(state:State<'_,RuntimeState>,instance_id:String,settings:AiSettings)->Result<AiSettings,String>{settings::save_for_instance(&state.data_dir,&instance_id,settings)}
+
+#[tauri::command]
 fn get_ai_settings(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
     settings::load(&state.data_dir)
 }
@@ -1213,6 +1218,8 @@ pub fn run() {
             ai_chat,
             get_ai_logs,
             clear_ai_logs,
+            get_instance_ai_settings,
+            save_instance_ai_settings,
             get_ai_settings,
             save_ai_settings,
             ai_emergency_stop,
