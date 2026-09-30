@@ -342,7 +342,10 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
               <button type="button" className="ghost compact" disabled={!selectedInstance} onClick={async()=>{if(!selectedInstance)return;try{setOutput(await invoke<string>("ai_input_visualizer",{port:selectedInstance.adbPort}));}catch(error){setOutput(String(error));}}}>Input visualizer</button>
             </div>
             <label>Audio file for speech recognition<input value={audioPath} onChange={e=>setAudioPath(e.target.value)}/></label>
-            <button type="button" className="ghost compact" disabled={!audioPath} onClick={async()=>{try{const text=await invoke<string>("ai_speech_to_text",{audioPath});setPrompt(text);setOutput(text);}catch(error){setOutput(String(error));}}}>Transcribe with Whisper CLI</button>
+            <div className="button-row">
+              <button type="button" className="ghost compact" disabled={!audioPath} onClick={async()=>{try{const text=await invoke<string>("ai_speech_to_text",{audioPath});setPrompt(text);setOutput(text);}catch(error){setOutput(String(error));}}}>Transcribe with Whisper CLI</button>
+              <button type="button" className="primary compact" disabled={!audioPath||!settings.enabled} onClick={async()=>{try{setBusy(true);const text=await invoke<string>("ai_speech_to_text",{audioPath});setPrompt(text);const reply=await invoke<AiChatResult>("ai_chat",{prompt:text});setOutput([`Voice command: ${text}`,`Model: ${reply.model}`,reply.response].join("\n\n"));}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Voice command → NekoAI</button>
+            </div>
             <label>TTS text<textarea value={ttsText} onChange={e=>setTtsText(e.target.value)}/></label>
             <button type="button" className="ghost compact" disabled={!ttsText.trim()} onClick={async()=>{try{setOutput(await invoke<string>("ai_tts",{text:ttsText}));}catch(error){setOutput(String(error));}}}>Speak with host TTS</button>
             <small className="muted">ADB screencap works without a visible emulator window, so headless/off-screen AI capture remains available. Capture FPS is limited by the AI setting above.</small>
