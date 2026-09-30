@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **136/643 tasks complete (21.2%)**
+> Progress: **138/643 tasks complete (21.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -277,7 +277,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] `adb reboot`
 - [x] Reboot recovery
 - [x] Screenshot
-- [ ] Screen recording
+- [x] Screen recording
 - [x] Device information
 - [ ] Package manager GUI
 - [x] Process viewer
@@ -631,7 +631,7 @@ skills/
 - [ ] Android audio capture
 - [ ] Recording quality presets
 - [ ] Recording FPS selection
-- [ ] Screenshot hotkey
+- [x] Screenshot hotkey
 
 ---
 
