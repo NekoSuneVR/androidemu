@@ -363,9 +363,9 @@ mod tests {
             "kvm",
             "host",
         );
-        assert!(args.windows(2).any(|pair| pair == ["-smp", "8"]));
-        assert!(args.windows(2).any(|pair| pair == ["-m", "8192"]));
-        assert!(args.windows(2).any(|pair| pair == ["-cpu", "host"]));
+        assert!(args.windows(2).any(|pair| pair[0] == "-smp" && pair[1] == "8"));
+        assert!(args.windows(2).any(|pair| pair[0] == "-m" && pair[1] == "8192"));
+        assert!(args.windows(2).any(|pair| pair[0] == "-cpu" && pair[1] == "host"));
     }
 }
 
