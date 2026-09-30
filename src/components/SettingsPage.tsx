@@ -7,7 +7,10 @@ const defaults: AppSettings = {
   defaultProfile: "Gaming Phone",
   defaultAdbEnabled: false,
   defaultHeadless: false,
-  confirmDangerousActions: true
+  confirmDangerousActions: true,
+  apiEnabled: false,
+  apiPort: 37891,
+  apiToken: ""
 };
 
 export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }) {
@@ -89,6 +92,30 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
             />
             Ask for confirmation before destructive actions
           </label>
+
+          <div className="tool-group">
+            <h4>Local Automation API</h4>
+            <label className="checkbox-line">
+              <input
+                type="checkbox"
+                checked={settings.apiEnabled}
+                onChange={e => setSettings({...settings, apiEnabled:e.target.checked})}
+              />
+              Enable localhost REST API after restart
+            </label>
+            <label>Port
+              <input type="number" min="1" max="65535" value={settings.apiPort} onChange={e => setSettings({...settings, apiPort:Number(e.target.value)})} />
+            </label>
+            <label>Bearer token
+              <input
+                type="password"
+                placeholder="At least 16 characters"
+                value={settings.apiToken}
+                onChange={e => setSettings({...settings, apiToken:e.target.value})}
+              />
+            </label>
+            <small className="muted">The API binds only to 127.0.0.1. Restart NekoDroid after changing API settings.</small>
+          </div>
 
           <button className="primary" disabled={busy}>{busy ? "Saving..." : "Save Settings"}</button>
 
