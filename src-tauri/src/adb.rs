@@ -1,4 +1,4 @@
-use crate::models::{AdbInfo, AdbResult};
+use crate::{models::{AdbInfo, AdbResult}, runtime};
 use serde::Serialize;
 use std::collections::BTreeSet;
 use std::{
@@ -108,7 +108,13 @@ pub fn detect_adb() -> AdbInfo {
         &["adb"]
     };
 
-    let executable = adb_override().or_else(||candidates.iter().find_map(|name| find_in_path(name)));
+    let executable = adb_override().or_else(|| {
+        if cfg!(windows) {
+            runtime::find_runtime_tool("adb")
+        } else {
+            candidates.iter().find_map(|name| find_in_path(name))
+        }
+    });
 
     let Some(path) = executable else {
         return AdbInfo {
@@ -1006,7 +1012,9 @@ fn run_adb(args: &[String]) -> Result<AdbResult, String> {
         .executable
         .ok_or_else(|| "ADB was not found in PATH. Install Android platform-tools or configure it for NekoDroid.".to_string())?;
 
-    let mut command = Command::new(adb);
+    let adb_path = PathBuf::from(&adb);
+    let mut command = Command::new(&adb_path);
+    runtime::apply_runtime_environment(&mut command, &adb_path);
     command.args(args);
     if let Some(key) = ADB_KEY_PATH.get().filter(|path| path.is_file()) {
         command.env("ADB_VENDOR_KEYS", key);
