@@ -12,6 +12,15 @@ const PORT = Number(process.env.PORT || 8096);
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 const DEFAULT_INVITE_TTL_SECONDS = Number(process.env.INVITE_TTL_SECONDS || 900);
 const MAX_INVITE_TTL_SECONDS = Number(process.env.MAX_INVITE_TTL_SECONDS || 86400);
+const NODE_SECRET = process.env.NODE_SECRET || "";
+const TURN_URL = process.env.TURN_URL || "";
+const TURN_USERNAME = process.env.TURN_USERNAME || "";
+const TURN_PASSWORD = process.env.TURN_PASSWORD || "";
+const ALLOW_ORIGIN = process.env.ALLOW_ORIGIN || "*";
+
+if (!NODE_SECRET) {
+  console.warn("WARNING: NODE_SECRET is not set. Session creation is disabled until it is configured.");
+}
 
 const sessions = new Map();
 
@@ -34,6 +43,9 @@ function json(res, status, body) {
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
+    "access-control-allow-origin": ALLOW_ORIGIN,
+    "access-control-allow-headers": "authorization, content-type",
+    "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
     "content-length": Buffer.byteLength(encoded)
   });
   res.end(encoded);
@@ -69,6 +81,15 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, PUBLIC_URL);
 
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, {
+        "access-control-allow-origin": ALLOW_ORIGIN,
+        "access-control-allow-headers": "authorization, content-type",
+        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS"
+      });
+      return res.end();
+    }
+
     if (req.method === "GET" && url.pathname === "/health") {
       return json(res, 200, {
         ok: true,
@@ -78,7 +99,25 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (req.method === "GET" && url.pathname === "/api/config") {
+      const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+      if (TURN_URL) {
+        iceServers.push({
+          urls: TURN_URL,
+          username: TURN_USERNAME,
+          credential: TURN_PASSWORD
+        });
+      }
+      return json(res, 200, { iceServers });
+    }
+
     if (req.method === "POST" && url.pathname === "/api/sessions") {
+      if (!NODE_SECRET) return json(res, 503, { error: "Remote node is not configured" });
+      const bearer = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+      if (!safeTextEqual(NODE_SECRET, bearer)) {
+        return json(res, 401, { error: "Invalid node secret" });
+      }
+
       const body = await readJson(req);
       const ttlSeconds = Math.max(
         60,
@@ -337,6 +376,12 @@ function sha256(value) {
 
 function safeHashEqual(a, b) {
   return Buffer.isBuffer(a) && Buffer.isBuffer(b) && a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function safeTextEqual(a, b) {
+  const left = Buffer.from(String(a));
+  const right = Buffer.from(String(b));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
 }
 
 server.listen(PORT, "0.0.0.0", () => {
