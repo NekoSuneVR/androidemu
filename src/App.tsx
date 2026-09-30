@@ -10,6 +10,7 @@ import MediaTools from "./components/MediaTools";
 import SettingsPage from "./components/SettingsPage";
 import SystemReadinessPanel from "./components/SystemReadinessPanel";
 import FileManager from "./components/FileManager";
+import GameLibrary from "./components/GameLibrary";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -21,7 +22,7 @@ import type {
   AppSettings
 } from "./types";
 
-const nav = ["Home", "Instances", "Android Images", "Device Profiles", "File Manager", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
+const nav = ["Home", "Game Library", "Instances", "Android Images", "Device Profiles", "File Manager", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
 
 const defaultRequest: CreateInstanceRequest = {
   name: "Gaming",
@@ -300,6 +301,7 @@ export default function App() {
           </>
         )}
 
+        {active === "Game Library" && <GameLibrary instances={instances} />}
         {active === "Instances" && (
           <>
             {instancesPanel}
