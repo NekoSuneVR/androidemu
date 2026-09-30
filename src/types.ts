@@ -379,3 +379,10 @@ export interface ApkPackageInfo {
   abis:string[];
   sizeBytes:number;
 }
+
+export interface DisplayState {
+  width:number;
+  height:number;
+  orientation:"portrait"|"landscape";
+  rotation:number;
+}
