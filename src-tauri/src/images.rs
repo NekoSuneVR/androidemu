@@ -247,6 +247,221 @@ pub fn supported_android_versions()->Vec<String>{
 }
 
 
+
+fn image_cache_dir(data_dir: &Path) -> PathBuf {
+    data_dir.join("cache").join("android-images")
+}
+
+fn resolve_default_image_url(data_dir: &Path, root: bool) -> Result<(String, Option<String>), String> {
+    let settings = load_default_image_settings(data_dir)?;
+    if root {
+        if let Some(url) = settings.root_developer_url.filter(|value| !value.trim().is_empty()) {
+            return Ok((url, settings.root_developer_sha256));
+        }
+        return Err("Root developer image URL is not configured.".into());
+    }
+
+    if !settings.url.trim().is_empty() {
+        return Ok((settings.url, settings.sha256));
+    }
+
+    // Zero-config source: look for a NekoDroid-managed Android image asset
+    // on the latest GitHub release. This keeps the desktop installer small
+    // while allowing the image to be downloaded once and cached locally.
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("NekoDroid default Android image resolver")
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let release: serde_json::Value = client
+        .get("https://api.github.com/repos/NekoSuneVR/androidemu/releases/latest")
+        .send()
+        .map_err(|e| format!("Unable to check NekoDroid releases for the default Android image: {e}"))?
+        .error_for_status()
+        .map_err(|e| format!("NekoDroid release lookup failed: {e}"))?
+        .json()
+        .map_err(|e| format!("Invalid NekoDroid release response: {e}"))?;
+
+    let assets = release.get("assets").and_then(|value| value.as_array())
+        .ok_or_else(|| "Latest NekoDroid release did not contain any assets.".to_string())?;
+    let asset = assets.iter().find(|asset| {
+        let name = asset.get("name").and_then(|value| value.as_str()).unwrap_or("").to_ascii_lowercase();
+        name.starts_with("nekodroid-android-16-x86_64")
+            && (name.ends_with(".zip") || name.ends_with(".qcow2") || name.ends_with(".img") || name.ends_with(".raw"))
+    }).ok_or_else(|| {
+        "No default Android 16 x86_64 image package was found on the latest NekoDroid release. Upload a NekoDroid-Android-16-x86_64.zip/.qcow2 asset or configure a custom source in Android Images.".to_string()
+    })?;
+
+    let url = asset.get("browser_download_url").and_then(|value| value.as_str())
+        .ok_or_else(|| "Default Android release asset did not contain a download URL.".to_string())?;
+    Ok((url.to_string(), None))
+}
+
+fn cached_package_path(data_dir: &Path, url: &str) -> PathBuf {
+    let file_name = url.split('?').next().unwrap_or(url)
+        .rsplit('/').next().filter(|name| !name.trim().is_empty())
+        .unwrap_or("NekoDroid-Android-16-x86_64.zip");
+    image_cache_dir(data_dir).join(file_name)
+}
+
+fn download_to_cache(data_dir: &Path, url: &str, expected_sha256: Option<&str>) -> Result<PathBuf, String> {
+    fs::create_dir_all(image_cache_dir(data_dir)).map_err(|e| e.to_string())?;
+    let target = cached_package_path(data_dir, url);
+
+    if target.is_file() {
+        if let Some(expected) = expected_sha256.filter(|value| !value.trim().is_empty()) {
+            verify_file_sha256(&target, expected)?;
+        }
+        return Ok(target);
+    }
+
+    let temp = target.with_extension(format!(
+        "{}.part",
+        target.extension().and_then(|value| value.to_str()).unwrap_or("download")
+    ));
+    let mut response = reqwest::blocking::Client::builder()
+        .user_agent("NekoDroid Android image installer")
+        .timeout(std::time::Duration::from_secs(60 * 60))
+        .build()
+        .map_err(|e| e.to_string())?
+        .get(url)
+        .send()
+        .map_err(|e| format!("Default Android image download failed: {e}"))?
+        .error_for_status()
+        .map_err(|e| format!("Default Android image server returned an error: {e}"))?;
+
+    let mut output = fs::File::create(&temp)
+        .map_err(|e| format!("Unable to create cached Android package: {e}"))?;
+    let mut buffer = [0u8; 1024 * 1024];
+    loop {
+        let count = response.read(&mut buffer).map_err(|e| format!("Android image download read failed: {e}"))?;
+        if count == 0 { break; }
+        output.write_all(&buffer[..count]).map_err(|e| format!("Unable to write cached Android package: {e}"))?;
+    }
+    output.sync_all().map_err(|e| format!("Unable to flush cached Android package: {e}"))?;
+
+    if let Some(expected) = expected_sha256.filter(|value| !value.trim().is_empty()) {
+        verify_file_sha256(&temp, expected)?;
+    }
+
+    fs::rename(&temp, &target)
+        .or_else(|_| { fs::copy(&temp, &target)?; fs::remove_file(&temp) })
+        .map_err(|e| format!("Unable to finalize cached Android package: {e}"))?;
+    Ok(target)
+}
+
+fn verify_file_sha256(path: &Path, expected: &str) -> Result<(), String> {
+    let mut file = fs::File::open(path).map_err(|e| e.to_string())?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 1024 * 1024];
+    loop {
+        let count = file.read(&mut buffer).map_err(|e| e.to_string())?;
+        if count == 0 { break; }
+        hasher.update(&buffer[..count]);
+    }
+    let actual = format!("{:x}", hasher.finalize());
+    if actual.eq_ignore_ascii_case(expected.trim()) {
+        Ok(())
+    } else {
+        Err(format!("Android image checksum mismatch. Expected {}, got {}.", expected.trim(), actual))
+    }
+}
+
+fn install_cached_image_package(data_dir: &Path, package: &Path, source_url: &str) -> Result<InstalledImage, String> {
+    let ext = package.extension().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
+    if ext != "zip" {
+        let manifest = default_manifest(false, None);
+        return register_image(data_dir, AndroidImageManifest { source_url: Some(source_url.to_string()), ..manifest }, package.to_string_lossy().as_ref());
+    }
+
+    let file = fs::File::open(package).map_err(|e| format!("Unable to open cached Android package: {e}"))?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("Invalid NekoDroid Android image ZIP: {e}"))?;
+
+    let manifest_bytes = {
+        let mut entry = archive.by_name("manifest.json")
+            .map_err(|_| "NekoDroid Android image ZIP must contain manifest.json at its root.".to_string())?;
+        let mut bytes = Vec::new();
+        entry.read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+        bytes
+    };
+    let mut manifest: AndroidImageManifest = serde_json::from_slice(&manifest_bytes)
+        .map_err(|e| format!("Invalid Android image package manifest: {e}"))?;
+    validate_id(&manifest.id)?;
+
+    if let Some(existing) = list_images(data_dir)?.into_iter().find(|image| image.manifest.id == manifest.id && image.valid) {
+        return Ok(existing);
+    }
+
+    let target = images_dir(data_dir).join(&manifest.id);
+    let temp = images_dir(data_dir).join(format!(".{}.installing", manifest.id));
+    if temp.exists() { let _ = fs::remove_dir_all(&temp); }
+    fs::create_dir_all(&temp).map_err(|e| e.to_string())?;
+
+    let result = (|| -> Result<InstalledImage, String> {
+        for index in 0..archive.len() {
+            let mut entry = archive.by_index(index).map_err(|e| e.to_string())?;
+            let Some(relative) = entry.enclosed_name().map(Path::to_path_buf) else { continue; };
+            if relative == Path::new("manifest.json") { continue; }
+            let output = temp.join(relative);
+            if entry.is_dir() {
+                fs::create_dir_all(&output).map_err(|e| e.to_string())?;
+            } else {
+                if let Some(parent) = output.parent() { fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
+                let mut file = fs::File::create(&output).map_err(|e| e.to_string())?;
+                std::io::copy(&mut entry, &mut file).map_err(|e| e.to_string())?;
+            }
+        }
+
+        let disk = temp.join(&manifest.disk);
+        validate_manifest(&manifest, &disk)?;
+
+        for optional in [
+            manifest.boot_kernel.as_deref(),
+            manifest.boot_initrd.as_deref(),
+            manifest.vendor_disk.as_deref(),
+        ].into_iter().flatten() {
+            if !temp.join(optional).is_file() {
+                return Err(format!("Android image package component is missing: {optional}"));
+            }
+        }
+
+        manifest.source_url = Some(source_url.to_string());
+        fs::write(temp.join("manifest.json"), serde_json::to_vec_pretty(&manifest).map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())?;
+
+        if target.exists() { fs::remove_dir_all(&target).map_err(|e| e.to_string())?; }
+        fs::rename(&temp, &target).map_err(|e| format!("Unable to install Android image package: {e}"))?;
+        let installed_disk = target.join(&manifest.disk);
+
+        Ok(InstalledImage {
+            manifest,
+            directory: target.to_string_lossy().to_string(),
+            disk_path: installed_disk.to_string_lossy().to_string(),
+            valid: true,
+            validation_error: None,
+        })
+    })();
+
+    if result.is_err() && temp.exists() { let _ = fs::remove_dir_all(&temp); }
+    result
+}
+
+pub fn ensure_default_image_installed(data_dir: &Path) -> Result<InstalledImage, String> {
+    if let Some(existing) = list_images(data_dir)?.into_iter()
+        .filter(|image| image.valid)
+        .find(|image| image.manifest.recommended)
+    {
+        return Ok(existing);
+    }
+    if let Some(existing) = list_images(data_dir)?.into_iter().find(|image| image.valid) {
+        return Ok(existing);
+    }
+
+    let (url, sha) = resolve_default_image_url(data_dir, false)?;
+    let package = download_to_cache(data_dir, &url, sha.as_deref())?;
+    install_cached_image_package(data_dir, &package, &url)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct DefaultImageSettings {
