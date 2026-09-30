@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AiChatResult, AiSettings } from "../types";
+import type { AdbResult, AiChatResult, AiSettings, AndroidInstance } from "../types";
 
 const defaults: AiSettings = {
   enabled: false,
@@ -13,12 +13,26 @@ const defaults: AiSettings = {
   maxCaptureFps: 10
 };
 
-export default function NekoAI() {
+export default function NekoAI({ instances }: { instances: AndroidInstance[] }) {
   const [settings, setSettings] = useState<AiSettings>(defaults);
   const [output, setOutput] = useState("AI control is off by default.");
   const [prompt, setPrompt] = useState("");
   const [logs, setLogs] = useState("");
+  const [instanceId, setInstanceId] = useState(instances[0]?.id ?? "");
+  const [x1, setX1] = useState(540);
+  const [y1, setY1] = useState(1200);
+  const [x2, setX2] = useState(900);
+  const [y2, setY2] = useState(1200);
+  const [durationMs, setDurationMs] = useState(600);
+  const [keycode, setKeycode] = useState("KEYCODE_ENTER");
+  const [inputText, setInputText] = useState("hello");
   const [busy, setBusy] = useState(false);
+
+  const selectedInstance = instances.find(instance => instance.id === instanceId) ?? instances[0];
+
+  useEffect(() => {
+    if (!instanceId && instances[0]) setInstanceId(instances[0].id);
+  }, [instances, instanceId]);
 
   useEffect(() => {
     invoke<AiSettings>("get_ai_settings")
@@ -33,6 +47,30 @@ export default function NekoAI() {
       const saved = await invoke<AiSettings>("save_ai_settings", { settings });
       setSettings(saved);
       setOutput(saved.enabled ? "NekoAI settings saved and AI is enabled." : "NekoAI settings saved. AI remains disabled.");
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runAiAction = async (action: Record<string, unknown>) => {
+    if (!selectedInstance) {
+      setOutput("Create an Android instance before using AI controls.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await invoke<AdbResult>("ai_execute_action", {
+        port: selectedInstance.adbPort,
+        action
+      });
+      setOutput([
+        result.success ? "AI ACTION SUCCESS" : `AI ACTION FAILED (exit ${result.exitCode ?? "unknown"})`,
+        result.stdout,
+        result.stderr
+      ].filter(Boolean).join("\n\n"));
+      setLogs(await invoke<string>("get_ai_logs"));
     } catch (error) {
       setOutput(String(error));
     } finally {
@@ -163,8 +201,40 @@ export default function NekoAI() {
             </button>
           </div>
 
+          <div className="tool-group">
+            <h4>AI virtual Android controls</h4>
+            <label>Instance
+              <select value={selectedInstance?.id ?? ""} onChange={e => setInstanceId(e.target.value)}>
+                {instances.map(instance => <option key={instance.id} value={instance.id}>{instance.name}</option>)}
+              </select>
+            </label>
+
+            <div className="split-fields">
+              <label>X1<input type="number" min="0" max="32767" value={x1} onChange={e => setX1(Number(e.target.value))} /></label>
+              <label>Y1<input type="number" min="0" max="32767" value={y1} onChange={e => setY1(Number(e.target.value))} /></label>
+            </div>
+            <div className="split-fields">
+              <label>X2<input type="number" min="0" max="32767" value={x2} onChange={e => setX2(Number(e.target.value))} /></label>
+              <label>Y2<input type="number" min="0" max="32767" value={y2} onChange={e => setY2(Number(e.target.value))} /></label>
+            </div>
+            <label>Duration ms<input type="number" min="50" max="5000" value={durationMs} onChange={e => setDurationMs(Number(e.target.value))} /></label>
+
+            <div className="button-row">
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"tap", x:x1, y:y1 })}>AI Tap</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"hold", x:x1, y:y1, durationMs })}>AI Hold</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"swipe", x1, y1, x2, y2, durationMs })}>AI Swipe</button>
+              <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance} onClick={() => runAiAction({ kind:"drag", x1, y1, x2, y2, durationMs })}>AI Drag</button>
+            </div>
+
+            <label>Android keycode<input value={keycode} onChange={e => setKeycode(e.target.value)} /></label>
+            <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance || !keycode} onClick={() => runAiAction({ kind:"key", keycode })}>AI Key</button>
+
+            <label>Text<input value={inputText} onChange={e => setInputText(e.target.value)} /></label>
+            <button type="button" className="ghost compact" disabled={busy || !settings.enabled || !selectedInstance || !inputText} onClick={() => runAiAction({ kind:"text", text:inputText })}>AI Text</button>
+          </div>
+
           <div className="warning-box">
-            Enabling AI here only permits the subsystem to operate. Game-control execution remains permission-gated and should use NekoDroid virtual Android input rather than the host OS cursor.
+            Enabling AI here only permits the subsystem to operate. Game-control execution uses NekoDroid virtual Android input directly and never moves the host OS mouse.
           </div>
         </form>
 
