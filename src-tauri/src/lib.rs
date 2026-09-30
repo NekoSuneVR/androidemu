@@ -12,7 +12,7 @@ use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
-use settings::AiSettings;
+use settings::{AiSettings, AppSettings};
 use snapshots::SnapshotInfo;
 use media::{FfmpegInfo, MediaResult};
 use tauri::{Manager, State};
@@ -377,6 +377,19 @@ fn run_media_job(
 }
 
 #[tauri::command]
+fn get_app_settings(state: State<'_, RuntimeState>) -> Result<AppSettings, String> {
+    settings::load_app(&state.data_dir)
+}
+
+#[tauri::command]
+fn save_app_settings(
+    state: State<'_, RuntimeState>,
+    settings: AppSettings,
+) -> Result<AppSettings, String> {
+    settings::save_app(&state.data_dir, settings)
+}
+
+#[tauri::command]
 fn get_ai_settings(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
     settings::load(&state.data_dir)
 }
@@ -493,6 +506,8 @@ pub fn run() {
             delete_snapshot,
             get_ffmpeg_info,
             run_media_job,
+            get_app_settings,
+            save_app_settings,
             get_ai_settings,
             save_ai_settings,
             ai_emergency_stop,
