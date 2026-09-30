@@ -352,6 +352,14 @@ fn list_android_images(state: State<'_, RuntimeState>) -> Result<Vec<InstalledIm
 }
 
 #[tauri::command]
+fn repair_android_image(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<InstalledImage, String> {
+    images::repair_image(&state.data_dir, &id)
+}
+
+#[tauri::command]
 fn remove_android_image(
     state: State<'_, RuntimeState>,
     id: String,
@@ -661,6 +669,7 @@ pub fn run() {
             save_device_profile,
             remove_device_profile,
             list_android_images,
+            repair_android_image,
             remove_android_image,
             download_android_image,
             register_android_image,
