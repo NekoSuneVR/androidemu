@@ -6,6 +6,7 @@ mod runtime;
 mod storage;
 mod settings;
 mod snapshots;
+mod media;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -13,6 +14,7 @@ use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use settings::AiSettings;
 use snapshots::SnapshotInfo;
+use media::{FfmpegInfo, MediaResult};
 use tauri::{Manager, State};
 
 #[tauri::command]
@@ -332,6 +334,34 @@ fn delete_snapshot(
 }
 
 #[tauri::command]
+fn get_ffmpeg_info() -> FfmpegInfo {
+    media::detect_ffmpeg()
+}
+
+#[tauri::command]
+fn run_media_job(
+    input: String,
+    output: String,
+    operation: String,
+    video_codec: String,
+    audio_codec: String,
+    width: Option<u32>,
+    height: Option<u32>,
+    fps: Option<u32>,
+) -> Result<MediaResult, String> {
+    media::run_media_job(
+        input,
+        output,
+        operation,
+        video_codec,
+        audio_codec,
+        width,
+        height,
+        fps,
+    )
+}
+
+#[tauri::command]
 fn get_ai_settings(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
     settings::load(&state.data_dir)
 }
@@ -443,6 +473,8 @@ pub fn run() {
             create_snapshot,
             restore_snapshot,
             delete_snapshot,
+            get_ffmpeg_info,
+            run_media_job,
             get_ai_settings,
             save_ai_settings,
             ai_emergency_stop,
