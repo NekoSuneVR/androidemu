@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AdbResult, AiChatResult, AiGameState, AiSettings, AndroidInstance, SkillManifest } from "../types";
+import type { AdbResult, AiCaptureResult, AiChatResult, AiGameState, AiSettings, AndroidInstance, SkillManifest } from "../types";
 
 const defaults: AiSettings = {
   enabled: false,
@@ -36,6 +36,10 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
   const [skillJson, setSkillJson] = useState("");
   const [skillPath, setSkillPath] = useState("");
   const [gameState, setGameState] = useState<AiGameState | null>(null);
+  const [capturePath,setCapturePath]=useState("nekodroid-ai-frame.png");
+  const [audioPath,setAudioPath]=useState("");
+  const [ttsText,setTtsText]=useState("Hello from NekoAI");
+  const [roi,setRoi]=useState({x:0,y:0,width:640,height:480});
 
   const selectedInstance = instances.find(instance => instance.id === instanceId) ?? instances[0];
 
@@ -318,6 +322,28 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
               <button type="button" className="primary compact" disabled={busy || !settings.enabled || !selectedInstance || !queueJson.trim()} onClick={runAiQueue}>Run Queue</button>
               <button type="button" className="danger compact" onClick={cancelAiQueue}>Cancel Queue</button>
             </div>
+          </div>
+
+          <div className="tool-group">
+            <h4>Vision / OCR / voice</h4>
+            <label>Capture path<input value={capturePath} onChange={e=>setCapturePath(e.target.value)}/></label>
+            <div className="split-fields">
+              <label>ROI X<input type="number" min="0" value={roi.x} onChange={e=>setRoi({...roi,x:Number(e.target.value)})}/></label>
+              <label>ROI Y<input type="number" min="0" value={roi.y} onChange={e=>setRoi({...roi,y:Number(e.target.value)})}/></label>
+              <label>ROI width<input type="number" min="1" value={roi.width} onChange={e=>setRoi({...roi,width:Number(e.target.value)})}/></label>
+              <label>ROI height<input type="number" min="1" value={roi.height} onChange={e=>setRoi({...roi,height:Number(e.target.value)})}/></label>
+            </div>
+            <div className="button-row">
+              <button type="button" className="ghost compact" disabled={!selectedInstance} onClick={async()=>{if(!selectedInstance)return;try{const r=await invoke<AiCaptureResult>("ai_capture_frame",{port:selectedInstance.adbPort,destination:capturePath,maxFps:settings.maxCaptureFps});setOutput(`Captured ${r.path}\nChanged: ${r.changed}\nSHA-256: ${r.sha256}`);}catch(error){setOutput(String(error));}}}>Capture frame</button>
+              <button type="button" className="ghost compact" disabled={!selectedInstance} onClick={async()=>{if(!selectedInstance)return;try{const r=await invoke<AiCaptureResult>("ai_capture_roi",{port:selectedInstance.adbPort,destination:capturePath,...roi,maxFps:settings.maxCaptureFps});setOutput(`Captured ROI ${r.path}\nSHA-256: ${r.sha256}`);}catch(error){setOutput(String(error));}}}>Capture ROI</button>
+              <button type="button" className="ghost compact" disabled={!capturePath} onClick={async()=>{try{setOutput(await invoke<string>("ai_ocr",{imagePath:capturePath}));}catch(error){setOutput(String(error));}}}>OCR image</button>
+              <button type="button" className="ghost compact" disabled={!selectedInstance} onClick={async()=>{if(!selectedInstance)return;try{setOutput(await invoke<string>("ai_input_visualizer",{port:selectedInstance.adbPort}));}catch(error){setOutput(String(error));}}}>Input visualizer</button>
+            </div>
+            <label>Audio file for speech recognition<input value={audioPath} onChange={e=>setAudioPath(e.target.value)}/></label>
+            <button type="button" className="ghost compact" disabled={!audioPath} onClick={async()=>{try{const text=await invoke<string>("ai_speech_to_text",{audioPath});setPrompt(text);setOutput(text);}catch(error){setOutput(String(error));}}}>Transcribe with Whisper CLI</button>
+            <label>TTS text<textarea value={ttsText} onChange={e=>setTtsText(e.target.value)}/></label>
+            <button type="button" className="ghost compact" disabled={!ttsText.trim()} onClick={async()=>{try{setOutput(await invoke<string>("ai_tts",{text:ttsText}));}catch(error){setOutput(String(error));}}}>Speak with host TTS</button>
+            <small className="muted">ADB screencap works without a visible emulator window, so headless/off-screen AI capture remains available. Capture FPS is limited by the AI setting above.</small>
           </div>
 
           <div className="tool-group">
