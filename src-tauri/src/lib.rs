@@ -8,6 +8,7 @@ mod settings;
 mod snapshots;
 mod media;
 mod first_run;
+mod automation_api;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -502,7 +503,19 @@ pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
-            app.manage(RuntimeState::new(data_dir).map_err(std::io::Error::other)?);
+            let runtime = RuntimeState::new(data_dir).map_err(std::io::Error::other)?;
+
+            match settings::load_app(&runtime.data_dir) {
+                Ok(app_settings) if app_settings.api_enabled => {
+                    if let Err(error) = automation_api::start(runtime.clone(), app_settings) {
+                        eprintln!("Automation API did not start: {error}");
+                    }
+                }
+                Ok(_) => {}
+                Err(error) => eprintln!("Unable to load automation API settings: {error}"),
+            }
+
+            app.manage(runtime);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
