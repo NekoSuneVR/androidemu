@@ -1,4 +1,4 @@
-use crate::models::{AndroidInstance, CreateInstanceRequest};
+use crate::models::{AndroidInstance, CreateInstanceRequest, UpdateInstanceRequest};
 use std::{
     fs,
     io,
@@ -80,11 +80,33 @@ pub fn create_instance(data_dir: &Path, request: CreateInstanceRequest) -> Resul
         cpu_cores: request.cpu_cores,
         ram_mb: request.ram_mb,
         adb_port: request.adb_port,
+        adb_enabled: request.adb_enabled,
         root_mode: request.root_mode,
         image_path: request.image_path.filter(|p| !p.trim().is_empty()),
         process_id: None,
     };
 
+    save_instance(data_dir, &instance)?;
+    Ok(instance)
+}
+
+pub fn update_instance(
+    data_dir: &Path,
+    id: &str,
+    request: UpdateInstanceRequest,
+) -> Result<AndroidInstance, String> {
+    let name = request.name.trim();
+    if name.is_empty() {
+        return Err("Instance name cannot be empty".into());
+    }
+
+    let mut instance = load_instance(data_dir, id)?;
+    if instance.status == "running" {
+        return Err("Stop the instance before changing its name or ADB setting".into());
+    }
+
+    instance.name = name.to_string();
+    instance.adb_enabled = request.adb_enabled;
     save_instance(data_dir, &instance)?;
     Ok(instance)
 }
