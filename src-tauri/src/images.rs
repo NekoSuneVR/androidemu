@@ -21,6 +21,20 @@ pub struct AndroidImageManifest {
     pub sha256: Option<String>,
     #[serde(default)]
     pub source_url: Option<String>,
+    #[serde(default = "default_gms_provider")]
+    pub gms_provider: String,
+    #[serde(default)]
+    pub certification_status: String,
+    #[serde(default)]
+    pub play_store_package: Option<String>,
+    #[serde(default)]
+    pub secure_image: bool,
+    #[serde(default)]
+    pub verified_boot_state: String,
+    #[serde(default)]
+    pub security_state: String,
+    #[serde(default)]
+    pub missing_hardware_features: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -32,6 +46,8 @@ pub struct InstalledImage {
     pub valid: bool,
     pub validation_error: Option<String>,
 }
+
+fn default_gms_provider() -> String { "none".into() }
 
 pub fn images_dir(data_dir: &Path) -> PathBuf {
     data_dir.join("images")
@@ -97,6 +113,9 @@ pub fn download_image(
 
     if !matches!(manifest.disk_format.as_str(), "qcow2" | "raw") {
         return Err("diskFormat must be qcow2 or raw".into());
+    }
+    if !matches!(manifest.gms_provider.as_str(), "none" | "google-compatible" | "microg" | "custom-gapps") {
+        return Err("gmsProvider must be none, google-compatible, microg, or custom-gapps".into());
     }
     if !(url.starts_with("https://") || url.starts_with("http://")) {
         return Err("Image URL must use http:// or https://".into());
