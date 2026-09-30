@@ -195,6 +195,13 @@ pub fn download_image(
     result
 }
 
+pub fn update_image(data_dir: &Path, id: &str) -> Result<InstalledImage, String> {
+    // Image updates use the saved source URL and current manifest/checksum.
+    // The replacement happens through the same temporary-file + verification
+    // path as repair, so a failed download never replaces the installed disk.
+    repair_image(data_dir, id)
+}
+
 pub fn repair_image(data_dir: &Path, id: &str) -> Result<InstalledImage, String> {
     ensure_layout(data_dir)?;
     validate_id(id)?;
