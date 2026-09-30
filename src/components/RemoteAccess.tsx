@@ -209,7 +209,9 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       }
 
       const stream = await ensureCapture();
-      const configResponse = await fetch(`${settings.nodeUrl.replace(/\/$/, "")}/api/config`);
+      const configResponse = await fetch(`${settings.nodeUrl.replace(/\/$/, "")}/api/config`, {
+        headers: { authorization: `Bearer ${settings.nodeSecret}` }
+      });
       const config = configResponse.ok ? await configResponse.json() : { iceServers: [] };
 
       const peer = new RTCPeerConnection({ iceServers: config.iceServers || [] });
