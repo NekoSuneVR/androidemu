@@ -114,3 +114,10 @@ export interface AiSettings {
   maxActionsPerMinute: number;
   maxCaptureFps: number;
 }
+
+
+export interface RuntimeLogs {
+  stdout: string;
+  stderr: string;
+  crashReport: string;
+}
