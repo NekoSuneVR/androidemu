@@ -296,7 +296,7 @@ pub fn register_gsi_bundle(data_dir:&Path,android_version:String,system:String,k
     for required in [&system,&kernel,&initrd]{if !Path::new(required).is_file(){return Err(format!("GSI bundle component missing: {required}"));}}
     if let Some(v)=vendor.as_deref(){if !Path::new(v).is_file(){return Err(format!("Vendor disk missing: {v}"));}}
     let stamp=SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e|e.to_string())?.as_secs();
-    let id=format!("gsi-bundle-{}-{stamp}",android_version.replace('.','-'));
+    let id=format!("gsi-bundle-{}-{stamp}",android_version.replace('.',"-"));
     let target=images_dir(data_dir).join(&id);fs::create_dir_all(&target).map_err(|e|e.to_string())?;
     let system_name="system.img";let kernel_name="kernel";let initrd_name="ramdisk.img";
     fs::copy(&system,target.join(system_name)).map_err(|e|e.to_string())?;
