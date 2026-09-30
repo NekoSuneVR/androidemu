@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **90/643 tasks complete (14.0%)**
+> Progress: **92/643 tasks complete (14.3%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -260,7 +260,7 @@ This file tracks the planned implementation of NekoDroid.
 # Phase 12 - ADB
 
 - [ ] Bundle/platform-tools manager
-- [ ] Toggle ADB on/off
+- [x] Toggle ADB on/off
 - [x] ADB over localhost
 - [ ] Optional ADB over LAN
 - [x] ADB authentication
@@ -653,7 +653,7 @@ skills/
 
 - [x] Instance creation
 - [x] Instance deletion
-- [ ] Instance rename
+- [x] Instance rename
 - [ ] Instance clone
 - [ ] Concurrent instances
 - [ ] Separate userdata
