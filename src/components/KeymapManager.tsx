@@ -7,6 +7,7 @@ const blank: KeymapProfile = {
   id: "default-game",
   name: "Default Game",
   packageName: "",
+  instanceId: null,
   overlayVisible: true,
   bindings: [
     { input: "W", action: "joystick-up", x: 220, y: 1800, durationMs: 500 },
@@ -48,7 +49,7 @@ export default function KeymapManager({ instances }: { instances: AndroidInstanc
     document.addEventListener("mousemove",onMove);return()=>document.removeEventListener("mousemove",onMove);
   },[mouseLook,selected?.id]);
 
-  const save=async()=>{setBusy(true);try{const p=await invoke<KeymapProfile>("save_keymap",{profile});setProfile(p);await refresh();setOutput(`Saved ${p.name}`);}catch(e){setOutput(String(e));}finally{setBusy(false);}};
+  const save=async()=>{setBusy(true);try{const scoped={...profile,instanceId:selected?.id??null};const p=await invoke<KeymapProfile>("save_keymap",{profile:scoped});setProfile(p);await refresh();setOutput(`Saved ${p.name}`);}catch(e){setOutput(String(e));}finally{setBusy(false);}};
   const remove=async(id:string)=>{if(!confirm("Delete this keymap?"))return;setBusy(true);try{await invoke("remove_keymap",{id});await refresh();setOutput("Keymap deleted.");}catch(e){setOutput(String(e));}finally{setBusy(false);}};
   const test=async(binding:KeyBinding)=>{if(!selected)return;setBusy(true);try{const r=await invoke<AdbResult>("execute_key_binding",{port:selected.adbPort,binding});setOutput([r.success?"SUCCESS":"FAILED",r.stdout,r.stderr].filter(Boolean).join("\n"));}catch(e){setOutput(String(e));}finally{setBusy(false);}};
 
@@ -65,6 +66,7 @@ export default function KeymapManager({ instances }: { instances: AndroidInstanc
         <label>Keymap ID<input value={profile.id} onChange={e=>setProfile({...profile,id:e.target.value})}/></label>
         <label>Name<input value={profile.name} onChange={e=>setProfile({...profile,name:e.target.value})}/></label>
         <label>Android package<input placeholder="com.example.game" value={profile.packageName} onChange={e=>setProfile({...profile,packageName:e.target.value})}/></label>
+        <small className="muted">Saved to instance: {selected?.name ?? "none"}</small>
         <label className="checkbox-line"><input type="checkbox" checked={profile.overlayVisible} onChange={e=>setProfile({...profile,overlayVisible:e.target.checked})}/>Show touch/control overlay</label>
         {profile.bindings.map((b,index)=><article className="instance-card" key={index}>
           <div className="split-fields">
