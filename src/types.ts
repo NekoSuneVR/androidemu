@@ -84,6 +84,7 @@ export interface AndroidImageManifest {
   recommended: boolean;
   notes?: string | null;
   sha256?: string | null;
+  sourceUrl?: string | null;
 }
 
 export interface InstalledImage {
