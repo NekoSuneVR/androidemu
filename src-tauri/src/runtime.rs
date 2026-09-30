@@ -173,14 +173,21 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
         "tcg"
     };
 
+    let disk_format = if image_path.to_ascii_lowercase().ends_with(".qcow2") {
+        "qcow2"
+    } else {
+        "raw"
+    };
+    let cpu_model = if accelerator == "kvm" { "host" } else { "max" };
+
     let mut command = Command::new(qemu_path);
     command
         .args(["-name", &format!("NekoDroid-{}", instance.name)])
         .args(["-machine", &format!("q35,accel={accelerator}")])
-        .args(["-cpu", "max"])
+        .args(["-cpu", cpu_model])
         .args(["-smp", &instance.cpu_cores.to_string()])
         .args(["-m", &instance.ram_mb.to_string()])
-        .args(["-drive", &format!("file={image_path},if=virtio,format=qcow2")])
+        .args(["-drive", &format!("file={image_path},if=virtio,format={disk_format}")])
         .args(["-device", "virtio-vga"])
         .args(["-device", "virtio-keyboard-pci"])
         .args(["-device", "virtio-mouse-pci"])
