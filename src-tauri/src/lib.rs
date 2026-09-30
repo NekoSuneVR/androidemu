@@ -104,6 +104,15 @@ fn adb_screenshot(port: u16, destination: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_screen_record(
+    port: u16,
+    destination: String,
+    seconds: u32,
+) -> Result<AdbResult, String> {
+    adb::screen_record(port, destination, seconds)
+}
+
+#[tauri::command]
 fn adb_push(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
     adb::push(port, source, destination)
 }
@@ -338,6 +347,7 @@ pub fn run() {
             adb_reboot,
             adb_device_info,
             adb_screenshot,
+            adb_screen_record,
             adb_push,
             adb_pull,
             adb_forward,
