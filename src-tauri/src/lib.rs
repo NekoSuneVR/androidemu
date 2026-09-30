@@ -385,6 +385,20 @@ fn create_snapshot(
 }
 
 #[tauri::command]
+fn rename_snapshot(
+    state: State<'_, RuntimeState>,
+    instance_id: String,
+    snapshot_id: String,
+    name: String,
+    description: String,
+) -> Result<SnapshotInfo, String> {
+    if state.processes.lock().map_err(|_| "Runtime process lock poisoned")?.contains_key(&instance_id) {
+        return Err("Stop the instance before renaming a snapshot".into());
+    }
+    snapshots::rename(&state.data_dir, &instance_id, &snapshot_id, name, description)
+}
+
+#[tauri::command]
 fn restore_snapshot(
     state: State<'_, RuntimeState>,
     instance_id: String,
@@ -493,6 +507,14 @@ fn stop_instance(
     id: String,
 ) -> Result<RuntimeActionResult, String> {
     runtime::stop_instance(&state, &id)
+}
+
+#[tauri::command]
+fn factory_reset_instance(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<RuntimeActionResult, String> {
+    runtime::factory_reset(&state, &id)
 }
 
 #[tauri::command]
@@ -607,6 +629,7 @@ pub fn run() {
             register_android_image,
             list_snapshots,
             create_snapshot,
+            rename_snapshot,
             restore_snapshot,
             delete_snapshot,
             get_system_readiness,
@@ -620,6 +643,7 @@ pub fn run() {
             get_host_capabilities,
             start_instance,
             stop_instance,
+            factory_reset_instance,
             get_instance_logs,
             get_instance_status
         ])
