@@ -1,8 +1,12 @@
+mod images;
 mod models;
+mod profiles;
 mod runtime;
 mod storage;
 
+use images::{AndroidImageManifest, InstalledImage};
 use models::{AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult};
+use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use tauri::{Manager, State};
 
@@ -33,6 +37,26 @@ fn delete_instance(state: State<'_, RuntimeState>, id: String) -> Result<(), Str
     }
 
     storage::delete_instance(&state.data_dir, &id)
+}
+
+
+#[tauri::command]
+fn list_device_profiles() -> Vec<DeviceProfile> {
+    profiles::builtin_profiles()
+}
+
+#[tauri::command]
+fn list_android_images(state: State<'_, RuntimeState>) -> Result<Vec<InstalledImage>, String> {
+    images::list_images(&state.data_dir)
+}
+
+#[tauri::command]
+fn register_android_image(
+    state: State<'_, RuntimeState>,
+    manifest: AndroidImageManifest,
+    source_disk: String,
+) -> Result<InstalledImage, String> {
+    images::register_image(&state.data_dir, manifest, &source_disk)
 }
 
 #[tauri::command]
@@ -76,6 +100,9 @@ pub fn run() {
             list_instances,
             create_instance,
             delete_instance,
+            list_device_profiles,
+            list_android_images,
+            register_android_image,
             get_host_capabilities,
             start_instance,
             stop_instance,
