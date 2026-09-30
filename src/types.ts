@@ -487,3 +487,10 @@ export interface DefaultImageSettings {
   rootDeveloperUrl?:string|null;
   rootDeveloperSha256?:string|null;
 }
+
+
+export interface PrerequisiteInstallResult {
+  success: boolean;
+  rebootRequired: boolean;
+  messages: string[];
+}
