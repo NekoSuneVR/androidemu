@@ -1,0 +1,84 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example 0.1.0
+        required: true
+        default: 0.1.0
+      prerelease:
+        description: Mark GitHub Release as prerelease
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      - name: Set APK version
+        shell: bash
+        run: |
+          sed -i "s/versionCode 1/versionCode $GITHUB_RUN_NUMBER/" android-client/app/build.gradle
+          sed -i "s/versionName '0.1.0'/versionName '${{ inputs.version }}'/" android-client/app/build.gradle
+
+      - name: Build installable Android APK
+        run: gradle -p android-client :app:assembleDebug --stacktrace
+
+      - name: Collect APK
+        run: |
+          mkdir -p release-assets
+          cp android-client/app/build/outputs/apk/debug/app-debug.apk              "release-assets/NekoDroid-Remote-${{ inputs.version }}.apk"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NekoDroid-Remote-Android-${{ inputs.version }}
+          path: release-assets/*.apk
+          if-no-files-found: error
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            ARGS=(
+              release create "$TAG"
+              --title "NekoDroid v${{ inputs.version }}"
+              --notes "Manual NekoDroid release build."
+            )
+            if [ "${{ inputs.prerelease }}" = "true" ]; then
+              ARGS+=(--prerelease)
+            fi
+            gh "${ARGS[@]}"
+          fi
+          gh release upload "$TAG" release-assets/*.apk --clobber
