@@ -117,6 +117,16 @@ fn adb_install(port: u16, apk_path: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_install_batch(port: u16, apk_paths: Vec<String>) -> Result<AdbResult, String> {
+    adb::install_batch(port, apk_paths)
+}
+
+#[tauri::command]
+fn adb_install_multiple(port: u16, apk_paths: Vec<String>) -> Result<AdbResult, String> {
+    adb::install_multiple(port, apk_paths)
+}
+
+#[tauri::command]
 fn adb_uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
     adb::uninstall(port, package_name)
 }
@@ -470,6 +480,8 @@ pub fn run() {
             adb_get_state,
             adb_shell,
             adb_install,
+            adb_install_batch,
+            adb_install_multiple,
             adb_uninstall,
             adb_reboot,
             adb_device_info,
