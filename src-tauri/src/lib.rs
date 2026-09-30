@@ -190,6 +190,15 @@ fn adb_uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_shutdown(port: u16) -> Result<AdbResult, String> { adb::shutdown(port) }
+
+#[tauri::command]
+fn adb_boot_status(port: u16) -> Result<AdbResult, String> { adb::boot_status(port) }
+
+#[tauri::command]
+fn adb_crash_diagnostics(port: u16) -> Result<AdbResult, String> { adb::crash_diagnostics(port) }
+
+#[tauri::command]
 fn adb_reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
     adb::reboot(port, mode)
 }
@@ -829,6 +838,9 @@ pub fn run() {
             adb_install_batch,
             adb_install_multiple,
             adb_uninstall,
+            adb_shutdown,
+            adb_boot_status,
+            adb_crash_diagnostics,
             adb_reboot,
             adb_device_info,
             adb_security_state,
