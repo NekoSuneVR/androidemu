@@ -30,6 +30,7 @@ mod passthrough;
 mod cloud_nodes;
 mod frame_share;
 mod arm_compat;
+mod sdl_gamepad;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -57,6 +58,7 @@ use passthrough::PassthroughSettings;
 use cloud_nodes::CloudAndroidNode;
 use frame_share::SharedFrameInfo;
 use android_validation::AndroidBootValidation;
+use sdl_gamepad::SdlControllerInfo;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -551,6 +553,10 @@ fn adb_set_orientation(port: u16, orientation: String) -> Result<AdbResult, Stri
 fn adb_rotate_orientation(port: u16, direction: String) -> Result<AdbResult, String> {
     adb::rotate_orientation(port, direction)
 }
+
+
+#[tauri::command]
+fn list_sdl_controllers()->Result<Vec<SdlControllerInfo>,String>{sdl_gamepad::list()}
 
 #[tauri::command]
 fn list_device_profiles(state: State<'_, RuntimeState>) -> Result<Vec<DeviceProfile>, String> {
@@ -1268,6 +1274,7 @@ pub fn run() {
             update_instance,
             clone_instance,
             delete_instance,
+            list_sdl_controllers,
             list_device_profiles,
             save_device_profile,
             remove_device_profile,
