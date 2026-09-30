@@ -12,7 +12,9 @@ pub struct AndroidInstance {
     pub ram_mb: u32,
     pub adb_port: u16,
     pub root_mode: String,
+    #[serde(default)]
     pub image_path: Option<String>,
+    #[serde(default)]
     pub process_id: Option<u32>,
 }
 
