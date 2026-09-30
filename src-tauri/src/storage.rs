@@ -113,6 +113,47 @@ pub fn update_instance(
     Ok(instance)
 }
 
+pub fn clone_instance(data_dir: &Path, id: &str, name: String) -> Result<AndroidInstance, String> {
+    let source = load_instance(data_dir, id)?;
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("Clone name cannot be empty".into());
+    }
+
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_millis();
+
+    let existing = load_instances(data_dir)?;
+    let next_adb_port = existing
+        .iter()
+        .map(|item| item.adb_port)
+        .max()
+        .unwrap_or(5554)
+        .saturating_add(1);
+
+    let mut clone = source.clone();
+    clone.id = format!("instance-{millis}");
+    clone.name = name.to_string();
+    clone.status = "stopped".into();
+    clone.process_id = None;
+    clone.adb_port = next_adb_port;
+    clone.adb_enabled = false;
+
+    save_instance(data_dir, &clone)?;
+
+    let source_disk = instance_dir(data_dir, id).join("disks").join("runtime.qcow2");
+    if source_disk.is_file() {
+        let target_disks = instance_dir(data_dir, &clone.id).join("disks");
+        fs::create_dir_all(&target_disks).map_err(|e| e.to_string())?;
+        fs::copy(&source_disk, target_disks.join("runtime.qcow2"))
+            .map_err(|e| format!("Failed to copy cloned runtime disk: {e}"))?;
+    }
+
+    Ok(clone)
+}
+
 pub fn delete_instance(data_dir: &Path, id: &str) -> Result<(), String> {
     let dir = instance_dir(data_dir, id);
     if !dir.exists() {
