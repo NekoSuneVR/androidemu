@@ -132,3 +132,19 @@ export interface SnapshotInfo {
   description: string;
   createdAt: number;
 }
+
+
+export interface FfmpegInfo {
+  found: boolean;
+  executable?: string | null;
+  version?: string | null;
+  hwaccels: string[];
+}
+
+export interface MediaResult {
+  success: boolean;
+  exitCode?: number | null;
+  stdout: string;
+  stderr: string;
+  outputPath: string;
+}
