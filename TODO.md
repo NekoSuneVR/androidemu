@@ -7,13 +7,13 @@ This file tracks the planned implementation of NekoDroid.
 # Phase 0 - Project Foundation
 
 - [ ] Choose final project name
-- [ ] Create repository
+- [x] Create repository
 - [ ] Add open-source license
-- [ ] Add `README.md`
-- [ ] Add `TODO.md`
+- [x] Add `README.md`
+- [x] Add `TODO.md`
 - [ ] Add contributing guide
 - [ ] Add code of conduct
-- [ ] Set up CI
+- [x] Set up CI
 - [ ] Set up release builds
 - [ ] Create Windows build pipeline
 - [ ] Create Linux build pipeline
@@ -25,11 +25,11 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 1 - Desktop Launcher
 
-- [ ] Create Tauri application
-- [ ] Add React frontend
-- [ ] Add Rust backend
-- [ ] Create dark modern UI
-- [ ] Create Home page
+- [x] Create Tauri application
+- [x] Add React frontend
+- [x] Add Rust backend
+- [x] Create dark modern UI
+- [x] Create Home page
 - [ ] Create Game Library page
 - [ ] Create Android Instances page
 - [ ] Create Device Profiles page
