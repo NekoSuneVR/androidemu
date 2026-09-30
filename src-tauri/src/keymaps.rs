@@ -31,6 +31,8 @@ pub struct KeymapProfile {
     pub name: String,
     pub package_name: String,
     #[serde(default)]
+    pub instance_id: Option<String>,
+    #[serde(default)]
     pub overlay_visible: bool,
     #[serde(default)]
     pub bindings: Vec<KeyBinding>,
