@@ -242,6 +242,73 @@ pub fn kernel_log(port: u16, lines: u32) -> Result<AdbResult, String> {
     ])
 }
 
+pub fn input_tap(port: u16, x: i32, y: i32) -> Result<AdbResult, String> {
+    validate_coord(x)?;
+    validate_coord(y)?;
+    run_for_device(port, &[
+        "shell".into(), "input".into(), "tap".into(), x.to_string(), y.to_string()
+    ])
+}
+
+pub fn input_swipe(
+    port: u16,
+    x1: i32,
+    y1: i32,
+    x2: i32,
+    y2: i32,
+    duration_ms: u32,
+) -> Result<AdbResult, String> {
+    validate_coord(x1)?;
+    validate_coord(y1)?;
+    validate_coord(x2)?;
+    validate_coord(y2)?;
+    let duration_ms = duration_ms.clamp(50, 5000);
+    run_for_device(port, &[
+        "shell".into(), "input".into(), "swipe".into(),
+        x1.to_string(), y1.to_string(), x2.to_string(), y2.to_string(),
+        duration_ms.to_string(),
+    ])
+}
+
+pub fn input_keyevent(port: u16, keycode: String) -> Result<AdbResult, String> {
+    const ALLOWED: &[&str] = &[
+        "KEYCODE_BACK", "KEYCODE_HOME", "KEYCODE_APP_SWITCH", "KEYCODE_ENTER",
+        "KEYCODE_DEL", "KEYCODE_DPAD_UP", "KEYCODE_DPAD_DOWN",
+        "KEYCODE_DPAD_LEFT", "KEYCODE_DPAD_RIGHT", "KEYCODE_ESCAPE",
+    ];
+    let keycode = keycode.trim().to_ascii_uppercase();
+    if !ALLOWED.contains(&keycode.as_str()) {
+        return Err("Unsupported Android keycode".into());
+    }
+    run_for_device(port, &[
+        "shell".into(), "input".into(), "keyevent".into(), keycode
+    ])
+}
+
+pub fn input_text(port: u16, text: String) -> Result<AdbResult, String> {
+    if text.is_empty() {
+        return Err("Input text cannot be empty".into());
+    }
+    if text.len() > 128 {
+        return Err("Input text is limited to 128 bytes".into());
+    }
+    if !text.chars().all(|c| c.is_ascii_graphic() || c == ' ') {
+        return Err("Input text currently supports printable ASCII only".into());
+    }
+
+    let encoded = text.replace('%', "%25").replace(' ', "%s");
+    run_for_device(port, &[
+        "shell".into(), "input".into(), "text".into(), encoded
+    ])
+}
+
+fn validate_coord(value: i32) -> Result<(), String> {
+    if !(0..=32767).contains(&value) {
+        return Err("Input coordinate must be between 0 and 32767".into());
+    }
+    Ok(())
+}
+
 fn validate_socket_spec(value: &str, label: &str) -> Result<(), String> {
     let value = value.trim();
     if value.is_empty() {
