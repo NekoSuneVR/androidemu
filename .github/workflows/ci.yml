@@ -37,3 +37,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo check --manifest-path src-tauri/Cargo.toml
       - run: cargo test --manifest-path src-tauri/Cargo.toml
+
+  remote-node:
+    name: Remote Node
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: remote-node
+      - run: node --check src/server.js
+        working-directory: remote-node
