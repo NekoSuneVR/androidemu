@@ -39,6 +39,18 @@ fn update_instance(
 }
 
 #[tauri::command]
+fn clone_instance(
+    state: State<'_, RuntimeState>,
+    id: String,
+    name: String,
+) -> Result<AndroidInstance, String> {
+    if state.processes.lock().map_err(|_| "Runtime process lock poisoned")?.contains_key(&id) {
+        return Err("Stop the instance before cloning it".into());
+    }
+    storage::clone_instance(&state.data_dir, &id, name)
+}
+
+#[tauri::command]
 fn delete_instance(state: State<'_, RuntimeState>, id: String) -> Result<(), String> {
     let running = state
         .processes
@@ -419,6 +431,7 @@ pub fn run() {
             adb_rotate_orientation,
             create_instance,
             update_instance,
+            clone_instance,
             delete_instance,
             list_device_profiles,
             save_device_profile,
