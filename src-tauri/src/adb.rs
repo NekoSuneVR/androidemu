@@ -250,6 +250,25 @@ pub fn input_tap(port: u16, x: i32, y: i32) -> Result<AdbResult, String> {
     ])
 }
 
+pub fn input_double_tap(port: u16, x: i32, y: i32) -> Result<AdbResult, String> {
+    validate_coord(x)?;
+    validate_coord(y)?;
+    let first = run_for_device(port, &[
+        "shell".into(), "input".into(), "tap".into(), x.to_string(), y.to_string()
+    ])?;
+    if !first.success {
+        return Ok(first);
+    }
+    std::thread::sleep(std::time::Duration::from_millis(120));
+    run_for_device(port, &[
+        "shell".into(), "input".into(), "tap".into(), x.to_string(), y.to_string()
+    ])
+}
+
+pub fn input_hold(port: u16, x: i32, y: i32, duration_ms: u32) -> Result<AdbResult, String> {
+    input_swipe(port, x, y, x, y, duration_ms)
+}
+
 pub fn input_swipe(
     port: u16,
     x1: i32,
