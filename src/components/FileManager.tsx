@@ -204,6 +204,13 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
             <button className="ghost compact" disabled={busy} onClick={() => refresh(parentPath())}>Up</button>
             <button className="ghost compact" disabled={busy} onClick={() => refresh("/sdcard")}>/sdcard</button>
             <button className="ghost compact" disabled={busy} onClick={() => refresh("/storage")}>/storage</button>
+            <button className="ghost compact" disabled={busy || !selected || !["adb-root","full-root"].includes(selected.rootMode)} onClick={async () => {
+              try {
+                setBusy(true);
+                await run("adb_root", {});
+                await refresh("/");
+              } catch (error) { setOutput(String(error)); } finally { setBusy(false); }
+            }}>Root filesystem</button>
             <button className="ghost compact" disabled={busy} onClick={() => refresh()}>Refresh</button>
             <button className="ghost compact" disabled={busy} onClick={createFolder}>New Folder</button>
             <button className="ghost compact" disabled={busy} onClick={() => run("adb_storage_info", {})}>Storage Usage</button>
