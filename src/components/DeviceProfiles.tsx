@@ -18,7 +18,21 @@ const blankProfile: DeviceProfile = {
   defaultRamMb: 4096,
   touchPoints: 10,
   telephony: true,
-  formFactor: "phone"
+  formFactor: "phone",
+  storageGb: 64,
+  wifi: true,
+  bluetooth: true,
+  gps: true,
+  cameraConfiguration: "front+rear",
+  microphone: true,
+  accelerometer: true,
+  gyroscope: true,
+  compass: true,
+  lightSensor: true,
+  proximitySensor: true,
+  batteryPercent: 100,
+  charging: false,
+  tabletResources: false
 };
 
 const builtInIds = new Set(["phone", "gaming-phone", "tablet", "large-tablet", "foldable"]);
@@ -70,7 +84,8 @@ export default function DeviceProfiles({ profiles, onChanged }: Props) {
               <div className="instance-title"><strong>{item.name}</strong><span>{item.refreshRate} Hz</span></div>
               <p>{item.width}×{item.height} · {item.dpi} DPI</p>
               <small>{item.defaultCpuCores} vCPU · {Math.round(item.defaultRamMb / 1024)} GB RAM · {item.touchPoints} touch points</small>
-              <small>{item.formFactor} · Telephony {item.telephony ? "enabled" : "disabled"}</small>
+              <small>{item.formFactor} · {item.storageGb} GB storage · Telephony {item.telephony ? "enabled" : "disabled"}</small>
+              <small>Wi-Fi {item.wifi ? "on" : "off"} · Bluetooth {item.bluetooth ? "on" : "off"} · GPS {item.gps ? "on" : "off"} · Camera {item.cameraConfiguration}</small>
               {!builtInIds.has(item.id) && (
                 <div className="button-row">
                   <button className="danger compact" disabled={busy} onClick={() => remove(item)}>Remove</button>
@@ -111,10 +126,23 @@ export default function DeviceProfiles({ profiles, onChanged }: Props) {
             </label>
           </div>
 
-          <label className="checkbox-line">
-            <input type="checkbox" checked={profile.telephony} onChange={e => setProfile({...profile,telephony:e.target.checked})} />
-            Telephony capability
+          <label>Storage GB<input type="number" min="4" max="2048" value={profile.storageGb} onChange={e => setProfile({...profile,storageGb:Number(e.target.value)})} /></label>
+          <label>Camera
+            <select value={profile.cameraConfiguration} onChange={e => setProfile({...profile,cameraConfiguration:e.target.value as DeviceProfile["cameraConfiguration"]})}>
+              <option value="none">None</option><option value="front">Front</option><option value="rear">Rear</option><option value="front+rear">Front + rear</option>
+            </select>
           </label>
+          <label>Battery %<input type="number" min="0" max="100" value={profile.batteryPercent} onChange={e => setProfile({...profile,batteryPercent:Number(e.target.value)})} /></label>
+          {[
+            ["telephony","Telephony capability"],["wifi","Wi-Fi capability"],["bluetooth","Bluetooth capability"],["gps","GPS capability"],
+            ["microphone","Microphone"],["accelerometer","Accelerometer"],["gyroscope","Gyroscope"],["compass","Compass"],
+            ["lightSensor","Light sensor"],["proximitySensor","Proximity sensor"],["charging","Charging state"],["tabletResources","Tablet resources"]
+          ].map(([key,label]) => (
+            <label className="checkbox-line" key={key}>
+              <input type="checkbox" checked={Boolean(profile[key as keyof DeviceProfile])} onChange={e => setProfile({...profile,[key]:e.target.checked})} />
+              {label}
+            </label>
+          ))}
 
           <button className="primary" disabled={busy}>{busy ? "Saving..." : "Save Custom Profile"}</button>
           {output && <pre className="inline-output">{output}</pre>}
