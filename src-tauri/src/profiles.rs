@@ -1,0 +1,87 @@
+use serde::Serialize;
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceProfile {
+    pub id: String,
+    pub name: String,
+    pub width: u32,
+    pub height: u32,
+    pub dpi: u32,
+    pub refresh_rate: u32,
+    pub default_cpu_cores: u16,
+    pub default_ram_mb: u32,
+    pub touch_points: u8,
+    pub telephony: bool,
+    pub form_factor: String,
+}
+
+pub fn builtin_profiles() -> Vec<DeviceProfile> {
+    vec![
+        DeviceProfile {
+            id: "phone".into(),
+            name: "Phone".into(),
+            width: 1080,
+            height: 2400,
+            dpi: 420,
+            refresh_rate: 60,
+            default_cpu_cores: 4,
+            default_ram_mb: 4096,
+            touch_points: 10,
+            telephony: true,
+            form_factor: "phone".into(),
+        },
+        DeviceProfile {
+            id: "gaming-phone".into(),
+            name: "Gaming Phone".into(),
+            width: 1080,
+            height: 2400,
+            dpi: 420,
+            refresh_rate: 120,
+            default_cpu_cores: 8,
+            default_ram_mb: 8192,
+            touch_points: 10,
+            telephony: true,
+            form_factor: "phone".into(),
+        },
+        DeviceProfile {
+            id: "tablet".into(),
+            name: "Tablet".into(),
+            width: 2560,
+            height: 1600,
+            dpi: 280,
+            refresh_rate: 90,
+            default_cpu_cores: 6,
+            default_ram_mb: 6144,
+            touch_points: 10,
+            telephony: false,
+            form_factor: "tablet".into(),
+        },
+        DeviceProfile {
+            id: "large-tablet".into(),
+            name: "Large Tablet".into(),
+            width: 2560,
+            height: 1600,
+            dpi: 240,
+            refresh_rate: 120,
+            default_cpu_cores: 8,
+            default_ram_mb: 8192,
+            touch_points: 10,
+            telephony: false,
+            form_factor: "tablet".into(),
+        },
+        DeviceProfile {
+            id: "foldable".into(),
+            name: "Foldable".into(),
+            width: 2208,
+            height: 1840,
+            dpi: 420,
+            refresh_rate: 120,
+            default_cpu_cores: 8,
+            default_ram_mb: 8192,
+            touch_points: 10,
+            telephony: true,
+            form_factor: "foldable".into(),
+        },
+    ]
+}

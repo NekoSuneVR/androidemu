@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#07110d" />
+  <title>NekoDroid Remote</title>
+  <link rel="stylesheet" href="/remote.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="card join" id="joinCard">
+      <div class="brand"><span>N</span><div><strong>NekoDroid Remote</strong><small>Secure invite access</small></div></div>
+      <h1>Connect to Android</h1>
+      <p>Enter the invite code shown by the NekoDroid host. The host must approve your session before video or controls are enabled.</p>
+      <form id="joinForm">
+        <input id="invite" maxlength="20" autocomplete="one-time-code" placeholder="Invite code" />
+        <button>Connect</button>
+      </form>
+      <p class="status" id="status">Waiting for invite.</p>
+    </section>
+
+    <section class="viewer hidden" id="viewer">
+      <header>
+        <div><strong id="sessionName">NekoDroid</strong><small id="permissionText">Waiting for host approval…</small></div>
+        <button id="disconnect">Disconnect</button>
+      </header>
+      <div class="screen-wrap">
+        <video id="screen" autoplay playsinline></video>
+        <div class="waiting" id="waiting">Waiting for host approval…</div>
+      </div>
+      <div class="mobile-controls">
+        <button data-key="BACK">Back</button>
+        <button data-key="HOME">Home</button>
+        <button data-key="APP_SWITCH">Apps</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/remote.js"></script>
+</body>
+</html>

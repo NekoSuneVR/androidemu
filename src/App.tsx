@@ -1,0 +1,297 @@
+import { FormEvent, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import DeviceProfiles from "./components/DeviceProfiles";
+import ImageManager from "./components/ImageManager";
+import RemoteAccess from "./components/RemoteAccess";
+import DeveloperTools from "./components/DeveloperTools";
+import type {
+  AdbInfo,
+  AndroidInstance,
+  CreateInstanceRequest,
+  DeviceProfile,
+  HostCapabilities,
+  InstalledImage,
+  RuntimeActionResult
+} from "./types";
+
+const nav = ["Home", "Instances", "Android Images", "Device Profiles", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
+
+const defaultRequest: CreateInstanceRequest = {
+  name: "Gaming",
+  androidVersion: "16",
+  profile: "Gaming Phone",
+  cpuCores: 4,
+  ramMb: 4096,
+  adbPort: 5555,
+  rootMode: "standard",
+  imagePath: ""
+};
+
+export default function App() {
+  const [instances, setInstances] = useState<AndroidInstance[]>([]);
+  const [profiles, setProfiles] = useState<DeviceProfile[]>([]);
+  const [images, setImages] = useState<InstalledImage[]>([]);
+  const [host, setHost] = useState<HostCapabilities | null>(null);
+  const [adbInfo, setAdbInfo] = useState<AdbInfo | null>(null);
+  const [active, setActive] = useState("Home");
+  const [backendOnline, setBackendOnline] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [request, setRequest] = useState<CreateInstanceRequest>(defaultRequest);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string>("");
+
+  const refresh = async () => {
+    const [instanceData, hostData, profileData, adbData, imageData] = await Promise.all([
+      invoke<AndroidInstance[]>("list_instances"),
+      invoke<HostCapabilities>("get_host_capabilities"),
+      invoke<DeviceProfile[]>("list_device_profiles"),
+      invoke<AdbInfo>("get_adb_info"),
+      invoke<InstalledImage[]>("list_android_images")
+    ]);
+    setInstances(instanceData);
+    setHost(hostData);
+    setProfiles(profileData);
+    setAdbInfo(adbData);
+    setImages(imageData);
+    setBackendOnline(true);
+  };
+
+  useEffect(() => {
+    refresh().catch((error) => {
+      setBackendOnline(false);
+      setNotice(String(error));
+    });
+
+    const timer = window.setInterval(() => {
+      invoke<AndroidInstance[]>("list_instances")
+        .then(setInstances)
+        .catch(() => setBackendOnline(false));
+    }, 3000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const createInstance = async (event: FormEvent) => {
+    event.preventDefault();
+    try {
+      const created = await invoke<AndroidInstance>("create_instance", { request });
+      setInstances(current => [...current, created]);
+      setShowCreate(false);
+      setNotice(`${created.name} created. Add a bootable Android x86_64 QCOW2 or raw image before starting it.`);
+      setRequest({ ...defaultRequest, adbPort: defaultRequest.adbPort + instances.length + 1 });
+    } catch (error) {
+      setNotice(String(error));
+    }
+  };
+
+  const applyProfile = (name: string) => {
+    const profile = profiles.find(item => item.name === name);
+    if (!profile) {
+      setRequest(current => ({ ...current, profile: name }));
+      return;
+    }
+    setRequest(current => ({
+      ...current,
+      profile: profile.name,
+      cpuCores: profile.defaultCpuCores,
+      ramMb: profile.defaultRamMb
+    }));
+  };
+
+  const runtimeAction = async (id: string, action: "start_instance" | "stop_instance") => {
+    setBusyId(id);
+    try {
+      const result = await invoke<RuntimeActionResult>(action, { id });
+      setNotice(result.message);
+      await refresh();
+    } catch (error) {
+      setNotice(String(error));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const deleteInstance = async (instance: AndroidInstance) => {
+    if (!window.confirm(`Delete ${instance.name}? Its instance configuration, logs and snapshots will be removed.`)) return;
+    setBusyId(instance.id);
+    try {
+      await invoke("delete_instance", { id: instance.id });
+      setInstances(current => current.filter(item => item.id !== instance.id));
+      setNotice(`${instance.name} deleted.`);
+    } catch (error) {
+      setNotice(String(error));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const qemuStatus = host?.qemu.found ? host.qemu.version ?? "QEMU detected" : "QEMU not found";
+
+  const instancesPanel = (
+    <section className="panel">
+      <div className="panel-heading">
+        <div><p className="eyebrow">Instances</p><h3>Android environments</h3></div>
+        <button className="ghost" onClick={() => refresh().catch(error => setNotice(String(error)))}>Refresh</button>
+      </div>
+      {instances.length === 0 ? (
+        <div className="empty">
+          <div className="phone-outline"><div /></div>
+          <h4>No Android instance yet</h4>
+          <p>Create an instance now. A bootable Android x86_64 QCOW2 or raw disk can be assigned in the creation form.</p>
+          <button className="primary" onClick={() => setShowCreate(true)}>Create first instance</button>
+        </div>
+      ) : (
+        <div className="instance-grid">
+          {instances.map(instance => (
+            <article className="instance-card" key={instance.id}>
+              <div className="instance-title">
+                <strong>{instance.name}</strong>
+                <span className={`status status-${instance.status}`}>{instance.status}</span>
+              </div>
+              <p>Android {instance.androidVersion} · {instance.profile}</p>
+              <small>{instance.cpuCores} vCPU · {Math.round(instance.ramMb / 1024)} GB RAM · ADB localhost:{instance.adbPort}</small>
+              <small className="image-path">{instance.imagePath || "No boot image configured"}</small>
+              {instance.processId && <small>PID {instance.processId}</small>}
+              <div className="instance-actions">
+                {instance.status === "running" ? (
+                  <button className="danger" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "stop_instance")}>Stop</button>
+                ) : (
+                  <button className="primary compact" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "start_instance")}>Start</button>
+                )}
+                <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => deleteInstance(instance)}>Delete</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-mark">N</div>
+          <div><strong>NekoDroid</strong><span>Android runtime</span></div>
+        </div>
+        <nav>
+          {nav.map(item => (
+            <button key={item} className={active === item ? "nav-item active" : "nav-item"} onClick={() => setActive(item)}>
+              {item}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <span className={backendOnline ? "dot online" : "dot"} />
+          Rust backend {backendOnline ? "online" : "offline"}
+        </div>
+      </aside>
+
+      <main>
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">NekoDroid Control Center</p>
+            <h1>{active}</h1>
+          </div>
+          <button className="primary" onClick={() => setShowCreate(true)}>+ New Instance</button>
+        </header>
+
+        {notice && <div className="notice"><span>{notice}</span><button onClick={() => setNotice("")}>×</button></div>}
+
+        {active === "Home" && (
+          <>
+            <section className="hero">
+              <div>
+                <span className="pill">Runtime foundation</span>
+                <h2>Native Android runtime management, ready for the first bootable image.</h2>
+                <p>NekoDroid now persists instances, probes QEMU/KVM/WHPX, manages QEMU processes, exposes localhost ADB tooling, and defines realistic Android device profiles.</p>
+              </div>
+              <div className="host-card">
+                <span>Detected host</span>
+                <strong>{host ? `${host.os} / ${host.arch}` : "Detecting..."}</strong>
+                <small>{host?.accelerator ?? "Waiting for backend"} · {host?.acceleratorAvailable ? "available" : "unavailable"}</small>
+                <small className="runtime-detail">{qemuStatus}</small>
+              </div>
+            </section>
+
+            <section className="stats">
+              <article><span>Instances</span><strong>{instances.length}</strong><small>Persistent Android environments</small></article>
+              <article><span>QEMU</span><strong>{host?.qemu.found ? "Ready" : "Missing"}</strong><small>{host?.qemu.executable ?? "Install qemu-system-x86_64"}</small></article>
+              <article><span>Acceleration</span><strong>{host?.accelerator ?? "Unknown"}</strong><small>{host?.virtualizationNote ?? "Capability scan pending"}</small></article>
+              <article><span>ADB</span><strong>{adbInfo?.found ? "Ready" : "Missing"}</strong><small>{adbInfo?.version ?? "Android platform-tools not detected"}</small></article>
+            </section>
+            {instancesPanel}
+          </>
+        )}
+
+        {active === "Instances" && instancesPanel}
+        {active === "Android Images" && <ImageManager images={images} onChanged={refresh} />}
+        {active === "Device Profiles" && <DeviceProfiles profiles={profiles} />}
+        {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
+        {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
+
+        {["Media Tools", "NekoAI", "Settings"].includes(active) && (
+          <section className="panel">
+            <div className="empty">
+              <h4>{active} foundation is queued next</h4>
+              <p>The page exists in navigation but its backend module has not been marked complete yet.</p>
+            </div>
+          </section>
+        )}
+      </main>
+
+      {showCreate && (
+        <div className="modal-backdrop" onMouseDown={() => setShowCreate(false)}>
+          <form className="modal" onSubmit={createInstance} onMouseDown={event => event.stopPropagation()}>
+            <div className="modal-heading">
+              <div><p className="eyebrow">Instance Manager</p><h3>Create Android instance</h3></div>
+              <button type="button" className="icon-button" onClick={() => setShowCreate(false)}>×</button>
+            </div>
+            <div className="form-grid">
+              <label>Name<input value={request.name} onChange={e => setRequest({...request, name:e.target.value})} /></label>
+              <label>Android version
+                <select value={request.androidVersion} onChange={e => setRequest({...request, androidVersion:e.target.value})}>
+                  {["16","15","14","13","12","11","10","9"].map(v => <option key={v} value={v}>Android {v}</option>)}
+                </select>
+              </label>
+              <label>Profile
+                <select value={request.profile} onChange={e => applyProfile(e.target.value)}>
+                  {(profiles.length ? profiles.map(profile => profile.name) : ["Gaming Phone","Phone","Tablet","Large Tablet","Foldable"])
+                    .map(name => <option key={name}>{name}</option>)}
+                </select>
+              </label>
+              <label>CPU cores<input type="number" min="1" max="64" value={request.cpuCores} onChange={e => setRequest({...request, cpuCores:Number(e.target.value)})} /></label>
+              <label>RAM (MB)<input type="number" min="512" step="512" value={request.ramMb} onChange={e => setRequest({...request, ramMb:Number(e.target.value)})} /></label>
+              <label>ADB localhost port<input type="number" min="1" max="65535" value={request.adbPort} onChange={e => setRequest({...request, adbPort:Number(e.target.value)})} /></label>
+              <label>Privilege mode
+                <select value={request.rootMode} onChange={e => setRequest({...request, rootMode:e.target.value as CreateInstanceRequest["rootMode"]})}>
+                  <option value="standard">Standard</option><option value="developer">Developer</option><option value="adb-root">ADB Root</option><option value="full-root">Full Root</option>
+                </select>
+              </label>
+              <label className="wide">Registered Android image
+                <select value={images.some(image => image.diskPath === request.imagePath) ? request.imagePath ?? "" : ""} onChange={e => setRequest({...request, imagePath:e.target.value})}>
+                  <option value="">Custom / none</option>
+                  {images.filter(image => image.valid).map(image => (
+                    <option key={image.manifest.id} value={image.diskPath}>
+                      {image.manifest.name} · Android {image.manifest.androidVersion}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="wide">Android boot disk path
+                <input placeholder="C:\\NekoDroid\\images\\android16.qcow2 or /opt/nekodroid/images/android16.img" value={request.imagePath ?? ""} onChange={e => setRequest({...request, imagePath:e.target.value})} />
+              </label>
+            </div>
+            <div className="warning-box">
+              NekoDroid does not falsify Play Integrity or hardware-backed attestation. Root and developer modes may change app compatibility.
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="ghost" onClick={() => setShowCreate(false)}>Cancel</button>
+              <button className="primary" type="submit">Create Instance</button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}

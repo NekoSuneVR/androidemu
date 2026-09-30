@@ -1,0 +1,33 @@
+services:
+  remote-node:
+    build: .
+    restart: unless-stopped
+    environment:
+      PORT: 8096
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8096}
+      NODE_SECRET: ${NODE_SECRET}
+      ALLOW_ORIGIN: ${ALLOW_ORIGIN:-*}
+      INVITE_TTL_SECONDS: ${INVITE_TTL_SECONDS:-900}
+      MAX_INVITE_TTL_SECONDS: ${MAX_INVITE_TTL_SECONDS:-86400}
+      TURN_URL: ${TURN_URL:-}
+      TURN_USERNAME: ${TURN_USERNAME:-}
+      TURN_PASSWORD: ${TURN_PASSWORD:-}
+    ports:
+      - "8096:8096"
+    depends_on:
+      - coturn
+
+  coturn:
+    image: coturn/coturn:4.6.3
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -n
+      - --log-file=stdout
+      - --fingerprint
+      - --lt-cred-mech
+      - --realm=${TURN_REALM:-remote.example.com}
+      - --user=${TURN_USERNAME:-nekodroid}:${TURN_PASSWORD}
+      - --listening-port=3478
+      - --min-port=49160
+      - --max-port=49200

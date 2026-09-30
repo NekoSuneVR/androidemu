@@ -7,13 +7,13 @@ This file tracks the planned implementation of NekoDroid.
 # Phase 0 - Project Foundation
 
 - [ ] Choose final project name
-- [ ] Create repository
+- [x] Create repository
 - [ ] Add open-source license
-- [ ] Add `README.md`
-- [ ] Add `TODO.md`
-- [ ] Add contributing guide
+- [x] Add `README.md`
+- [x] Add `TODO.md`
+- [x] Add contributing guide
 - [ ] Add code of conduct
-- [ ] Set up CI
+- [x] Set up CI
 - [ ] Set up release builds
 - [ ] Create Windows build pipeline
 - [ ] Create Linux build pipeline
@@ -25,16 +25,16 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 1 - Desktop Launcher
 
-- [ ] Create Tauri application
-- [ ] Add React frontend
-- [ ] Add Rust backend
-- [ ] Create dark modern UI
-- [ ] Create Home page
+- [x] Create Tauri application
+- [x] Add React frontend
+- [x] Add Rust backend
+- [x] Create dark modern UI
+- [x] Create Home page
 - [ ] Create Game Library page
-- [ ] Create Android Instances page
-- [ ] Create Device Profiles page
+- [x] Create Android Instances page
+- [x] Create Device Profiles page
 - [ ] Create Media Tools page
-- [ ] Create Developer Tools page
+- [x] Create Developer Tools page
 - [ ] Create AI page
 - [ ] Create Settings page
 - [ ] Add update system
@@ -66,13 +66,13 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 3 - Android Image Manager
 
-- [ ] Design image manifest format
+- [x] Design image manifest format
 - [ ] Add Android image downloader
 - [ ] Add checksum verification
 - [ ] Add image installation
 - [ ] Add image removal
 - [ ] Add image update handling
-- [ ] Add custom image import
+- [x] Add custom image import
 - [ ] Add custom GSI import
 - [ ] Add image repair
 
@@ -111,12 +111,12 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 5 - Device Profiles
 
-- [ ] Create device profile format
-- [ ] Phone profile
-- [ ] Gaming phone profile
-- [ ] Tablet profile
-- [ ] Large tablet profile
-- [ ] Foldable profile
+- [x] Create device profile format
+- [x] Phone profile
+- [x] Gaming phone profile
+- [x] Tablet profile
+- [x] Large tablet profile
+- [x] Foldable profile
 - [ ] Custom profile
 
 ## Profile Settings
@@ -124,8 +124,8 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Resolution
 - [ ] DPI
 - [ ] Refresh rate
-- [ ] CPU count
-- [ ] RAM
+- [x] CPU count
+- [x] RAM
 - [ ] Storage size
 - [ ] Touch point count
 - [ ] Wi-Fi capability
@@ -255,17 +255,17 @@ This file tracks the planned implementation of NekoDroid.
 
 - [ ] Bundle/platform-tools manager
 - [ ] Toggle ADB on/off
-- [ ] ADB over localhost
+- [x] ADB over localhost
 - [ ] Optional ADB over LAN
 - [ ] ADB authentication
-- [ ] Per-instance ADB ports
-- [ ] Connect/disconnect button
-- [ ] Built-in ADB terminal
-- [ ] `adb shell`
-- [ ] `adb install`
+- [x] Per-instance ADB ports
+- [x] Connect/disconnect button
+- [x] Built-in ADB terminal
+- [x] `adb shell`
+- [x] `adb install`
 - [ ] `adb uninstall`
-- [ ] `adb push`
-- [ ] `adb pull`
+- [x] `adb push`
+- [x] `adb pull`
 - [ ] `adb forward`
 - [ ] `adb reverse`
 - [ ] `adb reboot`
@@ -645,21 +645,21 @@ skills/
 
 # Phase 32 - Multi-Instance
 
-- [ ] Instance creation
-- [ ] Instance deletion
+- [x] Instance creation
+- [x] Instance deletion
 - [ ] Instance rename
 - [ ] Instance clone
 - [ ] Concurrent instances
 - [ ] Separate userdata
-- [ ] Separate Android versions
-- [ ] Separate device profiles
-- [ ] Separate root setting
-- [ ] Separate ADB ports
+- [x] Separate Android versions
+- [x] Separate device profiles
+- [x] Separate root setting
+- [x] Separate ADB ports
 - [ ] Separate AI settings
 - [ ] Separate keymaps
 - [ ] Separate storage
 - [ ] Separate snapshots
-- [ ] CPU/RAM resource limits
+- [x] CPU/RAM resource limits
 
 ---
 
@@ -724,10 +724,10 @@ skills/
 
 # Phase 36 - Security
 
-- [ ] ADB off by default
-- [ ] Root off by default
+- [x] ADB off by default
+- [x] Root off by default
 - [ ] AI control off by default
-- [ ] LAN ADB off by default
+- [x] LAN ADB off by default
 - [ ] API localhost-only by default
 - [ ] Require user approval for dangerous actions
 - [ ] Root warning
@@ -796,7 +796,7 @@ skills/
 - [ ] Detect CPU
 - [ ] Detect VT-x/AMD-V
 - [ ] Detect Hyper-V/WHPX
-- [ ] Detect KVM
+- [x] Detect KVM
 - [ ] Detect GPU
 - [ ] Detect Vulkan
 - [ ] Detect hardware codecs
@@ -805,6 +805,46 @@ skills/
 - [ ] Recommend renderer
 - [ ] Recommend Android version
 - [ ] Create gaming profile
+
+---
+
+# Phase 41 - Remote Access
+
+- [x] Self-hosted remote signalling node
+- [x] Docker deployment
+- [x] Expiring invite codes
+- [x] Remote node shared-secret authentication
+- [x] Per-session host tokens
+- [x] Browser/mobile viewer
+- [x] Host viewer approval
+- [x] Deny viewer
+- [x] Revoke viewer
+- [x] View-only permission
+- [x] Android control permission
+- [x] WebRTC signalling
+- [x] STUN support
+- [x] Optional TURN relay deployment
+- [x] Touch/tap forwarding
+- [x] Swipe forwarding
+- [x] Android navigation key forwarding
+- [x] Keyboard forwarding
+- [x] ADB-backed remote Android input
+- [x] Explicit host screen/window sharing
+- [ ] Direct emulator framebuffer WebRTC capture
+- [ ] Direct Android audio capture
+- [ ] Adaptive bitrate
+- [ ] 30/60/90/120 FPS remote presets
+- [ ] Clipboard synchronization
+- [ ] Encrypted remote file transfer
+- [ ] Gamepad forwarding
+- [ ] Remote microphone
+- [ ] Remote virtual camera
+- [ ] Persistent trusted-device pairing
+- [ ] Optional owner-configured unattended access
+- [ ] Multi-region signalling nodes
+- [ ] Connection quality statistics
+- [ ] Native Android viewer app
+- [ ] PWA install support
 
 ---
 
