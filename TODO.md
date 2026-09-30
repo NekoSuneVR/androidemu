@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **371/643 tasks complete (57.7%)**
+> Progress: **384/643 tasks complete (59.7%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -199,16 +199,16 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 8 - Frame Rate
 
-- [ ] 30 FPS
-- [ ] 60 FPS
-- [ ] 90 FPS
-- [ ] 120 FPS
-- [ ] 144 FPS
-- [ ] 165 FPS
-- [ ] 240 FPS
-- [ ] Unlimited FPS
+- [x] 30 FPS
+- [x] 60 FPS
+- [x] 90 FPS
+- [x] 120 FPS
+- [x] 144 FPS
+- [x] 165 FPS
+- [x] 240 FPS
+- [x] Unlimited FPS
 - [ ] Per-game FPS setting
-- [ ] Frame limiter
+- [x] Frame limiter
 - [ ] FPS overlay
 - [ ] Frame time graph
 - [ ] CPU/GPU usage overlay
@@ -217,15 +217,15 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 9 - ARM Compatibility
 
-- [ ] Inspect APK ABI
-- [ ] Prefer x86_64 when available
-- [ ] Native bridge architecture
+- [x] Inspect APK ABI
+- [x] Prefer x86_64 when available
+- [x] Native bridge architecture
 - [ ] Investigate `libndk_translation`
 - [ ] ARM64 application compatibility
 - [ ] ARMv7 compatibility
 - [x] ARM64 guest mode research
 - [ ] Per-app compatibility mode
-- [ ] Compatibility diagnostics
+- [x] Compatibility diagnostics
 
 ---
 
