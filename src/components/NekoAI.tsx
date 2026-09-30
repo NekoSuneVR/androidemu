@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AdbResult, AiChatResult, AiSettings, AndroidInstance } from "../types";
+import type { AdbResult, AiChatResult, AiGameState, AiSettings, AndroidInstance, SkillManifest } from "../types";
 
 const defaults: AiSettings = {
   enabled: false,
@@ -32,6 +32,10 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
   const [inputText, setInputText] = useState("hello");
   const [queueJson, setQueueJson] = useState('[{"kind":"tap","x":540,"y":1200},{"kind":"hold","x":540,"y":1200,"durationMs":500}]');
   const [busy, setBusy] = useState(false);
+  const [skills, setSkills] = useState<SkillManifest[]>([]);
+  const [skillJson, setSkillJson] = useState("");
+  const [skillPath, setSkillPath] = useState("");
+  const [gameState, setGameState] = useState<AiGameState | null>(null);
 
   const selectedInstance = instances.find(instance => instance.id === instanceId) ?? instances[0];
 
@@ -42,6 +46,9 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
   useEffect(() => {
     invoke<AiSettings>("get_ai_settings")
       .then(setSettings)
+      .catch(error => setOutput(String(error)));
+    invoke<SkillManifest[]>("list_ai_skills")
+      .then(setSkills)
       .catch(error => setOutput(String(error)));
   }, []);
 
@@ -311,6 +318,48 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
               <button type="button" className="primary compact" disabled={busy || !settings.enabled || !selectedInstance || !queueJson.trim()} onClick={runAiQueue}>Run Queue</button>
               <button type="button" className="danger compact" onClick={cancelAiQueue}>Cancel Queue</button>
             </div>
+          </div>
+
+          <div className="tool-group">
+            <h4>AI game skills</h4>
+            <small className="muted">{skills.length} skill(s) loaded, including the built-in Generic Android skill.</small>
+            <label>Skill JSON
+              <textarea value={skillJson} placeholder='{"schemaVersion":1,"id":"my-game",...}' onChange={e => setSkillJson(e.target.value)} />
+            </label>
+            <div className="button-row">
+              <button type="button" className="ghost compact" disabled={!skillJson.trim()} onClick={async () => {
+                try {
+                  const skill = JSON.parse(skillJson) as SkillManifest;
+                  await invoke("save_ai_skill", { skill });
+                  setSkills(await invoke<SkillManifest[]>("list_ai_skills"));
+                  setOutput(`Saved AI skill ${skill.name}.`);
+                } catch (error) { setOutput(String(error)); }
+              }}>Save custom skill</button>
+              <button type="button" className="ghost compact" disabled={!selectedInstance} onClick={async () => {
+                try {
+                  const state = await invoke<AiGameState>("get_ai_game_state", { port:selectedInstance?.adbPort });
+                  setGameState(state);
+                  setOutput(`Foreground package: ${state.packageName || "unknown"}\nOrientation: ${state.orientation}\nDisplay: ${state.displaySize}`);
+                } catch (error) { setOutput(String(error)); }
+              }}>Read game state</button>
+            </div>
+            <label>Import/export file path<input value={skillPath} onChange={e => setSkillPath(e.target.value)} /></label>
+            <div className="button-row">
+              <button type="button" className="ghost compact" disabled={!skillPath} onClick={async () => {
+                try {
+                  await invoke("import_ai_skill", { source:skillPath });
+                  setSkills(await invoke<SkillManifest[]>("list_ai_skills"));
+                  setOutput("Skill imported.");
+                } catch (error) { setOutput(String(error)); }
+              }}>Import skill</button>
+              <button type="button" className="ghost compact" disabled={!skillPath || !skills.length} onClick={async () => {
+                try {
+                  await invoke("export_ai_skill", { id:skills[0].id, destination:skillPath });
+                  setOutput("Skill exported.");
+                } catch (error) { setOutput(String(error)); }
+              }}>Export first skill</button>
+            </div>
+            {gameState && <small className="muted">{gameState.packageName} · {gameState.orientation} · {gameState.displaySize}</small>}
           </div>
 
           <div className="warning-box">
