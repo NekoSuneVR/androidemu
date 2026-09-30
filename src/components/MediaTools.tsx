@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { FfmpegInfo, MediaJobRequest, MediaResult } from "../types";
+import type { FfmpegInfo, MediaCodecCapabilityReport, MediaJobRequest, MediaResult } from "../types";
 
 export default function MediaTools() {
   const [info, setInfo] = useState<FfmpegInfo | null>(null);
@@ -19,10 +19,14 @@ export default function MediaTools() {
   const [busy, setBusy] = useState(false);
   const [batchLines, setBatchLines] = useState("");
   const [result, setResult] = useState("FFmpeg job output will appear here.");
+  const [codecReport, setCodecReport] = useState<MediaCodecCapabilityReport | null>(null);
 
   useEffect(() => {
     invoke<FfmpegInfo>("get_ffmpeg_info")
       .then(setInfo)
+      .catch(error => setResult(String(error)));
+    invoke<MediaCodecCapabilityReport>("get_media_codec_report")
+      .then(setCodecReport)
       .catch(error => setResult(String(error)));
   }, []);
 
@@ -245,6 +249,13 @@ export default function MediaTools() {
               <pre>{info.codecCapabilities.join("\n")}</pre>
             </>
           ) : null}
+          {codecReport && <>
+            <div className="terminal-title">MediaCodec host bridge</div>
+            <pre>{[
+              ...codecReport.hardwareFamilies,
+              ...codecReport.capabilities.map(c => `${c.codec}: decode=${c.decode} encode=${c.encode} decoder=${c.preferredDecoder ?? "-"} encoder=${c.preferredEncoder ?? "-"} softwareFallback=${c.softwareFallback}`)
+            ].join("\n")}</pre>
+          </>}
           <div className="terminal-title">Job output</div>
           <pre>{result}</pre>
         </div>
