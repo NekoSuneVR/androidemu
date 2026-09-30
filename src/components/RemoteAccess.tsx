@@ -201,6 +201,13 @@ export default function RemoteAccess({ instances, profiles }: Props) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
     try {
+      if (settings.control && selected) {
+        const connected = await invoke<any>("adb_connect", { port: selected.adbPort });
+        if (connected && connected.success === false) {
+          throw new Error(connected.stderr || connected.stdout || "Unable to connect ADB for remote control");
+        }
+      }
+
       const stream = await ensureCapture();
       const configResponse = await fetch(`${settings.nodeUrl.replace(/\/$/, "")}/api/config`);
       const config = configResponse.ok ? await configResponse.json() : { iceServers: [] };
