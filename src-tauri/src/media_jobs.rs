@@ -42,7 +42,7 @@ pub fn save_settings(data_dir:&Path,s:FfmpegSettings)->Result<FfmpegSettings,Str
 fn find_in_path(name:&str)->Option<PathBuf>{env::var_os("PATH").and_then(|paths|env::split_paths(&paths).map(|d|d.join(name)).find(|p|p.is_file()))}
 fn ffmpeg_path(s:&FfmpegSettings)->Result<PathBuf,String>{
     if !s.custom_ffmpeg_path.trim().is_empty()&&Path::new(&s.custom_ffmpeg_path).is_file(){return Ok(PathBuf::from(&s.custom_ffmpeg_path));}
-    find_in_path(if cfg!(windows){"ffmpeg.exe"}else{"ffmpeg"}).ok_or("FFmpeg not found")
+    find_in_path(if cfg!(windows){"ffmpeg.exe"}else{"ffmpeg"}).ok_or_else(||"FFmpeg not found".to_string())
 }
 fn ffprobe_path(s:&FfmpegSettings)->Option<PathBuf>{
     if !s.custom_ffprobe_path.trim().is_empty()&&Path::new(&s.custom_ffprobe_path).is_file(){return Some(PathBuf::from(&s.custom_ffprobe_path));}
