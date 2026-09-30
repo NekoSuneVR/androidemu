@@ -11,6 +11,8 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
   const [selectedId, setSelectedId] = useState(instances[0]?.id ?? "");
   const [command, setCommand] = useState("getprop ro.build.version.release");
   const [apkPath, setApkPath] = useState("");
+  const [packageName, setPackageName] = useState("");
+  const [screenshotPath, setScreenshotPath] = useState("nekodroid-screenshot.png");
   const [pushSource, setPushSource] = useState("");
   const [pushDestination, setPushDestination] = useState("/sdcard/Download/");
   const [pullSource, setPullSource] = useState("/sdcard/Download/");
@@ -75,6 +77,23 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               <div className="tool-group">
                 <label>APK path<input placeholder="C:\\Downloads\\game.apk" value={apkPath} onChange={e => setApkPath(e.target.value)} /></label>
                 <button className="ghost compact" disabled={busy || !apkPath} onClick={() => run("adb_install", { apkPath })}>Install APK</button>
+              </div>
+
+              <div className="tool-group">
+                <label>Package name<input placeholder="com.example.game" value={packageName} onChange={e => setPackageName(e.target.value)} /></label>
+                <button className="ghost compact" disabled={busy || !packageName} onClick={() => run("adb_uninstall", { packageName })}>Uninstall package</button>
+              </div>
+
+              <div className="button-row">
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_device_info", {})}>Device info</button>
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_reboot", { mode: null })}>Reboot Android</button>
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_reboot", { mode: "recovery" })}>Recovery</button>
+                <button className="ghost compact" disabled={busy} onClick={() => run("adb_reboot", { mode: "bootloader" })}>Bootloader</button>
+              </div>
+
+              <div className="tool-group">
+                <label>Screenshot host path<input value={screenshotPath} onChange={e => setScreenshotPath(e.target.value)} /></label>
+                <button className="ghost compact" disabled={busy || !screenshotPath} onClick={() => run("adb_screenshot", { destination: screenshotPath })}>Save screenshot</button>
               </div>
 
               <div className="tool-group">
