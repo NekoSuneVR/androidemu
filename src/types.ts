@@ -462,3 +462,10 @@ export interface CloudAndroidNode {
   region:string;
   enabled:boolean;
 }
+
+export interface SharedFrameInfo {
+  path:string;
+  length:number;
+  updatedAt:number;
+  format:string;
+}
