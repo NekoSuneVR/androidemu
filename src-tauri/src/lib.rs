@@ -6,7 +6,7 @@ mod runtime;
 mod storage;
 
 use images::{AndroidImageManifest, InstalledImage};
-use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult};
+use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, UpdateInstanceRequest};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use tauri::{Manager, State};
@@ -23,6 +23,15 @@ fn create_instance(
     request: CreateInstanceRequest,
 ) -> Result<AndroidInstance, String> {
     storage::create_instance(&state.data_dir, request)
+}
+
+#[tauri::command]
+fn update_instance(
+    state: State<'_, RuntimeState>,
+    id: String,
+    request: UpdateInstanceRequest,
+) -> Result<AndroidInstance, String> {
+    storage::update_instance(&state.data_dir, &id, request)
 }
 
 #[tauri::command]
@@ -181,6 +190,7 @@ pub fn run() {
             adb_push,
             adb_pull,
             create_instance,
+            update_instance,
             delete_instance,
             list_device_profiles,
             list_android_images,
