@@ -1,3 +1,4 @@
+mod adb;
 mod images;
 mod models;
 mod profiles;
@@ -5,7 +6,7 @@ mod runtime;
 mod storage;
 
 use images::{AndroidImageManifest, InstalledImage};
-use models::{AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult};
+use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use tauri::{Manager, State};
@@ -39,6 +40,47 @@ fn delete_instance(state: State<'_, RuntimeState>, id: String) -> Result<(), Str
     storage::delete_instance(&state.data_dir, &id)
 }
 
+
+
+#[tauri::command]
+fn get_adb_info() -> AdbInfo {
+    adb::detect_adb()
+}
+
+#[tauri::command]
+fn adb_connect(port: u16) -> Result<AdbResult, String> {
+    adb::connect(port)
+}
+
+#[tauri::command]
+fn adb_disconnect(port: u16) -> Result<AdbResult, String> {
+    adb::disconnect(port)
+}
+
+#[tauri::command]
+fn adb_get_state(port: u16) -> Result<AdbResult, String> {
+    adb::get_state(port)
+}
+
+#[tauri::command]
+fn adb_shell(port: u16, command: String) -> Result<AdbResult, String> {
+    adb::shell(port, command)
+}
+
+#[tauri::command]
+fn adb_install(port: u16, apk_path: String) -> Result<AdbResult, String> {
+    adb::install(port, apk_path)
+}
+
+#[tauri::command]
+fn adb_push(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
+    adb::push(port, source, destination)
+}
+
+#[tauri::command]
+fn adb_pull(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
+    adb::pull(port, source, destination)
+}
 
 #[tauri::command]
 fn list_device_profiles() -> Vec<DeviceProfile> {
@@ -98,6 +140,14 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             list_instances,
+            get_adb_info,
+            adb_connect,
+            adb_disconnect,
+            adb_get_state,
+            adb_shell,
+            adb_install,
+            adb_push,
+            adb_pull,
             create_instance,
             delete_instance,
             list_device_profiles,
