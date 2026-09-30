@@ -221,6 +221,24 @@ pub fn uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
     run_for_device(port, &["uninstall".into(), package_name.into()])
 }
 
+pub fn shutdown(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &["shell".into(), "reboot".into(), "-p".into()])
+}
+
+pub fn boot_status(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(), "sh".into(), "-c".into(),
+        "printf 'sys.boot_completed='; getprop sys.boot_completed; printf 'bootanim='; getprop init.svc.bootanim; printf 'launcher='; dumpsys window windows 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -n 1".into()
+    ])
+}
+
+pub fn crash_diagnostics(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(), "sh".into(), "-c".into(),
+        "echo '--- crash log ---'; logcat -b crash -d -t 200 2>/dev/null; echo '--- tombstones ---'; ls -lt /data/tombstones 2>/dev/null | head -n 20; echo '--- last ANRs ---'; ls -lt /data/anr 2>/dev/null | head -n 20".into()
+    ])
+}
+
 pub fn reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
     let mut args = vec!["reboot".into()];
     if let Some(mode) = mode {
