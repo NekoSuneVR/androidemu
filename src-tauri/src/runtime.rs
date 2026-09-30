@@ -3,6 +3,7 @@ use crate::{
     storage,
     performance,
     graphics,
+    passthrough,
     adb,
 };
 use base64::Engine as _;
@@ -219,6 +220,9 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
             "node,memdev=nekoram".into(),
         ]);
     }
+    let passthrough_settings=passthrough::load(&state.data_dir).unwrap_or_default();
+    qemu_args.extend(passthrough::qemu_args(&passthrough_settings));
+
     if let Some(audio_backend) = detect_virtio_audio_backend(&qemu_path) {
         qemu_args.push("-audiodev".into());
         qemu_args.push(format!("{audio_backend},id=nekodroid_audio"));
