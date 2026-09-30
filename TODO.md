@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **189/643 tasks complete (29.4%)**
+> Progress: **202/643 tasks complete (31.4%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -341,20 +341,20 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 15 - Android File Manager
 
-- [ ] Browse `/sdcard`
-- [ ] Browse `/storage`
-- [ ] Upload
-- [ ] Download
-- [ ] Rename
-- [ ] Delete
-- [ ] Copy
-- [ ] Move
-- [ ] Create folder
-- [ ] File properties
-- [ ] Storage usage
-- [ ] Permissions viewer
+- [x] Browse `/sdcard`
+- [x] Browse `/storage`
+- [x] Upload
+- [x] Download
+- [x] Rename
+- [x] Delete
+- [x] Copy
+- [x] Move
+- [x] Create folder
+- [x] File properties
+- [x] Storage usage
+- [x] Permissions viewer
 - [ ] Root filesystem mode
-- [ ] Search files
+- [x] Search files
 
 ---
 
