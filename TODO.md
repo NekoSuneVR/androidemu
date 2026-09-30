@@ -254,7 +254,7 @@ This file tracks the planned implementation of NekoDroid.
 # Phase 12 - ADB
 
 - [ ] Bundle/platform-tools manager
-- [x] Toggle ADB on/off
+- [ ] Toggle ADB on/off
 - [x] ADB over localhost
 - [ ] Optional ADB over LAN
 - [ ] ADB authentication
@@ -795,7 +795,7 @@ skills/
 
 - [ ] Detect CPU
 - [ ] Detect VT-x/AMD-V
-- [x] Detect Hyper-V/WHPX
+- [ ] Detect Hyper-V/WHPX
 - [x] Detect KVM
 - [ ] Detect GPU
 - [ ] Detect Vulkan
