@@ -235,6 +235,17 @@ fn route(method: &str, path: &str, body: &[u8], state: &RuntimeState) -> Result<
             let alt=value.get("altitude").and_then(Value::as_f64).unwrap_or(0.0);
             to_value(sensors::gps(required_u16(&value,"port")?,lat,lon,alt)?)
         }
+        ("POST", "/sensors/accelerometer") => {
+            let port=required_u16(&value,"port")?;
+            to_value(sensors::accelerometer(port,value.get("x").and_then(Value::as_f64).unwrap_or(0.0),value.get("y").and_then(Value::as_f64).unwrap_or(0.0),value.get("z").and_then(Value::as_f64).unwrap_or(0.0))?)
+        }
+        ("POST", "/sensors/gyroscope") => {
+            let port=required_u16(&value,"port")?;
+            to_value(sensors::gyroscope(port,value.get("x").and_then(Value::as_f64).unwrap_or(0.0),value.get("y").and_then(Value::as_f64).unwrap_or(0.0),value.get("z").and_then(Value::as_f64).unwrap_or(0.0))?)
+        }
+        ("POST", "/sensors/compass") => to_value(sensors::compass(required_u16(&value,"port")?,value.get("heading").and_then(Value::as_f64).unwrap_or(0.0))?),
+        ("POST", "/sensors/light") => to_value(sensors::light(required_u16(&value,"port")?,value.get("lux").and_then(Value::as_f64).unwrap_or(0.0))?),
+        ("POST", "/sensors/proximity") => to_value(sensors::proximity(required_u16(&value,"port")?,value.get("cm").and_then(Value::as_f64).unwrap_or(0.0))?),
         ("POST", "/sensors/report") => to_value(sensors::report(required_u16(&value,"port")?)?),
         ("POST", "/screenshot") => {
             to_value(adb::screenshot(
