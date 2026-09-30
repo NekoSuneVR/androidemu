@@ -1,0 +1,91 @@
+name: Build Windows App
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example 0.1.0
+        required: true
+        default: 0.1.0
+      prerelease:
+        description: Mark GitHub Release as prerelease
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows App
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Set app version
+        shell: pwsh
+        run: |
+          $path = "src-tauri/tauri.conf.json"
+          $config = Get-Content $path -Raw | ConvertFrom-Json
+          $config.version = "${{ inputs.version }}"
+          $config | ConvertTo-Json -Depth 20 | Set-Content $path -Encoding UTF8
+
+      - name: Build NekoDroid Windows bundles
+        run: npm run tauri build
+
+      - name: Collect Windows release files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          Get-ChildItem "src-tauri/target/release/bundle" -Recurse -File |
+            Where-Object { $_.Extension -in ".exe", ".msi" } |
+            ForEach-Object {
+              $name = "NekoDroid-Windows-${{ inputs.version }}-" + $_.Name
+              Copy-Item $_.FullName "release-assets/$name"
+            }
+          if (-not (Get-ChildItem release-assets -File)) {
+            throw "No Windows installer/bundle files were produced."
+          }
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NekoDroid-Windows-${{ inputs.version }}
+          path: release-assets/*
+          if-no-files-found: error
+
+      - name: Create or update GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "v${{ inputs.version }}"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            $args = @(
+              "release", "create", $tag,
+              "--title", "NekoDroid v${{ inputs.version }}",
+              "--notes", "Manual NekoDroid release build."
+            )
+            if ("${{ inputs.prerelease }}" -eq "true") {
+              $args += "--prerelease"
+            }
+            gh @args
+          }
+          Get-ChildItem release-assets -File | ForEach-Object {
+            gh release upload $tag $_.FullName --clobber
+          }
