@@ -442,3 +442,5 @@ export interface MediaJobStatus {
   message:string;
   pid?:number|null;
 }
+
+export interface PerformanceTelemetry { cpu:string; gpu:string; ram:string; }
