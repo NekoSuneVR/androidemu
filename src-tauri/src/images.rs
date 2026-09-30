@@ -203,7 +203,7 @@ pub fn import_gsi(data_dir:&Path, source:String, android_version:String, archite
     let ext=source_path.extension().and_then(|v|v.to_str()).unwrap_or("").to_ascii_lowercase();
     if !matches!(ext.as_str(),"img"|"raw"|"qcow2"){return Err("GSI must be .img, .raw, or .qcow2".into());}
     let stamp=SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e|e.to_string())?.as_secs();
-    let id=format!("gsi-{}-{stamp}",android_version.replace('.','-'));
+    let id=format!("gsi-{}-{stamp}",android_version.replace('.',"-"));
     let disk_format=if ext=="qcow2"{"qcow2"}else{"raw"};
     let disk=format!("system.{disk_format}");
     let manifest=AndroidImageManifest{
