@@ -11,6 +11,8 @@ pub struct AndroidInstance {
     pub cpu_cores: u16,
     pub ram_mb: u32,
     pub adb_port: u16,
+    #[serde(default)]
+    pub adb_enabled: bool,
     pub root_mode: String,
     #[serde(default)]
     pub image_path: Option<String>,
@@ -27,8 +29,17 @@ pub struct CreateInstanceRequest {
     pub cpu_cores: u16,
     pub ram_mb: u32,
     pub adb_port: u16,
+    #[serde(default)]
+    pub adb_enabled: bool,
     pub root_mode: String,
     pub image_path: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateInstanceRequest {
+    pub name: String,
+    pub adb_enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
