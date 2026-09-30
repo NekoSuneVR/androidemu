@@ -6,7 +6,10 @@ use std::{
     fs::{self, OpenOptions},
     io::Write,
     path::Path,
-    sync::{Mutex, OnceLock},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Mutex, OnceLock
+    },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
@@ -22,6 +25,7 @@ pub enum AiAction {
 }
 
 static ACTION_TIMES: OnceLock<Mutex<VecDeque<Instant>>> = OnceLock::new();
+static CANCEL_ACTIONS: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -250,4 +254,40 @@ fn append_control_log(data_dir: &Path, port: u16, success: bool) -> Result<(), S
         .map_err(|e| format!("Unable to open AI log: {e}"))?;
     writeln!(file, "[{timestamp}] android-control port={port} success={success}")
         .map_err(|e| format!("Unable to write AI control log: {e}"))
+}
+
+
+pub fn execute_actions(
+    data_dir: &Path,
+    port: u16,
+    actions: Vec<AiAction>,
+) -> Result<Vec<AdbResult>, String> {
+    if actions.is_empty() {
+        return Err("AI action queue cannot be empty".into());
+    }
+    if actions.len() > 100 {
+        return Err("AI action queue is limited to 100 actions".into());
+    }
+
+    CANCEL_ACTIONS.store(false, Ordering::SeqCst);
+    let mut results = Vec::with_capacity(actions.len());
+
+    for action in actions {
+        if CANCEL_ACTIONS.load(Ordering::SeqCst) {
+            return Err("AI action queue cancelled".into());
+        }
+
+        let result = execute_action(data_dir, port, action)?;
+        let failed = !result.success;
+        results.push(result);
+        if failed {
+            break;
+        }
+    }
+
+    Ok(results)
+}
+
+pub fn cancel_actions() {
+    CANCEL_ACTIONS.store(true, Ordering::SeqCst);
 }
