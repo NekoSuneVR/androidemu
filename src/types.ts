@@ -288,3 +288,12 @@ export interface AiGameState {
   orientation: string;
   displaySize: string;
 }
+
+export interface ApkCompatibility {
+  path: string;
+  abis: string[];
+  preferredAbi: string;
+  nativeX86_64: boolean;
+  needsArmCompatibility: boolean;
+  diagnostic: string;
+}
