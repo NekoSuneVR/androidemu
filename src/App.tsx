@@ -12,6 +12,7 @@ import SystemReadinessPanel from "./components/SystemReadinessPanel";
 import FileManager from "./components/FileManager";
 import GameLibrary from "./components/GameLibrary";
 import FirstRunWizard from "./components/FirstRunWizard";
+import KeymapManager from "./components/KeymapManager";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -23,7 +24,7 @@ import type {
   AppSettings
 } from "./types";
 
-const nav = ["Home", "Game Library", "Instances", "Android Images", "Device Profiles", "File Manager", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
+const nav = ["Home", "Game Library", "Instances", "Android Images", "Device Profiles", "File Manager", "Keymaps", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
 
 const defaultRequest: CreateInstanceRequest = {
   name: "Gaming",
@@ -339,6 +340,7 @@ export default function App() {
         {active === "Android Images" && <ImageManager images={images} onChanged={refresh} />}
         {active === "Device Profiles" && <DeviceProfiles profiles={profiles} onChanged={refresh} />}
         {active === "File Manager" && <FileManager instances={instances} />}
+        {active === "Keymaps" && <KeymapManager instances={instances} />}
         {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
         {active === "NekoAI" && <NekoAI instances={instances} />}
