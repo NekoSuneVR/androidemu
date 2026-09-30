@@ -193,6 +193,9 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                       setOutput([`Package: ${info.packageName ?? "unknown (aapt not found)"}`,`Version: ${info.versionName ?? "unknown"} (${info.versionCode ?? "?"})`,`ABIs: ${info.abis.join(", ")||"none"}`,`Size: ${Math.round(info.sizeBytes/1024/1024*10)/10} MB`].join("\n"));
                     }catch(error){setOutput(String(error));}
                   }}>Package info</button>
+                  <button className="ghost compact" disabled={busy || !apkPath || !/\.apk$/i.test(apkPath)} onClick={async()=>{
+                    try{const job=await invoke("start_apk_install",{port:selected.adbPort,apkPath});setOutput(`APK install job started: ${JSON.stringify(job,null,2)}`);}catch(error){setOutput(String(error));}
+                  }}>Install APK with progress</button>
                   <button className="ghost compact" disabled={busy || !apkPath} onClick={async()=>{
                     try{
                       setBusy(true);
