@@ -494,3 +494,12 @@ export interface PrerequisiteInstallResult {
   rebootRequired: boolean;
   messages: string[];
 }
+
+
+export interface StorageLocations {
+  dataDir: string;
+  imagesDir: string;
+  instancesDir: string;
+  customDataDir: boolean;
+  portable: boolean;
+}
