@@ -20,6 +20,7 @@ mod display;
 mod graphics;
 mod plugins;
 mod sensors;
+mod ai_capture;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -40,6 +41,7 @@ use apk_bundle::ApkPackageInfo;
 use display::DisplayState;
 use graphics::{GraphicsSettings,GraphicsCapabilities};
 use plugins::PluginManifest;
+use ai_capture::AiCaptureResult;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -810,6 +812,20 @@ fn execute_key_binding(port: u16, binding: KeyBinding) -> Result<AdbResult, Stri
     keymaps::execute(port, binding)
 }
 
+
+#[tauri::command]
+fn ai_capture_frame(port:u16,destination:String,max_fps:u32)->Result<AiCaptureResult,String>{ai_capture::capture(port,destination,max_fps)}
+#[tauri::command]
+fn ai_capture_roi(port:u16,destination:String,x:u32,y:u32,width:u32,height:u32,max_fps:u32)->Result<AiCaptureResult,String>{ai_capture::capture_roi(port,destination,x,y,width,height,max_fps)}
+#[tauri::command]
+fn ai_ocr(image_path:String)->Result<String,String>{ai_capture::ocr(image_path)}
+#[tauri::command]
+fn ai_speech_to_text(audio_path:String)->Result<String,String>{ai_capture::speech_to_text(audio_path)}
+#[tauri::command]
+fn ai_tts(text:String)->Result<String,String>{ai_capture::tts(text)}
+#[tauri::command]
+fn ai_input_visualizer(port:u16)->Result<String,String>{ai_capture::input_visualizer(port)}
+
 #[tauri::command]
 fn list_ai_skills(state: State<'_, RuntimeState>) -> Result<Vec<SkillManifest>, String> {
     skills::list(&state.data_dir)
@@ -1131,6 +1147,12 @@ pub fn run() {
             import_keymap,
             export_keymap,
             execute_key_binding,
+            ai_capture_frame,
+            ai_capture_roi,
+            ai_ocr,
+            ai_speech_to_text,
+            ai_tts,
+            ai_input_visualizer,
             list_ai_skills,
             save_ai_skill,
             import_ai_skill,
