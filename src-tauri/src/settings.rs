@@ -83,7 +83,7 @@ fn validate(settings: &AiSettings) -> Result<(), String> {
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct AppSettings {
     pub default_android_version: String,
     pub default_profile: String,
@@ -93,6 +93,7 @@ pub struct AppSettings {
     pub api_enabled: bool,
     pub api_port: u16,
     pub api_token: String,
+    pub first_run_completed: bool,
 }
 
 impl Default for AppSettings {
@@ -106,6 +107,7 @@ impl Default for AppSettings {
             api_enabled: false,
             api_port: 37891,
             api_token: String::new(),
+            first_run_completed: false,
         }
     }
 }
