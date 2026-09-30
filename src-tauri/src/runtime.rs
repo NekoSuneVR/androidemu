@@ -110,8 +110,39 @@ fn windows_msys2_roots() -> Vec<PathBuf> {
     for path in [
         PathBuf::from(r"C:\msys64"),
         PathBuf::from(r"C:\msys32"),
+        PathBuf::from(r"C:\tools\msys64"),
+        PathBuf::from(r"C:\tools\msys32"),
     ] {
         push_unique_path(&mut roots, path);
+    }
+
+    // The official MSYS2 installer normally registers an InstallLocation.
+    // Read both user and machine uninstall hives so a custom install path
+    // can be discovered without requiring MSYS2_ROOT.
+    for hive in [
+        r"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall",
+        r"HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall",
+        r"HKLM\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+    ] {
+        if let Ok(output) = Command::new("reg.exe")
+            .args(["query", hive, "/s", "/f", "MSYS2"])
+            .output()
+        {
+            let mut text = String::from_utf8_lossy(&output.stdout).to_string();
+            text.push_str(&String::from_utf8_lossy(&output.stderr));
+            for line in text.lines() {
+                let trimmed = line.trim();
+                if !trimmed.to_ascii_lowercase().starts_with("installlocation") {
+                    continue;
+                }
+                if let Some(index) = trimmed.find("REG_SZ") {
+                    let value = trimmed[index + "REG_SZ".len()..].trim();
+                    if !value.is_empty() {
+                        push_unique_path(&mut roots, PathBuf::from(value));
+                    }
+                }
+            }
+        }
     }
 
     for key in ["ProgramFiles", "ProgramFiles(x86)", "LOCALAPPDATA"] {
