@@ -297,3 +297,18 @@ export interface ApkCompatibility {
   needsArmCompatibility: boolean;
   diagnostic: string;
 }
+
+export interface KeyBinding {
+  input: string;
+  action: "tap"|"hold"|"swipe"|"key"|"text"|"mouse-left"|"mouse-right"|"scroll-up"|"scroll-down"|"joystick-up"|"joystick-down"|"joystick-left"|"joystick-right";
+  x?: number|null; y?: number|null; x2?: number|null; y2?: number|null;
+  durationMs?: number|null; keycode?: string|null; text?: string|null;
+}
+export interface KeymapProfile {
+  schemaVersion: number;
+  id: string;
+  name: string;
+  packageName: string;
+  overlayVisible: boolean;
+  bindings: KeyBinding[];
+}
