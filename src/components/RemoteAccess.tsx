@@ -33,6 +33,9 @@ type RemoteSettings = {
   clipboard: boolean;
   fileTransfer: boolean;
   gamepad: boolean;
+  microphone: boolean;
+  camera: boolean;
+  directAndroidAudio: boolean;
   adaptiveBitrate: boolean;
   fpsPreset: 30|60|90|120;
   directFramebuffer: boolean;
@@ -49,6 +52,9 @@ const defaultSettings: RemoteSettings = {
   clipboard: false,
   fileTransfer: false,
   gamepad: true,
+  microphone: false,
+  camera: false,
+  directAndroidAudio: false,
   adaptiveBitrate: true,
   fpsPreset: 60,
   directFramebuffer: false,
@@ -105,6 +111,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
             body: JSON.stringify({
               name:selected.name, instanceId:selected.id, control:settings.control,
               clipboard:settings.clipboard, fileTransfer:settings.fileTransfer, gamepad:settings.gamepad,
+              microphone:settings.microphone, camera:settings.camera,
               adaptiveBitrate:settings.adaptiveBitrate, fpsPreset:settings.fpsPreset,
               unattendedTrusted:settings.unattendedTrusted, ttlSeconds:settings.ttlSeconds
             })
@@ -273,6 +280,15 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       peersRef.current.set(viewerId, peer);
 
       stream.getTracks().forEach(track => peer.addTrack(track, stream));
+      if(settings.microphone) peer.addTransceiver("audio",{direction:"recvonly"});
+      if(settings.camera) peer.addTransceiver("video",{direction:"recvonly"});
+      peer.addEventListener("track",event=>{
+        const element=document.createElement(event.track.kind==="video"?"video":"audio");
+        element.autoplay=true;(element as HTMLMediaElement).srcObject=event.streams[0]??new MediaStream([event.track]);
+        if(event.track.kind==="video"){(element as HTMLVideoElement).muted=true;(element as HTMLElement).style.cssText="position:fixed;right:12px;bottom:12px;width:240px;max-height:180px;z-index:9998;border-radius:10px;";document.body.appendChild(element);}
+        else{(element as HTMLElement).style.display="none";document.body.appendChild(element);}
+        event.track.addEventListener("ended",()=>element.remove());
+      });
       if (settings.adaptiveBitrate) {
         for (const sender of peer.getSenders()) {
           if (sender.track?.kind !== "video") continue;
@@ -508,6 +524,9 @@ export default function RemoteAccess({ instances, profiles }: Props) {
             <label><input type="checkbox" checked={settings.control} disabled={Boolean(invite)} onChange={e => setSettings({...settings,control:e.target.checked})} /> Control Android</label>
             <label><input type="checkbox" checked={settings.clipboard} disabled={Boolean(invite)} onChange={e => setSettings({...settings,clipboard:e.target.checked})} /> Clipboard (future)</label>
             <label><input type="checkbox" checked={settings.fileTransfer} disabled={Boolean(invite)} onChange={e => setSettings({...settings,fileTransfer:e.target.checked})} /> File transfer</label>
+            <label><input type="checkbox" checked={settings.microphone} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,microphone:e.target.checked})} /> Remote microphone</label>
+            <label><input type="checkbox" checked={settings.camera} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,camera:e.target.checked})} /> Remote camera</label>
+            <label><input type="checkbox" checked={settings.directAndroidAudio} disabled={Boolean(invite)||!settings.directFramebuffer} onChange={e=>setSettings({...settings,directAndroidAudio:e.target.checked})} /> Direct Android audio chunks (compatible rooted images)</label>
             <label><input type="checkbox" checked={settings.gamepad} disabled={Boolean(invite)} onChange={e => setSettings({...settings,gamepad:e.target.checked})} /> Gamepad forwarding</label>
             <label><input type="checkbox" checked={settings.unattendedTrusted} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,unattendedTrusted:e.target.checked})} /> Allow trusted devices to reconnect without manual approval</label>
             <label><input type="checkbox" checked={settings.directFramebuffer} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,directFramebuffer:e.target.checked})} /> Direct emulator framebuffer capture</label>
