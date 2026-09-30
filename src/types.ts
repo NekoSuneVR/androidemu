@@ -344,3 +344,17 @@ export interface PerformanceSettings {
   gpuOverlay: boolean;
   ramOverlay: boolean;
 }
+
+export interface MediaCodecCapability {
+  codec: string;
+  decode: boolean;
+  encode: boolean;
+  preferredDecoder?: string|null;
+  preferredEncoder?: string|null;
+  softwareFallback: boolean;
+}
+export interface MediaCodecCapabilityReport {
+  ffmpegFound: boolean;
+  capabilities: MediaCodecCapability[];
+  hardwareFamilies: string[];
+}
