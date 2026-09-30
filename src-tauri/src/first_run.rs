@@ -26,6 +26,7 @@ pub struct SystemReadiness {
     pub recommended_cpu_cores: u16,
     pub recommended_ram_mb: u32,
     pub recommended_android_version: String,
+    pub recommended_renderer: String,
 }
 
 pub fn detect() -> SystemReadiness {
@@ -42,6 +43,13 @@ pub fn detect() -> SystemReadiness {
     let qemu = runtime::detect_qemu();
     let adb_info = adb::detect_adb();
     let ffmpeg = media::detect_ffmpeg();
+    let recommended_renderer = if vulkan_available {
+        "Vulkan".to_string()
+    } else if !gpu_names.is_empty() {
+        "Compatibility / OpenGL".to_string()
+    } else {
+        "Software".to_string()
+    };
 
     let recommended_cpu_cores = logical_cores
         .saturating_sub(2)
@@ -71,6 +79,7 @@ pub fn detect() -> SystemReadiness {
         recommended_cpu_cores,
         recommended_ram_mb,
         recommended_android_version: "16".into(),
+        recommended_renderer,
     }
 }
 
