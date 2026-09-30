@@ -106,6 +106,10 @@ export interface AndroidImageManifest {
   verifiedBootState: string;
   securityState: string;
   missingHardwareFeatures: string[];
+  bootKernel?: string|null;
+  bootInitrd?: string|null;
+  vendorDisk?: string|null;
+  rootCapable?: boolean;
 }
 
 export interface InstalledImage {
@@ -474,4 +478,11 @@ export interface SdlControllerInfo {
   index:number;
   name:string;
   isGameController:boolean;
+}
+
+export interface DefaultImageSettings {
+  url:string;
+  sha256?:string|null;
+  rootDeveloperUrl?:string|null;
+  rootDeveloperSha256?:string|null;
 }
