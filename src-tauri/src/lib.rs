@@ -5,12 +5,14 @@ mod profiles;
 mod runtime;
 mod storage;
 mod settings;
+mod snapshots;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use settings::AiSettings;
+use snapshots::SnapshotInfo;
 use tauri::{Manager, State};
 
 #[tauri::command]
@@ -273,6 +275,51 @@ fn register_android_image(
 }
 
 #[tauri::command]
+fn list_snapshots(
+    state: State<'_, RuntimeState>,
+    instance_id: String,
+) -> Result<Vec<SnapshotInfo>, String> {
+    snapshots::list(&state.data_dir, &instance_id)
+}
+
+#[tauri::command]
+fn create_snapshot(
+    state: State<'_, RuntimeState>,
+    instance_id: String,
+    name: String,
+    description: String,
+) -> Result<SnapshotInfo, String> {
+    if state.processes.lock().map_err(|_| "Runtime process lock poisoned")?.contains_key(&instance_id) {
+        return Err("Stop the instance before creating a snapshot".into());
+    }
+    snapshots::create(&state.data_dir, &instance_id, name, description)
+}
+
+#[tauri::command]
+fn restore_snapshot(
+    state: State<'_, RuntimeState>,
+    instance_id: String,
+    snapshot_id: String,
+) -> Result<(), String> {
+    if state.processes.lock().map_err(|_| "Runtime process lock poisoned")?.contains_key(&instance_id) {
+        return Err("Stop the instance before restoring a snapshot".into());
+    }
+    snapshots::restore(&state.data_dir, &instance_id, &snapshot_id)
+}
+
+#[tauri::command]
+fn delete_snapshot(
+    state: State<'_, RuntimeState>,
+    instance_id: String,
+    snapshot_id: String,
+) -> Result<(), String> {
+    if state.processes.lock().map_err(|_| "Runtime process lock poisoned")?.contains_key(&instance_id) {
+        return Err("Stop the instance before deleting a snapshot".into());
+    }
+    snapshots::delete(&state.data_dir, &instance_id, &snapshot_id)
+}
+
+#[tauri::command]
 fn get_ai_settings(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
     settings::load(&state.data_dir)
 }
@@ -379,6 +426,10 @@ pub fn run() {
             list_android_images,
             remove_android_image,
             register_android_image,
+            list_snapshots,
+            create_snapshot,
+            restore_snapshot,
+            delete_snapshot,
             get_ai_settings,
             save_ai_settings,
             ai_emergency_stop,
