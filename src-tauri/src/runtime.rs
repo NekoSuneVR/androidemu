@@ -92,7 +92,9 @@ pub fn detect_host() -> HostCapabilities {
 }
 
 fn push_unique_path(paths: &mut Vec<PathBuf>, path: PathBuf) {
-    if path.as_os_str().is_empty() || paths.iter().any(|existing| existing.eq_ignore_ascii_case(&path)) {
+    if path.as_os_str().is_empty() || paths.iter().any(|existing| {
+        existing.to_string_lossy().eq_ignore_ascii_case(&path.to_string_lossy())
+    }) {
         return;
     }
     paths.push(path);
