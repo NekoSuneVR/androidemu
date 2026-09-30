@@ -15,6 +15,7 @@ pub struct FfmpegInfo {
     pub hwaccels: Vec<String>,
     pub hardware_encoders: Vec<String>,
     pub hardware_decoders: Vec<String>,
+    pub codec_capabilities: Vec<String>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -57,6 +58,7 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
             hwaccels: Vec::new(),
             hardware_encoders: Vec::new(),
             hardware_decoders: Vec::new(),
+            codec_capabilities: Vec::new(),
         };
     };
 
@@ -87,6 +89,9 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
 
     let hardware_encoders = detect_codec_names(&path, "-encoders", &["nvenc", "_qsv", "_amf", "vaapi", "videotoolbox"]);
     let hardware_decoders = detect_codec_names(&path, "-decoders", &["cuvid", "_qsv", "vaapi", "videotoolbox", "v4l2m2m"]);
+    let encoder_text = command_text(&path, "-encoders");
+    let decoder_text = command_text(&path, "-decoders");
+    let codec_capabilities = detect_common_codecs(&encoder_text, &decoder_text);
 
     FfmpegInfo {
         found: true,
@@ -95,6 +100,7 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
         hwaccels,
         hardware_encoders,
         hardware_decoders,
+        codec_capabilities,
     }
 }
 
@@ -196,6 +202,44 @@ pub fn run_media_job(
         stderr: String::from_utf8_lossy(&result.stderr).trim().to_string(),
         output_path: output,
     })
+}
+
+
+fn command_text(path: &Path, switch: &str) -> String {
+    Command::new(path)
+        .args(["-hide_banner", switch])
+        .output()
+        .ok()
+        .map(|output| {
+            let mut text = String::from_utf8_lossy(&output.stdout).to_ascii_lowercase();
+            text.push_str(&String::from_utf8_lossy(&output.stderr).to_ascii_lowercase());
+            text
+        })
+        .unwrap_or_default()
+}
+
+fn detect_common_codecs(encoders: &str, decoders: &str) -> Vec<String> {
+    const CODECS: &[(&str, &[&str])] = &[
+        ("H.264 / AVC", &["h264", "libx264", "h264_nvenc", "h264_qsv", "h264_amf"]),
+        ("H.265 / HEVC", &["hevc", "libx265", "hevc_nvenc", "hevc_qsv", "hevc_amf"]),
+        ("VP8", &["vp8", "libvpx"]),
+        ("VP9", &["vp9", "libvpx-vp9"]),
+        ("AV1", &["av1", "libaom-av1", "libsvtav1", "av1_nvenc", "av1_qsv", "av1_amf"]),
+        ("MPEG-4", &["mpeg4"]),
+        ("MPEG-2", &["mpeg2video"]),
+        ("AAC", &["aac"]),
+        ("MP3", &["mp3", "libmp3lame"]),
+        ("Opus", &["opus", "libopus"]),
+        ("Vorbis", &["vorbis", "libvorbis"]),
+        ("FLAC", &["flac"]),
+        ("PCM/WAV", &["pcm_s16le", "pcm_s24le", "pcm_f32le"]),
+        ("ALAC", &["alac"]),
+    ];
+
+    CODECS.iter()
+        .filter(|(_, aliases)| aliases.iter().any(|name| encoders.contains(name) || decoders.contains(name)))
+        .map(|(name, _)| (*name).to_string())
+        .collect()
 }
 
 fn detect_codec_names(path: &Path, switch: &str, needles: &[&str]) -> Vec<String> {
