@@ -58,19 +58,21 @@ pub fn detect_host() -> HostCapabilities {
             )
         }
         "windows" => {
-            let whpx = qemu.accelerators.iter().any(|a| a == "whpx");
-            let msys2_path = qemu.executable.as_deref().map(|p| p.to_ascii_lowercase().contains("\\msys64\\")).unwrap_or(false);
+            let whpx_advertised = qemu.accelerators.iter().any(|a| a == "whpx");
+            let tcg = qemu.accelerators.iter().any(|a| a == "tcg");
+            let whpx_enabled = windows_feature_enabled("HypervisorPlatform");
+            let use_whpx = whpx_advertised && whpx_enabled;
             (
-                "MSYS2 + WHPX".to_string(),
-                whpx,
+                if use_whpx { "WHPX".to_string() } else { "Software Emulation".to_string() },
+                use_whpx || tcg,
                 if !qemu.found {
-                    "MSYS2 runtime was not found automatically. Install MSYS2 with the UCRT64/MINGW64 QEMU package, or set MSYS2_ROOT only for a custom install location.".to_string()
-                } else if whpx && msys2_path {
-                    "MSYS2 Android VM runtime detected with Windows Hypervisor Platform acceleration.".to_string()
-                } else if whpx {
-                    "Windows VM runtime detected with Windows Hypervisor Platform acceleration.".to_string()
+                    "Windows emulator runtime was not found automatically.".to_string()
+                } else if use_whpx {
+                    "Windows Hypervisor Platform acceleration is enabled and will be used.".to_string()
+                } else if tcg {
+                    "Windows Hypervisor Platform is disabled or unavailable. NekoDroid will use software CPU emulation (TCG), which is slower but does not require Hyper-V/WHPX.".to_string()
                 } else {
-                    "MSYS2 runtime was found, but WHPX is unavailable. Enable Windows Hypervisor Platform in Windows Features.".to_string()
+                    "No usable Windows acceleration or software-emulation backend was detected.".to_string()
                 },
             )
         }
@@ -331,7 +333,8 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     let stderr = File::create(dir.join("logs").join("qemu.err.log")).map_err(|e| e.to_string())?;
 
     let accelerator = if cfg!(target_os = "windows") {
-        "whpx"
+        let whpx = host.qemu.accelerators.iter().any(|a| a == "whpx") && windows_feature_enabled("HypervisorPlatform");
+        if whpx { "whpx" } else { "tcg" }
     } else if cfg!(target_os = "linux") {
         "kvm"
     } else {
@@ -451,7 +454,7 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     Ok(RuntimeActionResult {
         instance_id: id.to_string(),
         status: "running".into(),
-        message: format!("QEMU started with PID {pid}"),
+        message: format!("NekoDroid runtime started with PID {pid} using {}", if accelerator == "tcg" { "software CPU emulation" } else { accelerator }),
         process_id: Some(pid),
     })
 }
@@ -875,7 +878,7 @@ pub fn build_qemu_args(
         "-name".into(),
         format!("NekoDroid-{}", instance.name),
         "-machine".into(),
-        format!("q35,accel={accelerator}"),
+        if accelerator == "tcg" { "q35,accel=tcg,thread=multi".into() } else { format!("q35,accel={accelerator}") },
         "-cpu".into(),
         cpu_model.into(),
         "-smp".into(),
@@ -1009,6 +1012,23 @@ mod tests {
         assert!(args.windows(2).any(|pair| pair[0] == "-m" && pair[1] == "8192"));
         assert!(args.windows(2).any(|pair| pair[0] == "-cpu" && pair[1] == "host"));
     }
+}
+
+fn windows_feature_enabled(feature: &str) -> bool {
+    if !cfg!(windows) {
+        return false;
+    }
+    let script = format!(
+        "(Get-WindowsOptionalFeature -Online -FeatureName '{}').State",
+        feature.replace('\'', "''")
+    );
+    Command::new("powershell.exe")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().eq_ignore_ascii_case("Enabled"))
+        .unwrap_or(false)
 }
 
 fn find_in_path(name: &str) -> Option<PathBuf> {
