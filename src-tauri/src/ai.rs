@@ -179,8 +179,8 @@ fn append_log(
         .open(data_dir.join("ai.log"))
         .map_err(|e| format!("Unable to open AI log: {e}"))?;
 
-    let safe_prompt = prompt.replace('\r', " ").replace('\n', " ");
-    let safe_response = response.replace('\r', " ").replace('\n', " ");
+    let safe_prompt = redact_sensitive(&prompt.replace('\r', " ").replace('\n', " "));
+    let safe_response = redact_sensitive(&response.replace('\r', " ").replace('\n', " "));
     writeln!(
         file,
         "[{timestamp}] mode={} model={} prompt={} response={}",
@@ -190,6 +190,28 @@ fn append_log(
         truncate(&safe_response, 4000)
     )
     .map_err(|e| format!("Unable to write AI log: {e}"))
+}
+
+fn redact_sensitive(value: &str) -> String {
+    let mut words = value.split_whitespace().map(str::to_string).collect::<Vec<_>>();
+    let mut redact_next = false;
+    for word in &mut words {
+        let lower = word.to_ascii_lowercase();
+        if redact_next {
+            *word = "[REDACTED]".into();
+            redact_next = false;
+            continue;
+        }
+        if matches!(lower.as_str(), "bearer" | "authorization:" | "password" | "password:" | "token" | "token:" | "api_key" | "apikey") {
+            redact_next = true;
+            continue;
+        }
+        if lower.starts_with("token=") || lower.starts_with("password=") || lower.starts_with("api_key=") || lower.starts_with("apikey=") {
+            let key = word.split('=').next().unwrap_or("secret");
+            *word = format!("{key}=[REDACTED]");
+        }
+    }
+    words.join(" ")
 }
 
 fn truncate(value: &str, max_chars: usize) -> String {
