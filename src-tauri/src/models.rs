@@ -101,3 +101,14 @@ pub struct RuntimeLogs {
     pub stderr: String,
     pub crash_report: String,
 }
+
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StorageLocations {
+    pub data_dir: String,
+    pub images_dir: String,
+    pub instances_dir: String,
+    pub custom_data_dir: bool,
+    pub portable: bool,
+}
