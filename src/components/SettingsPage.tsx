@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, DeviceProfile, PerformanceSettings, UpdateCheck } from "../types";
+import type { AppSettings, DeviceProfile, GraphicsCapabilities, GraphicsSettings, PerformanceSettings, UpdateCheck } from "../types";
 
 const defaults: AppSettings = {
   defaultAndroidVersion: "16",
@@ -20,14 +20,16 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
   const [busy, setBusy] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateCheck | null>(null);
   const [performance, setPerformance] = useState<PerformanceSettings | null>(null);
+  const [graphics,setGraphics]=useState<GraphicsSettings|null>(null);
+  const [graphicsCaps,setGraphicsCaps]=useState<GraphicsCapabilities|null>(null);
 
   useEffect(() => {
     invoke<AppSettings>("get_app_settings")
       .then(setSettings)
       .catch(error => setStatus(String(error)));
-    invoke<PerformanceSettings>("get_performance_settings")
-      .then(setPerformance)
-      .catch(error => setStatus(String(error)));
+    invoke<PerformanceSettings>("get_performance_settings").then(setPerformance).catch(error => setStatus(String(error)));
+    invoke<GraphicsSettings>("get_graphics_settings").then(setGraphics).catch(error=>setStatus(String(error)));
+    invoke<GraphicsCapabilities>("get_graphics_capabilities").then(setGraphicsCaps).catch(error=>setStatus(String(error)));
   }, []);
 
   const save = async (event: FormEvent) => {
@@ -148,6 +150,28 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
             }}>Check GitHub Releases</button>
             {updateInfo && <small className="muted">Current {updateInfo.currentVersion} · Latest {updateInfo.latestVersion}</small>}
           </div>
+
+          {graphics && <div className="tool-group">
+            <h4>Graphics renderer</h4>
+            <label>Renderer<select value={graphics.renderer} onChange={e=>setGraphics({...graphics,renderer:e.target.value as GraphicsSettings["renderer"]})}>
+              {["auto","vulkan","opengl","directx","virgl","software"].map(v=><option key={v}>{v}</option>)}
+            </select></label>
+            {graphicsCaps && <small className="muted">VirGL {graphicsCaps.virgl?"yes":"no"} · ANGLE {graphicsCaps.angle?"yes":"no"} · Vulkan {graphicsCaps.vulkan?"yes":"no"} · OpenGL {graphicsCaps.opengl?"yes":"no"} · DirectX {graphicsCaps.directx?"yes":"no"} · ASTC tools {graphicsCaps.astcTools.join(", ")||"none"}</small>}
+            <div className="permission-grid">
+              <label><input type="checkbox" checked={graphics.vsync} onChange={e=>setGraphics({...graphics,vsync:e.target.checked})}/>VSync</label>
+              <label><input type="checkbox" checked={graphics.tripleBuffer} onChange={e=>setGraphics({...graphics,tripleBuffer:e.target.checked})}/>Triple buffering</label>
+              <label><input type="checkbox" checked={graphics.dynamicResolution} onChange={e=>setGraphics({...graphics,dynamicResolution:e.target.checked})}/>Dynamic resolution</label>
+              <label><input type="checkbox" checked={graphics.shaderCache} onChange={e=>setGraphics({...graphics,shaderCache:e.target.checked})}/>Shader cache</label>
+              <label><input type="checkbox" checked={graphics.astcCache} onChange={e=>setGraphics({...graphics,astcCache:e.target.checked})}/>ASTC cache</label>
+              <label><input type="checkbox" checked={graphics.fpsOverlay} onChange={e=>setGraphics({...graphics,fpsOverlay:e.target.checked})}/>FPS overlay</label>
+              <label><input type="checkbox" checked={graphics.frameTimeGraph} onChange={e=>setGraphics({...graphics,frameTimeGraph:e.target.checked})}/>Frame-time graph</label>
+              <label><input type="checkbox" checked={graphics.usageOverlay} onChange={e=>setGraphics({...graphics,usageOverlay:e.target.checked})}/>CPU/GPU usage overlay</label>
+            </div>
+            <div className="button-row">
+              <button type="button" className="ghost compact" onClick={async()=>{try{setGraphics(await invoke<GraphicsSettings>("save_graphics_settings",{settings:graphics}));setStatus("Graphics settings saved; renderer changes apply to new emulator starts.");}catch(error){setStatus(String(error));}}}>Save graphics settings</button>
+              <button type="button" className="ghost compact" onClick={async()=>{try{const out=await invoke<string[]>("run_graphics_benchmark");setStatus(out.join("\n")||"No external graphics benchmark tool returned data.");}catch(error){setStatus(String(error));}}}>Graphics benchmark</button>
+            </div>
+          </div>}
 
           {performance && <div className="tool-group">
             <h4>Performance tuning</h4>
