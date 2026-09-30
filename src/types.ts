@@ -156,6 +156,9 @@ export interface AppSettings {
   defaultAdbEnabled: boolean;
   defaultHeadless: boolean;
   confirmDangerousActions: boolean;
+  apiEnabled: boolean;
+  apiPort: number;
+  apiToken: string;
 }
 
 
