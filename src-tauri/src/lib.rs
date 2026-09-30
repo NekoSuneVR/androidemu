@@ -794,6 +794,14 @@ fn stream_media(input:String,url:String,video_codec:String,rotate:Option<String>
 
 
 
+
+#[tauri::command]
+fn execute_plugin(state:State<'_,RuntimeState>,id:String,input:serde_json::Value)->Result<serde_json::Value,String>{plugins::execute(&state.data_dir,id,input)}
+#[tauri::command]
+fn run_renderer_plugins(state:State<'_,RuntimeState>,input:serde_json::Value)->Result<Vec<serde_json::Value>,String>{plugins::renderer_hook(&state.data_dir,input)}
+#[tauri::command]
+fn run_ai_plugins(state:State<'_,RuntimeState>,input:serde_json::Value)->Result<Vec<serde_json::Value>,String>{plugins::ai_hook(&state.data_dir,input)}
+
 #[tauri::command]
 fn list_plugins(state:State<'_,RuntimeState>)->Result<Vec<PluginManifest>,String>{plugins::list(&state.data_dir)}
 #[tauri::command]
@@ -1268,6 +1276,9 @@ pub fn run() {
             run_media_job,
             run_media_batch,
             stream_media,
+            execute_plugin,
+            run_renderer_plugins,
+            run_ai_plugins,
             list_plugins,
             save_plugin,
             import_plugin,
