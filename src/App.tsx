@@ -141,6 +141,21 @@ export default function App() {
     await updateInstance(instance, { name });
   };
 
+  const cloneInstance = async (instance: AndroidInstance) => {
+    const name = window.prompt("Clone Android instance", `${instance.name} Clone`)?.trim();
+    if (!name) return;
+    setBusyId(instance.id);
+    try {
+      const cloned = await invoke<AndroidInstance>("clone_instance", { id: instance.id, name });
+      setInstances(current => [...current, cloned]);
+      setNotice(`${cloned.name} cloned from ${instance.name}. ADB is disabled on the clone until you enable it.`);
+    } catch (error) {
+      setNotice(String(error));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const deleteInstance = async (instance: AndroidInstance) => {
     if (!window.confirm(`Delete ${instance.name}? Its instance configuration, logs and snapshots will be removed.`)) return;
     setBusyId(instance.id);
@@ -203,6 +218,7 @@ export default function App() {
                 ) : (
                   <button className="primary compact" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "start_instance")}>Start</button>
                 )}
+                <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => cloneInstance(instance)}>Clone</button>
                 <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => deleteInstance(instance)}>Delete</button>
               </div>
             </article>
