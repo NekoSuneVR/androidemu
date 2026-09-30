@@ -253,6 +253,15 @@ pub fn reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
     run_for_device(port, &args)
 }
 
+pub fn clipboard_set(port: u16, text: String) -> Result<AdbResult, String> {
+    if text.len() > 100_000 { return Err("Clipboard text is limited to 100,000 characters".into()); }
+    run_for_device(port, &["shell".into(), "cmd".into(), "clipboard".into(), "set".into(), text])
+}
+
+pub fn clipboard_get(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &["shell".into(), "cmd".into(), "clipboard".into(), "get".into()])
+}
+
 pub fn media_codec_requests(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &[
         "shell".into(), "sh".into(), "-c".into(),
