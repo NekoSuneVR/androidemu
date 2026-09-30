@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **250/643 tasks complete (38.9%)**
+> Progress: **252/643 tasks complete (39.2%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -61,7 +61,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Add VirtIO input
 - [ ] Add VirtIO audio
 - [x] Add QCOW2 storage
-- [ ] Add dynamically expanding userdata disks
+- [x] Add dynamically expanding userdata disks
 - [x] Add snapshot support
 - [x] Add clone support
 - [x] Add VM pause/resume
@@ -737,7 +737,7 @@ skills/
 - [x] API localhost-only by default
 - [ ] Require user approval for dangerous actions
 - [x] Root warning
-- [ ] Network exposure warning
+- [x] Network exposure warning
 - [ ] Instance isolation
 - [ ] Secure ADB keys
 - [ ] Secure configuration storage
