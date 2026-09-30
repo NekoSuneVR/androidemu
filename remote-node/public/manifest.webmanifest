@@ -1,0 +1,10 @@
+{
+  "name": "NekoDroid Remote",
+  "short_name": "NekoDroid",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08110d",
+  "theme_color": "#0f2b1f",
+  "description": "Installable remote viewer for NekoDroid Android instances.",
+  "icons": []
+}
