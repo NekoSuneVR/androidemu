@@ -23,6 +23,48 @@ use first_run::SystemReadiness;
 use ai::{AiAction, AiChatResult};
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
+use serde::Serialize;
+
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateCheck {
+    current_version: String,
+    latest_version: String,
+    update_available: bool,
+    release_url: String,
+}
+
+#[tauri::command]
+fn check_for_updates() -> Result<UpdateCheck, String> {
+    let current = env!("CARGO_PKG_VERSION").to_string();
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("NekoDroid update checker")
+        .build()
+        .map_err(|e| e.to_string())?;
+    let response = client
+        .get("https://api.github.com/repos/NekoSuneVR/androidemu/releases/latest")
+        .send()
+        .map_err(|e| format!("Unable to check GitHub Releases: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("GitHub Releases returned HTTP {}", response.status()));
+    }
+
+    let value: serde_json::Value = response.json().map_err(|e| e.to_string())?;
+    let latest = value.get("tag_name").and_then(|v| v.as_str()).unwrap_or("").trim_start_matches('v').to_string();
+    let release_url = value.get("html_url").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    if latest.is_empty() {
+        return Err("Latest release did not contain a version tag".into());
+    }
+
+    Ok(UpdateCheck {
+        update_available: latest != current,
+        current_version: current,
+        latest_version: latest,
+        release_url,
+    })
+}
 
 #[tauri::command]
 fn list_instances(state: State<'_, RuntimeState>) -> Result<Vec<AndroidInstance>, String> {
@@ -661,6 +703,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            check_for_updates,
             list_instances,
             get_adb_info,
             adb_connect,
