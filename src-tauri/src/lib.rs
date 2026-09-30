@@ -177,6 +177,16 @@ fn adb_input_tap(port: u16, x: i32, y: i32) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_input_double_tap(port: u16, x: i32, y: i32) -> Result<AdbResult, String> {
+    adb::input_double_tap(port, x, y)
+}
+
+#[tauri::command]
+fn adb_input_hold(port: u16, x: i32, y: i32, duration_ms: u32) -> Result<AdbResult, String> {
+    adb::input_hold(port, x, y, duration_ms)
+}
+
+#[tauri::command]
 fn adb_input_swipe(
     port: u16,
     x1: i32,
@@ -305,6 +315,8 @@ pub fn run() {
             adb_network_connections,
             adb_kernel_log,
             adb_input_tap,
+            adb_input_double_tap,
+            adb_input_hold,
             adb_input_swipe,
             adb_input_keyevent,
             adb_input_text,
