@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **266/643 tasks complete (41.4%)**
+> Progress: **267/643 tasks complete (41.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -59,7 +59,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Add VirtIO block devices
 - [x] Add VirtIO networking
 - [x] Add VirtIO input
-- [ ] Add VirtIO audio
+- [x] Add VirtIO audio
 - [x] Add QCOW2 storage
 - [x] Add dynamically expanding userdata disks
 - [x] Add snapshot support
