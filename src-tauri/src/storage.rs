@@ -60,11 +60,22 @@ pub fn save_instance(data_dir: &Path, instance: &AndroidInstance) -> Result<(), 
     fs::create_dir_all(dir.join("snapshots")).map_err(|e| e.to_string())?;
 
     let encoded = serde_json::to_vec_pretty(instance).map_err(|e| e.to_string())?;
-    fs::write(config_path(data_dir, &instance.id), encoded).map_err(|e| e.to_string())
+    let path = config_path(data_dir, &instance.id);
+    fs::write(&path, encoded).map_err(|e| e.to_string())?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
+            .map_err(|e| format!("Unable to secure instance config {}: {e}", path.display()))?;
+    }
+    Ok(())
 }
 
 pub fn create_instance(data_dir: &Path, request: CreateInstanceRequest) -> Result<AndroidInstance, String> {
     validate_request(&request)?;
+    if load_instances(data_dir)?.iter().any(|instance| instance.adb_port == request.adb_port) {
+        return Err(format!("ADB port {} is already assigned to another instance", request.adb_port));
+    }
 
     let millis = SystemTime::now()
         .duration_since(UNIX_EPOCH)
