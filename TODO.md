@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **400/643 tasks complete (62.2%)**
+> Progress: **410/643 tasks complete (63.8%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -368,7 +368,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Multi-touch
 - [ ] Pinch
 - [ ] Zoom
-- [ ] Virtual joystick
+- [x] Virtual joystick
 - [ ] Touch overlays
 - [ ] Touch debugging overlay
 
@@ -376,17 +376,17 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 17 - Keyboard and Mouse Mapping
 
-- [ ] WASD joystick mapping
-- [ ] Key-to-tap mapping
-- [ ] Key-to-hold mapping
+- [x] WASD joystick mapping
+- [x] Key-to-tap mapping
+- [x] Key-to-hold mapping
 - [ ] Mouse-look
 - [ ] Mouse lock
-- [ ] Left-click mapping
-- [ ] Right-click mapping
-- [ ] Scroll mapping
-- [ ] Per-game keymaps
-- [ ] Import/export keymaps
-- [ ] Keymap editor
+- [x] Left-click mapping
+- [x] Right-click mapping
+- [x] Scroll mapping
+- [x] Per-game keymaps
+- [x] Import/export keymaps
+- [x] Keymap editor
 - [ ] Visual overlay editor
 - [ ] Hotkey to show/hide controls
 
