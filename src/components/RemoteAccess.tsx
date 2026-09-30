@@ -35,6 +35,7 @@ type RemoteSettings = {
   gamepad: boolean;
   adaptiveBitrate: boolean;
   fpsPreset: 30|60|90|120;
+  directFramebuffer: boolean;
   ttlSeconds: number;
 };
 
@@ -50,6 +51,7 @@ const defaultSettings: RemoteSettings = {
   gamepad: true,
   adaptiveBitrate: true,
   fpsPreset: 60,
+  directFramebuffer: false,
   ttlSeconds: 900
 };
 
@@ -63,6 +65,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const pointerState = useRef<Map<string, { x: number; y: number; at: number }>>(new Map());
+  const framebufferTimerRef=useRef<number|null>(null);
 
   const selected = useMemo(
     () => instances.find(instance => instance.id === settings.instanceId) ?? instances[0],
@@ -78,6 +81,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
   useEffect(() => () => {
     socketRef.current?.close();
     streamRef.current?.getTracks().forEach(track => track.stop());
+    if(framebufferTimerRef.current) window.clearInterval(framebufferTimerRef.current);
     peersRef.current.forEach(peer => peer.close());
   }, []);
 
@@ -197,29 +201,52 @@ export default function RemoteAccess({ instances, profiles }: Props) {
     }
   };
 
+  const decodePpmToCanvas = (base64:string,canvas:HTMLCanvasElement) => {
+    const raw=atob(base64); const bytes=new Uint8Array(raw.length);
+    for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+    let pos=0; const token=()=>{while(pos<bytes.length&&String.fromCharCode(bytes[pos]).trim()==="")pos++; let s=""; while(pos<bytes.length&&!/\s/.test(String.fromCharCode(bytes[pos])))s+=String.fromCharCode(bytes[pos++]); return s;};
+    if(token()!=="P6") throw new Error("Unsupported framebuffer format");
+    const width=Number(token()),height=Number(token()),max=Number(token()); while(pos<bytes.length&&/\s/.test(String.fromCharCode(bytes[pos])))pos++;
+    if(!width||!height||max!==255) throw new Error("Invalid PPM framebuffer");
+    canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Canvas unavailable");
+    const image=ctx.createImageData(width,height);let src=pos,dst=0;
+    while(src+2<bytes.length&&dst<image.data.length){image.data[dst++]=bytes[src++];image.data[dst++]=bytes[src++];image.data[dst++]=bytes[src++];image.data[dst++]=255;}
+    ctx.putImageData(image,0,0);
+  };
+
   const ensureCapture = async () => {
     if (streamRef.current) return streamRef.current;
+    if(settings.directFramebuffer){
+      if(!selected||selected.status!=="running") throw new Error("Direct framebuffer streaming requires a running instance.");
+      const profile=profiles.find(p=>p.name===selected.profile);
+      const canvas=document.createElement("canvas");
+      canvas.width=profile?.width??1080;canvas.height=profile?.height??2400;
+      const refresh=async()=>{try{const frame=await invoke<string>("capture_instance_framebuffer_base64",{id:selected.id});decodePpmToCanvas(frame,canvas);}catch(error){setStatus(`Framebuffer capture: ${String(error)}`);}};
+      await refresh();
+      framebufferTimerRef.current=window.setInterval(refresh,Math.max(50,Math.round(1000/settings.fpsPreset)));
+      const stream=(canvas as HTMLCanvasElement & {captureStream:(fps:number)=>MediaStream}).captureStream(settings.fpsPreset);
+      streamRef.current=stream;
+      return stream;
+    }
     if (!navigator.mediaDevices?.getDisplayMedia) {
       throw new Error("Screen capture is unavailable in this WebView. Use a current Tauri/WebView2 build.");
     }
-
+    const profile=selected?profiles.find(p=>p.name===selected.profile):undefined;
     const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: { frameRate: settings.fpsPreset },
+      video: { frameRate: settings.fpsPreset, width:profile?.width, height:profile?.height },
       audio: true
     });
     const videoTrack = stream.getVideoTracks()[0];
     if (videoTrack) {
-      await videoTrack.applyConstraints({ frameRate: settings.fpsPreset }).catch(() => {});
+      await videoTrack.applyConstraints({ frameRate: settings.fpsPreset, width:profile?.width, height:profile?.height }).catch(() => {});
     }
     streamRef.current = stream;
-
     stream.getVideoTracks()[0]?.addEventListener("ended", () => {
       setStatus("Screen sharing stopped locally.");
       streamRef.current = null;
       peersRef.current.forEach(peer => peer.close());
       peersRef.current.clear();
     });
-
     return stream;
   };
 
@@ -413,6 +440,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
     peersRef.current.clear();
     streamRef.current?.getTracks().forEach(track => track.stop());
     streamRef.current = null;
+    if(framebufferTimerRef.current){window.clearInterval(framebufferTimerRef.current);framebufferTimerRef.current=null;}
     socketRef.current?.close();
     socketRef.current = null;
 
@@ -469,6 +497,7 @@ export default function RemoteAccess({ instances, profiles }: Props) {
             <label><input type="checkbox" checked={settings.fileTransfer} disabled={Boolean(invite)} onChange={e => setSettings({...settings,fileTransfer:e.target.checked})} /> File transfer</label>
             <label><input type="checkbox" checked={settings.gamepad} disabled={Boolean(invite)} onChange={e => setSettings({...settings,gamepad:e.target.checked})} /> Gamepad forwarding</label>
             <label><input type="checkbox" checked={settings.unattendedTrusted} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,unattendedTrusted:e.target.checked})} /> Allow trusted devices to reconnect without manual approval</label>
+            <label><input type="checkbox" checked={settings.directFramebuffer} disabled={Boolean(invite)} onChange={e=>setSettings({...settings,directFramebuffer:e.target.checked})} /> Direct emulator framebuffer capture</label>
             <label><input type="checkbox" checked={settings.adaptiveBitrate} disabled={Boolean(invite)} onChange={e => setSettings({...settings,adaptiveBitrate:e.target.checked})} /> Adaptive bitrate</label>
           </div>
 
