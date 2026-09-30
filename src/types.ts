@@ -143,6 +143,7 @@ export interface FfmpegInfo {
   hwaccels: string[];
   hardwareEncoders: string[];
   hardwareDecoders: string[];
+  codecCapabilities: string[];
 }
 
 export interface MediaResult {
