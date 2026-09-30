@@ -23,6 +23,27 @@ The current development branch includes:
 
 See [BUILDING.md](BUILDING.md) for development prerequisites and current runtime limitations.
 
+## NekoDroid Remote Access
+
+The development branch now also contains a self-hosted remote-access system for sharing a NekoDroid Android instance with another PC, phone, tablet, or browser.
+
+Current remote features include:
+
+- self-hosted signalling/invite server;
+- Docker deployment;
+- WebRTC video/audio transport;
+- optional Coturn relay for difficult NAT/firewall networks;
+- expiring invite codes and URLs;
+- explicit host approval, deny, and revoke;
+- view-only or view+control permission;
+- mobile-friendly browser viewer;
+- Android touch/swipe/key forwarding through ADB;
+- localhost-only emulator ADB remains private from the remote viewer.
+
+See [REMOTE.md](REMOTE.md) for architecture and deployment instructions.
+
+The remote software is self-hosted and has no required subscription. Cloud hosting or TURN bandwidth can still have infrastructure costs depending on where you deploy it.
+
 > Android 16 x86_64 boot is not marked complete yet. The current QEMU layer boots a bootable disk image; native AOSP-style kernel/ramdisk/system/vendor/userdata boot support is the next runtime milestone.
 
 ---
