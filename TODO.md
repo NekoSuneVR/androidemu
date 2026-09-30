@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **147/643 tasks complete (22.9%)**
+> Progress: **150/643 tasks complete (23.3%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -65,7 +65,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Add snapshot support
 - [ ] Add clone support
 - [ ] Add VM pause/resume
-- [ ] Add headless mode
+- [x] Add headless mode
 - [ ] Add off-screen rendering
 
 ---
@@ -656,14 +656,14 @@ skills/
 - [x] Instance rename
 - [ ] Instance clone
 - [x] Concurrent instances
-- [ ] Separate userdata
+- [x] Separate userdata
 - [x] Separate Android versions
 - [x] Separate device profiles
 - [x] Separate root setting
 - [x] Separate ADB ports
 - [ ] Separate AI settings
 - [ ] Separate keymaps
-- [ ] Separate storage
+- [x] Separate storage
 - [ ] Separate snapshots
 - [x] CPU/RAM resource limits
 
