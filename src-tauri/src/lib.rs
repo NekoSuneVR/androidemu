@@ -21,6 +21,7 @@ mod graphics;
 mod plugins;
 mod sensors;
 mod ai_capture;
+mod media_jobs;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -42,6 +43,7 @@ use display::DisplayState;
 use graphics::{GraphicsSettings,GraphicsCapabilities};
 use plugins::PluginManifest;
 use ai_capture::AiCaptureResult;
+use media_jobs::{FfmpegSettings,MediaJobStatus};
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -673,6 +675,18 @@ fn get_system_readiness() -> SystemReadiness {
     first_run::detect()
 }
 
+
+#[tauri::command]
+fn get_ffmpeg_settings(state:State<'_,RuntimeState>)->Result<FfmpegSettings,String>{media_jobs::load_settings(&state.data_dir)}
+#[tauri::command]
+fn save_ffmpeg_settings(state:State<'_,RuntimeState>,settings:FfmpegSettings)->Result<FfmpegSettings,String>{media_jobs::save_settings(&state.data_dir,settings)}
+#[tauri::command]
+fn start_media_job(state:State<'_,RuntimeState>,request:MediaJobRequest)->Result<MediaJobStatus,String>{media_jobs::start(state.data_dir.clone(),request)}
+#[tauri::command]
+fn list_media_jobs()->Result<Vec<MediaJobStatus>,String>{media_jobs::list()}
+#[tauri::command]
+fn cancel_media_job(id:String)->Result<MediaJobStatus,String>{media_jobs::cancel(&id)}
+
 #[tauri::command]
 fn get_media_codec_report() -> MediaCodecCapabilityReport { media::media_codec_report() }
 
@@ -1120,6 +1134,11 @@ pub fn run() {
             delete_snapshot,
             repair_installation,
             get_system_readiness,
+            get_ffmpeg_settings,
+            save_ffmpeg_settings,
+            start_media_job,
+            list_media_jobs,
+            cancel_media_job,
             get_media_codec_report,
             get_ffmpeg_info,
             run_media_job,
