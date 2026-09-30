@@ -1,5 +1,5 @@
 use serde::{Deserialize,Serialize};
-use std::{fs,path::{Path,PathBuf}};
+use std::{fs,io::Write,path::{Path,PathBuf},process::{Command,Stdio}};
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
 #[serde(rename_all="camelCase")]
@@ -41,4 +41,32 @@ pub fn import_file(data_dir:&Path,path:String)->Result<PluginManifest,String>{
 pub fn remove(data_dir:&Path,id:String)->Result<(),String>{
     if !valid_id(&id){return Err("Invalid plugin id".into());}
     let p=dir(data_dir).join(format!("{id}.json"));if p.exists(){fs::remove_file(p).map_err(|e|e.to_string())?;}Ok(())
+}
+
+pub fn execute(data_dir:&Path,id:String,input:serde_json::Value)->Result<serde_json::Value,String>{
+    let plugin=list(data_dir)?.into_iter().find(|p|p.id==id).ok_or("Plugin not found")?;
+    if plugin.entry.trim().is_empty(){return Err("Plugin has no executable entry".into());}
+    let entry=PathBuf::from(&plugin.entry);
+    if !entry.is_file(){return Err(format!("Plugin executable does not exist: {}",entry.display()));}
+    let mut child=Command::new(&entry).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().map_err(|e|e.to_string())?;
+    if let Some(stdin)=child.stdin.as_mut(){stdin.write_all(&serde_json::to_vec(&input).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;}
+    let out=child.wait_with_output().map_err(|e|e.to_string())?;
+    if !out.status.success(){return Err(String::from_utf8_lossy(&out.stderr).trim().to_string());}
+    serde_json::from_slice(&out.stdout).map_err(|e|format!("Plugin returned invalid JSON: {e}"))
+}
+pub fn renderer_hook(data_dir:&Path,input:serde_json::Value)->Result<Vec<serde_json::Value>,String>{
+    let mut out=Vec::new();
+    for plugin in list(data_dir)?.into_iter().filter(|p|p.plugin_type=="renderer"){
+        if plugin.entry.trim().is_empty(){continue;}
+        out.push(execute(data_dir,plugin.id,input.clone())?);
+    }
+    Ok(out)
+}
+pub fn ai_hook(data_dir:&Path,input:serde_json::Value)->Result<Vec<serde_json::Value>,String>{
+    let mut out=Vec::new();
+    for plugin in list(data_dir)?.into_iter().filter(|p|p.plugin_type=="ai"){
+        if plugin.entry.trim().is_empty(){continue;}
+        out.push(execute(data_dir,plugin.id,input.clone())?);
+    }
+    Ok(out)
 }
