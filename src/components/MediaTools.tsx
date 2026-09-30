@@ -22,6 +22,8 @@ export default function MediaTools() {
   const [streamUrl,setStreamUrl]=useState("");
   const [streamRotate,setStreamRotate]=useState<"none"|"left"|"right"|"flip">("none");
   const [codecReport, setCodecReport] = useState<MediaCodecCapabilityReport | null>(null);
+  const [microphone,setMicrophone]=useState("");
+  const [virtualCamera,setVirtualCamera]=useState("/dev/video10");
   const [ffmpegSettings,setFfmpegSettings]=useState<FfmpegSettings|null>(null);
   const [managedJobs,setManagedJobs]=useState<MediaJobStatus[]>([]);
 
@@ -227,6 +229,16 @@ export default function MediaTools() {
             <label className="checkbox-line"><input type="checkbox" checked={ffmpegSettings.obsFriendly} onChange={e=>setFfmpegSettings({...ffmpegSettings,obsFriendly:e.target.checked})}/>OBS-friendly yuv420p + faststart output</label>
             <button type="button" className="ghost compact" onClick={async()=>{try{setFfmpegSettings(await invoke<FfmpegSettings>("save_ffmpeg_settings",{settings:ffmpegSettings}));setResult("FFmpeg manager settings saved.");}catch(error){setResult(String(error));}}}>Save FFmpeg settings</button>
           </div>}
+
+          <div className="tool-group">
+            <h4>Microphone mixing / virtual camera</h4>
+            <label>Microphone device<input value={microphone} placeholder={navigator.userAgent.includes("Windows")?"Microphone (Device Name)":"default"} onChange={e=>setMicrophone(e.target.value)}/></label>
+            <div className="button-row">
+              <button type="button" className="ghost compact" disabled={!input||!output||!microphone} onClick={async()=>{try{setBusy(true);const r=await invoke<MediaResult>("mix_microphone",{input,output,microphone});setResult([r.success?"MIX COMPLETE":"MIX FAILED",r.stderr||r.stdout].join("\n"));}catch(error){setResult(String(error));}finally{setBusy(false);}}}>Mix microphone into media</button>
+            </div>
+            <label>Virtual camera device (Linux v4l2loopback)<input value={virtualCamera} onChange={e=>setVirtualCamera(e.target.value)}/></label>
+            <button type="button" className="ghost compact" disabled={!input||!virtualCamera} onClick={async()=>{try{setBusy(true);const r=await invoke<MediaResult>("output_virtual_camera",{input,device:virtualCamera});setResult([r.success?"VIRTUAL CAMERA ENDED":"VIRTUAL CAMERA FAILED",r.stderr||r.stdout].join("\n"));}catch(error){setResult(String(error));}finally{setBusy(false);}}}>Output to virtual camera</button>
+          </div>
 
           <div className="tool-group">
             <h4>RTMP / SRT streaming</h4>
