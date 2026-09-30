@@ -9,6 +9,7 @@ import SnapshotManager from "./components/SnapshotManager";
 import MediaTools from "./components/MediaTools";
 import SettingsPage from "./components/SettingsPage";
 import SystemReadinessPanel from "./components/SystemReadinessPanel";
+import FileManager from "./components/FileManager";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -20,7 +21,7 @@ import type {
   AppSettings
 } from "./types";
 
-const nav = ["Home", "Instances", "Android Images", "Device Profiles", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
+const nav = ["Home", "Instances", "Android Images", "Device Profiles", "File Manager", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
 
 const defaultRequest: CreateInstanceRequest = {
   name: "Gaming",
@@ -307,6 +308,7 @@ export default function App() {
         )}
         {active === "Android Images" && <ImageManager images={images} onChanged={refresh} />}
         {active === "Device Profiles" && <DeviceProfiles profiles={profiles} onChanged={refresh} />}
+        {active === "File Manager" && <FileManager instances={instances} />}
         {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
         {active === "NekoAI" && <NekoAI />}
