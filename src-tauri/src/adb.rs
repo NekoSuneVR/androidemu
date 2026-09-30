@@ -1,11 +1,59 @@
 use crate::models::{AdbInfo, AdbResult};
 use serde::Serialize;
+use std::collections::BTreeSet;
 use std::{
     env,
     fs,
     path::{Path, PathBuf},
     process::Command,
 };
+
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApkCompatibility {
+    pub path: String,
+    pub abis: Vec<String>,
+    pub preferred_abi: String,
+    pub native_x86_64: bool,
+    pub needs_arm_compatibility: bool,
+    pub diagnostic: String,
+}
+
+pub fn inspect_apk(apk_path: String) -> Result<ApkCompatibility, String> {
+    let path = Path::new(&apk_path);
+    if !path.is_file() { return Err(format!("APK does not exist: {apk_path}")); }
+    let file = fs::File::open(path).map_err(|e| format!("Unable to open APK: {e}"))?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("Invalid APK/ZIP: {e}"))?;
+    let mut abis = BTreeSet::new();
+    for index in 0..archive.len() {
+        let entry = archive.by_index(index).map_err(|e| e.to_string())?;
+        let name = entry.name();
+        if let Some(rest) = name.strip_prefix("lib/") {
+            if let Some((abi, _)) = rest.split_once('/') {
+                if !abi.is_empty() { abis.insert(abi.to_string()); }
+            }
+        }
+    }
+    let abis = abis.into_iter().collect::<Vec<_>>();
+    let native_x86_64 = abis.iter().any(|abi| abi == "x86_64");
+    let preferred_abi = if native_x86_64 { "x86_64".to_string() }
+        else if abis.iter().any(|abi| abi == "x86") { "x86".to_string() }
+        else if abis.iter().any(|abi| abi == "arm64-v8a") { "arm64-v8a".to_string() }
+        else if abis.iter().any(|abi| abi == "armeabi-v7a") { "armeabi-v7a".to_string() }
+        else { "no native libraries / universal Java-Kotlin".to_string() };
+    let needs_arm_compatibility = !native_x86_64 && abis.iter().any(|abi| abi.starts_with("arm") || abi.starts_with("armeabi"));
+    let diagnostic = if abis.is_empty() {
+        "No ABI-specific native libraries found; the app may be architecture-neutral.".to_string()
+    } else if native_x86_64 {
+        "Native x86_64 libraries are present and should be preferred.".to_string()
+    } else if needs_arm_compatibility {
+        format!("No x86_64 libraries found. Preferred available ABI is {preferred_abi}; ARM compatibility may be required.")
+    } else {
+        format!("Available native ABIs: {}.", abis.join(", "))
+    };
+    Ok(ApkCompatibility { path: apk_path, abis, preferred_abi, native_x86_64, needs_arm_compatibility, diagnostic })
+}
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
