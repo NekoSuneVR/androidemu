@@ -198,7 +198,9 @@ fn run_qemu_img(args: &[String]) -> Result<(), String> {
         } else {
             "qemu-img was not found in PATH".to_string()
         })?;
-    let output = Command::new(executable)
+    let mut command = Command::new(&executable);
+    runtime::apply_runtime_environment(&mut command, &executable);
+    let output = command
         .args(args)
         .output()
         .map_err(|e| format!("Failed to run qemu-img: {e}"))?;
