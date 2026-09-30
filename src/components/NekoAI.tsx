@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AiSettings } from "../types";
+import type { AiChatResult, AiSettings } from "../types";
 
 const defaults: AiSettings = {
   enabled: false,
@@ -16,6 +16,8 @@ const defaults: AiSettings = {
 export default function NekoAI() {
   const [settings, setSettings] = useState<AiSettings>(defaults);
   const [output, setOutput] = useState("AI control is off by default.");
+  const [prompt, setPrompt] = useState("");
+  const [logs, setLogs] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -35,6 +37,44 @@ export default function NekoAI() {
       setOutput(String(error));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const sendPrompt = async () => {
+    if (!prompt.trim()) return;
+    setBusy(true);
+    try {
+      const result = await invoke<AiChatResult>("ai_chat", { prompt });
+      setOutput([
+        `Model: ${result.model}`,
+        `Endpoint: ${result.endpoint}`,
+        "",
+        result.response
+      ].join("\n"));
+      setPrompt("");
+      const currentLogs = await invoke<string>("get_ai_logs");
+      setLogs(currentLogs);
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const loadLogs = async () => {
+    try {
+      setLogs(await invoke<string>("get_ai_logs"));
+    } catch (error) {
+      setLogs(String(error));
+    }
+  };
+
+  const clearLogs = async () => {
+    try {
+      await invoke("clear_ai_logs");
+      setLogs("");
+    } catch (error) {
+      setLogs(String(error));
     }
   };
 
@@ -104,14 +144,39 @@ export default function NekoAI() {
             <button type="button" className="danger compact" disabled={busy} onClick={emergencyStop}>Emergency Stop</button>
           </div>
 
+          <div className="tool-group">
+            <h4>Chat / connection test</h4>
+            <label>Prompt
+              <textarea
+                value={prompt}
+                placeholder="Ask the configured NekoAI model something..."
+                onChange={e => setPrompt(e.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className="ghost compact"
+              disabled={busy || !settings.enabled || !prompt.trim()}
+              onClick={sendPrompt}
+            >
+              Send to NekoAI
+            </button>
+          </div>
+
           <div className="warning-box">
             Enabling AI here only permits the subsystem to operate. Game-control execution remains permission-gated and should use NekoDroid virtual Android input rather than the host OS cursor.
           </div>
         </form>
 
         <div className="terminal">
-          <div className="terminal-title">NekoAI status</div>
+          <div className="terminal-title">NekoAI response</div>
           <pre>{output}</pre>
+          <div className="button-row">
+            <button className="ghost compact" onClick={loadLogs}>Load AI Logs</button>
+            <button className="danger compact" onClick={clearLogs}>Clear AI Logs</button>
+          </div>
+          <div className="terminal-title">AI logs</div>
+          <pre>{logs || "No AI log loaded."}</pre>
         </div>
       </div>
     </section>
