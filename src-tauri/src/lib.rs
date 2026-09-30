@@ -27,6 +27,7 @@ mod android_validation;
 mod remote_transfer;
 mod host_media_io;
 mod passthrough;
+mod cloud_nodes;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -51,6 +52,7 @@ use ai_capture::AiCaptureResult;
 use media_jobs::{FfmpegSettings,MediaJobStatus};
 use platform_tools::PlatformToolsSettings;
 use passthrough::PassthroughSettings;
+use cloud_nodes::CloudAndroidNode;
 use android_validation::AndroidBootValidation;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
@@ -812,6 +814,14 @@ fn import_plugin(state:State<'_,RuntimeState>,path:String)->Result<PluginManifes
 fn remove_plugin(state:State<'_,RuntimeState>,id:String)->Result<(),String>{plugins::remove(&state.data_dir,id)}
 
 
+
+#[tauri::command]
+fn list_cloud_android_nodes(state:State<'_,RuntimeState>)->Result<Vec<CloudAndroidNode>,String>{cloud_nodes::list(&state.data_dir)}
+#[tauri::command]
+fn save_cloud_android_nodes(state:State<'_,RuntimeState>,nodes:Vec<CloudAndroidNode>)->Result<Vec<CloudAndroidNode>,String>{cloud_nodes::save(&state.data_dir,nodes)}
+#[tauri::command]
+fn test_cloud_android_node(node:CloudAndroidNode)->Result<serde_json::Value,String>{cloud_nodes::health(node)}
+
 #[tauri::command]
 fn get_passthrough_settings(state:State<'_,RuntimeState>)->Result<PassthroughSettings,String>{passthrough::load(&state.data_dir)}
 #[tauri::command]
@@ -1283,6 +1293,9 @@ pub fn run() {
             save_plugin,
             import_plugin,
             remove_plugin,
+            list_cloud_android_nodes,
+            save_cloud_android_nodes,
+            test_cloud_android_node,
             get_passthrough_settings,
             save_passthrough_settings,
             get_graphics_settings,
