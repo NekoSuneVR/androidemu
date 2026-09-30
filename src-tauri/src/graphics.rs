@@ -76,3 +76,15 @@ pub fn benchmark()->Result<Vec<String>,String>{
     }
     Ok(out)
 }
+
+pub fn astc_transcode(input:String,output:String,decode:bool)->Result<String,String>{
+    let exe=["astcenc","astcenc-avx2","astcenc-sse2"].into_iter()
+        .find_map(|name|env::var_os("PATH").and_then(|paths|env::split_paths(&paths).map(|d|d.join(name)).find(|p|p.is_file())))
+        .ok_or("astcenc was not found in PATH")?;
+    if !Path::new(&input).is_file(){return Err("ASTC input file does not exist".into());}
+    if let Some(parent)=Path::new(&output).parent(){if !parent.as_os_str().is_empty(){fs::create_dir_all(parent).map_err(|e|e.to_string())?;}}
+    let args=if decode{vec!["-dl".to_string(),input,output.clone()]}else{vec!["-cl".to_string(),input,output.clone(),"6x6".into(),"-medium".into()]};
+    let result=Command::new(exe).args(args).output().map_err(|e|e.to_string())?;
+    if !result.status.success(){return Err(String::from_utf8_lossy(&result.stderr).to_string());}
+    Ok(output)
+}
