@@ -87,3 +87,12 @@ pub struct AdbResult {
     pub stdout: String,
     pub stderr: String,
 }
+
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RuntimeLogs {
+    pub stdout: String,
+    pub stderr: String,
+    pub crash_report: String,
+}
