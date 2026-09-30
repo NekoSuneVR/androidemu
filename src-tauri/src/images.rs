@@ -94,8 +94,9 @@ pub fn register_image(
 
     let file_name = Path::new(&manifest.disk)
         .file_name()
-        .ok_or_else(|| "Manifest disk must contain a file name".to_string())?;
-    let target_disk = target_dir.join(file_name);
+        .ok_or_else(|| "Manifest disk must contain a file name".to_string())?
+        .to_owned();
+    let target_disk = target_dir.join(&file_name);
 
     fs::copy(source, &target_disk).map_err(|e| format!("Failed to copy image: {e}"))?;
 
