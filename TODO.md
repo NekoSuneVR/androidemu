@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **234/643 tasks complete (36.4%)**
+> Progress: **235/643 tasks complete (36.5%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -333,7 +333,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Root-on-next-boot
 - [ ] Separate rooted snapshot
 - [ ] Separate clean snapshot
-- [ ] Factory reset
+- [x] Factory reset
 - [x] Explain app compatibility risks
 - [x] Explain Play Integrity impact
 
