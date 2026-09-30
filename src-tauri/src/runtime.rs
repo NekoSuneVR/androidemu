@@ -173,16 +173,17 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
         "tcg"
     };
 
-    let disk_format = if image_path.to_ascii_lowercase().ends_with(".qcow2") {
+    let base_disk_format = if image_path.to_ascii_lowercase().ends_with(".qcow2") {
         "qcow2"
     } else {
         "raw"
     };
+    let runtime_disk = ensure_runtime_overlay(state, id, &image_path, base_disk_format)?;
     let cpu_model = if accelerator == "kvm" { "host" } else { "max" };
 
     let mut command = Command::new(qemu_path);
     command
-        .args(build_qemu_args(&instance, &image_path, disk_format, accelerator, cpu_model))
+        .args(build_qemu_args(&instance, &runtime_disk, "qcow2", accelerator, cpu_model))
         .stdout(Stdio::from(stdout))
         .stderr(Stdio::from(stderr));
 
@@ -314,6 +315,51 @@ pub fn runtime_status(state: &RuntimeState, id: &str) -> Result<AndroidInstance,
     Ok(instance)
 }
 
+fn ensure_runtime_overlay(
+    state: &RuntimeState,
+    id: &str,
+    base_image: &str,
+    base_format: &str,
+) -> Result<String, String> {
+    let disks_dir = storage::instance_dir(&state.data_dir, id).join("disks");
+    fs::create_dir_all(&disks_dir).map_err(|e| e.to_string())?;
+    let overlay = disks_dir.join("runtime.qcow2");
+
+    if overlay.is_file() {
+        return Ok(overlay.to_string_lossy().to_string());
+    }
+
+    let qemu_img = if cfg!(windows) {
+        find_in_path("qemu-img.exe").or_else(|| find_in_path("qemu-img"))
+    } else {
+        find_in_path("qemu-img")
+    }
+    .ok_or_else(|| "qemu-img was not found in PATH; it is required to create per-instance writable disks".to_string())?;
+
+    let output = Command::new(qemu_img)
+        .args([
+            "create",
+            "-f",
+            "qcow2",
+            "-F",
+            base_format,
+            "-b",
+            base_image,
+            overlay.to_string_lossy().as_ref(),
+        ])
+        .output()
+        .map_err(|e| format!("Failed to execute qemu-img: {e}"))?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "qemu-img failed to create runtime overlay: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+
+    Ok(overlay.to_string_lossy().to_string())
+}
+
 pub fn build_qemu_args(
     instance: &AndroidInstance,
     image_path: &str,
@@ -353,6 +399,12 @@ pub fn build_qemu_args(
     }
     args.push("-device".into());
     args.push("virtio-net-pci,netdev=net0".into());
+
+    if instance.headless {
+        args.push("-display".into());
+        args.push("none".into());
+    }
+
     args
 }
 
@@ -372,6 +424,7 @@ mod tests {
             ram_mb: 8192,
             adb_port: 5557,
             adb_enabled: false,
+            headless: false,
             root_mode: "standard".into(),
             image_path: Some("/tmp/android16.qcow2".into()),
             process_id: None,
@@ -404,6 +457,20 @@ mod tests {
         );
         assert!(args.iter().any(|arg| arg == "user,id=net0"));
         assert!(!args.iter().any(|arg| arg.contains("hostfwd=")));
+    }
+
+    #[test]
+    fn qemu_args_enable_headless_display() {
+        let mut configured = instance();
+        configured.headless = true;
+        let args = build_qemu_args(
+            &configured,
+            "/tmp/runtime.qcow2",
+            "qcow2",
+            "kvm",
+            "host",
+        );
+        assert!(args.windows(2).any(|pair| pair[0] == "-display" && pair[1] == "none"));
     }
 
     #[test]
