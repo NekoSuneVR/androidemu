@@ -6,6 +6,7 @@ import RemoteAccess from "./components/RemoteAccess";
 import DeveloperTools from "./components/DeveloperTools";
 import NekoAI from "./components/NekoAI";
 import SnapshotManager from "./components/SnapshotManager";
+import MediaTools from "./components/MediaTools";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -296,8 +297,9 @@ export default function App() {
         {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
         {active === "NekoAI" && <NekoAI />}
+        {active === "Media Tools" && <MediaTools />}
 
-        {["Media Tools", "Settings"].includes(active) && (
+        {["Settings"].includes(active) && (
           <section className="panel">
             <div className="empty">
               <h4>{active} foundation is queued next</h4>
