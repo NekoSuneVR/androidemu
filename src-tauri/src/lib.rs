@@ -7,6 +7,7 @@ mod storage;
 mod settings;
 mod snapshots;
 mod media;
+mod first_run;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -15,6 +16,7 @@ use runtime::RuntimeState;
 use settings::{AiSettings, AppSettings};
 use snapshots::SnapshotInfo;
 use media::{FfmpegInfo, MediaResult};
+use first_run::SystemReadiness;
 use tauri::{Manager, State};
 
 #[tauri::command]
@@ -349,6 +351,11 @@ fn delete_snapshot(
 }
 
 #[tauri::command]
+fn get_system_readiness() -> SystemReadiness {
+    first_run::detect()
+}
+
+#[tauri::command]
 fn get_ffmpeg_info() -> FfmpegInfo {
     media::detect_ffmpeg()
 }
@@ -504,6 +511,7 @@ pub fn run() {
             create_snapshot,
             restore_snapshot,
             delete_snapshot,
+            get_system_readiness,
             get_ffmpeg_info,
             run_media_job,
             get_app_settings,
