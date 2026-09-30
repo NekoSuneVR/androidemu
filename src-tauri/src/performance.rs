@@ -94,3 +94,28 @@ pub fn telemetry()->PerformanceTelemetry{
     let gpu=Command::new(if cfg!(windows){"nvidia-smi.exe"}else{"nvidia-smi"}).args(["--query-gpu=utilization.gpu,memory.used,memory.total","--format=csv,noheader,nounits"]).output().ok().filter(|o|o.status.success()).map(|o|String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_else(||"GPU telemetry unavailable".into());
     PerformanceTelemetry{cpu,gpu,ram}
 }
+
+pub fn benchmark_builtin(data_dir:&Path)->Result<Vec<String>,String>{
+    use std::time::Instant;
+    use sha2::{Digest,Sha256};
+    let block=vec![0x5Au8;1024*1024];
+    let start=Instant::now();
+    let mut digest=[0u8;32];
+    for _ in 0..128{
+        let value=Sha256::digest(&block);
+        digest.copy_from_slice(&value);
+    }
+    let cpu_ms=start.elapsed().as_secs_f64()*1000.0;
+    let bench_dir=data_dir.join("bench");fs::create_dir_all(&bench_dir).map_err(|e|e.to_string())?;
+    let path=bench_dir.join("io-benchmark.bin");
+    let write_start=Instant::now();fs::write(&path,&block).map_err(|e|e.to_string())?;let write_ms=write_start.elapsed().as_secs_f64()*1000.0;
+    let read_start=Instant::now();let read=fs::read(&path).map_err(|e|e.to_string())?;let read_ms=read_start.elapsed().as_secs_f64()*1000.0;
+    let _=fs::remove_file(&path);
+    Ok(vec![
+        format!("CPU SHA-256: 128 MiB in {cpu_ms:.1} ms ({:.1} MiB/s)",128.0/(cpu_ms/1000.0)),
+        format!("Disk write: 1 MiB in {write_ms:.2} ms"),
+        format!("Disk read: 1 MiB in {read_ms:.2} ms"),
+        format!("Checksum sample: {:02x}{:02x}{:02x}{:02x}",digest[0],digest[1],digest[2],digest[3]),
+        format!("Read bytes: {}",read.len()),
+    ])
+}
