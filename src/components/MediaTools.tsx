@@ -131,11 +131,27 @@ export default function MediaTools() {
                   <datalist id="video-codecs">
                     <option value="libx264" />
                     <option value="libx265" />
+                    <option value="libvpx" />
+                    <option value="libvpx-vp9" />
+                    <option value="libaom-av1" />
+                    <option value="mpeg4" />
+                    <option value="mpeg2video" />
                     {info?.hardwareEncoders?.map(codec => <option key={codec} value={codec} />)}
                   </datalist>
                 </label>
               )}
-              <label>Audio codec<input value={audioCodec} onChange={e => setAudioCodec(e.target.value)} /></label>
+              <label>Audio codec
+                <input list="audio-codecs" value={audioCodec} onChange={e => setAudioCodec(e.target.value)} />
+                <datalist id="audio-codecs">
+                  <option value="aac" />
+                  <option value="libmp3lame" />
+                  <option value="libopus" />
+                  <option value="libvorbis" />
+                  <option value="flac" />
+                  <option value="pcm_s16le" />
+                  <option value="alac" />
+                </datalist>
+              </label>
             </>
           )}
 
