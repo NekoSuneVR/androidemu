@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { AdbResult, AndroidInstance, KeyBinding, KeymapProfile } from "../types";
 
@@ -23,11 +23,30 @@ export default function KeymapManager({ instances }: { instances: AndroidInstanc
   const [path,setPath]=useState("");
   const [output,setOutput]=useState("");
   const [busy,setBusy]=useState(false);
+  const [overlayVisible,setOverlayVisible]=useState(true);
+  const [mouseLook,setMouseLook]=useState(false);
+  const overlayRef=useRef<HTMLDivElement|null>(null);
   const selected=useMemo(()=>instances.find(x=>x.id===instanceId)??instances[0],[instances,instanceId]);
 
   const refresh=()=>invoke<KeymapProfile[]>("list_keymaps").then(setProfiles).catch(e=>setOutput(String(e)));
   useEffect(()=>{refresh();},[]);
   useEffect(()=>{if(!instanceId&&instances[0])setInstanceId(instances[0].id);},[instances,instanceId]);
+  useEffect(()=>{
+    const onKey=(event:KeyboardEvent)=>{if(event.key==="F10"){event.preventDefault();setOverlayVisible(v=>!v);}};
+    window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey);
+  },[]);
+  useEffect(()=>{
+    const node=overlayRef.current;if(!node||!mouseLook||!selected)return;
+    const onMove=(event:MouseEvent)=>{
+      if(document.pointerLockElement!==node)return;
+      const dx=Math.max(-300,Math.min(300,event.movementX));
+      const dy=Math.max(-300,Math.min(300,event.movementY));
+      if(Math.abs(dx)<2&&Math.abs(dy)<2)return;
+      const cx=540,cy=1200;
+      invoke("adb_input_swipe",{port:selected.adbPort,x1:cx,y1:cy,x2:cx+dx,y2:cy+dy,durationMs:80}).catch(()=>{});
+    };
+    document.addEventListener("mousemove",onMove);return()=>document.removeEventListener("mousemove",onMove);
+  },[mouseLook,selected?.id]);
 
   const save=async()=>{setBusy(true);try{const p=await invoke<KeymapProfile>("save_keymap",{profile});setProfile(p);await refresh();setOutput(`Saved ${p.name}`);}catch(e){setOutput(String(e));}finally{setBusy(false);}};
   const remove=async(id:string)=>{if(!confirm("Delete this keymap?"))return;setBusy(true);try{await invoke("remove_keymap",{id});await refresh();setOutput("Keymap deleted.");}catch(e){setOutput(String(e));}finally{setBusy(false);}};
@@ -72,6 +91,23 @@ export default function KeymapManager({ instances }: { instances: AndroidInstanc
           </div>
         </article>)}
         <div className="button-row"><button className="ghost compact" onClick={addBinding}>Add binding</button><button className="primary compact" disabled={busy} onClick={save}>Save keymap</button></div>
+        <div className="tool-group">
+          <h4>Visual overlay editor</h4>
+          <div className="button-row">
+            <button type="button" className="ghost compact" onClick={()=>setOverlayVisible(v=>!v)}>{overlayVisible?"Hide":"Show"} overlay (F10)</button>
+            <button type="button" className={mouseLook?"danger compact":"ghost compact"} onClick={async()=>{const next=!mouseLook;setMouseLook(next);if(next)await overlayRef.current?.requestPointerLock();else if(document.pointerLockElement)document.exitPointerLock();}}>{mouseLook?"Release mouse":"Mouse-look / lock"}</button>
+          </div>
+          <div ref={overlayRef} style={{position:"relative",width:"100%",aspectRatio:"9 / 16",maxHeight:520,border:"1px solid currentColor",overflow:"hidden",cursor:mouseLook?"crosshair":"default"}}>
+            {overlayVisible&&profile.bindings.filter(b=>b.x!=null&&b.y!=null).map((b,index)=><button
+              type="button"
+              key={index}
+              title={`${b.input} → ${b.action}`}
+              style={{position:"absolute",left:`${Math.max(0,Math.min(100,(Number(b.x)/1080)*100))}%`,top:`${Math.max(0,Math.min(100,(Number(b.y)/2400)*100))}%`,transform:"translate(-50%,-50%)"}}
+              onPointerDown={event=>{if(mouseLook)return;const rect=(event.currentTarget.parentElement as HTMLElement).getBoundingClientRect();const move=(ev:PointerEvent)=>{const x=Math.round(Math.max(0,Math.min(1,(ev.clientX-rect.left)/rect.width))*1080);const y=Math.round(Math.max(0,Math.min(1,(ev.clientY-rect.top)/rect.height))*2400);updateBinding(index,{x,y});};const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up);};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up);}}
+            >{b.input}</button>)}
+          </div>
+          <small className="muted">Drag overlay markers to edit touch positions. F10 shows/hides controls. Mouse-look uses pointer lock and forwards relative motion as short Android swipes.</small>
+        </div>
         <label>Import/export path<input value={path} onChange={e=>setPath(e.target.value)}/></label>
         <div className="button-row">
           <button className="ghost compact" disabled={!path} onClick={async()=>{try{const p=await invoke<KeymapProfile>("import_keymap",{source:path});setProfile(p);await refresh();setOutput("Imported.");}catch(e){setOutput(String(e));}}}>Import</button>
