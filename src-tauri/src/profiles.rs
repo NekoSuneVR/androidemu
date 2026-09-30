@@ -15,6 +15,34 @@ pub struct DeviceProfile {
     pub touch_points: u8,
     pub telephony: bool,
     pub form_factor: String,
+    #[serde(default = "default_storage_gb")]
+    pub storage_gb: u32,
+    #[serde(default = "default_true")]
+    pub wifi: bool,
+    #[serde(default = "default_true")]
+    pub bluetooth: bool,
+    #[serde(default = "default_true")]
+    pub gps: bool,
+    #[serde(default = "default_camera_configuration")]
+    pub camera_configuration: String,
+    #[serde(default = "default_true")]
+    pub microphone: bool,
+    #[serde(default = "default_true")]
+    pub accelerometer: bool,
+    #[serde(default = "default_true")]
+    pub gyroscope: bool,
+    #[serde(default = "default_true")]
+    pub compass: bool,
+    #[serde(default = "default_true")]
+    pub light_sensor: bool,
+    #[serde(default = "default_true")]
+    pub proximity_sensor: bool,
+    #[serde(default = "default_battery_percent")]
+    pub battery_percent: u8,
+    #[serde(default)]
+    pub charging: bool,
+    #[serde(default)]
+    pub tablet_resources: bool,
 }
 
 pub fn builtin_profiles() -> Vec<DeviceProfile> {
@@ -31,6 +59,20 @@ pub fn builtin_profiles() -> Vec<DeviceProfile> {
             touch_points: 10,
             telephony: true,
             form_factor: "phone".into(),
+            storage_gb: 64,
+            wifi: true,
+            bluetooth: true,
+            gps: true,
+            camera_configuration: "front+rear".into(),
+            microphone: true,
+            accelerometer: true,
+            gyroscope: true,
+            compass: true,
+            light_sensor: true,
+            proximity_sensor: true,
+            battery_percent: 100,
+            charging: false,
+            tablet_resources: false,
         },
         DeviceProfile {
             id: "gaming-phone".into(),
@@ -44,6 +86,20 @@ pub fn builtin_profiles() -> Vec<DeviceProfile> {
             touch_points: 10,
             telephony: true,
             form_factor: "phone".into(),
+            storage_gb: 64,
+            wifi: true,
+            bluetooth: true,
+            gps: true,
+            camera_configuration: "front+rear".into(),
+            microphone: true,
+            accelerometer: true,
+            gyroscope: true,
+            compass: true,
+            light_sensor: true,
+            proximity_sensor: true,
+            battery_percent: 100,
+            charging: false,
+            tablet_resources: false,
         },
         DeviceProfile {
             id: "tablet".into(),
@@ -57,6 +113,20 @@ pub fn builtin_profiles() -> Vec<DeviceProfile> {
             touch_points: 10,
             telephony: false,
             form_factor: "tablet".into(),
+            storage_gb: 64,
+            wifi: true,
+            bluetooth: true,
+            gps: true,
+            camera_configuration: "front+rear".into(),
+            microphone: true,
+            accelerometer: true,
+            gyroscope: true,
+            compass: true,
+            light_sensor: true,
+            proximity_sensor: true,
+            battery_percent: 100,
+            charging: false,
+            tablet_resources: true,
         },
         DeviceProfile {
             id: "large-tablet".into(),
@@ -70,6 +140,20 @@ pub fn builtin_profiles() -> Vec<DeviceProfile> {
             touch_points: 10,
             telephony: false,
             form_factor: "tablet".into(),
+            storage_gb: 64,
+            wifi: true,
+            bluetooth: true,
+            gps: true,
+            camera_configuration: "front+rear".into(),
+            microphone: true,
+            accelerometer: true,
+            gyroscope: true,
+            compass: true,
+            light_sensor: true,
+            proximity_sensor: true,
+            battery_percent: 100,
+            charging: false,
+            tablet_resources: true,
         },
         DeviceProfile {
             id: "foldable".into(),
@@ -83,10 +167,28 @@ pub fn builtin_profiles() -> Vec<DeviceProfile> {
             touch_points: 10,
             telephony: true,
             form_factor: "foldable".into(),
+            storage_gb: 64,
+            wifi: true,
+            bluetooth: true,
+            gps: true,
+            camera_configuration: "front+rear".into(),
+            microphone: true,
+            accelerometer: true,
+            gyroscope: true,
+            compass: true,
+            light_sensor: true,
+            proximity_sensor: true,
+            battery_percent: 100,
+            charging: false,
+            tablet_resources: false,
         },
     ]
 }
 
+fn default_true() -> bool { true }
+fn default_storage_gb() -> u32 { 64 }
+fn default_battery_percent() -> u8 { 100 }
+fn default_camera_configuration() -> String { "front+rear".into() }
 
 fn custom_profiles_dir(data_dir: &Path) -> PathBuf {
     data_dir.join("profiles")
@@ -160,6 +262,15 @@ fn validate_profile(profile: &DeviceProfile) -> Result<(), String> {
     }
     if !(1..=20).contains(&profile.touch_points) {
         return Err("Touch points must be between 1 and 20".into());
+    }
+    if !(4..=2048).contains(&profile.storage_gb) {
+        return Err("Storage must be between 4 GB and 2048 GB".into());
+    }
+    if profile.battery_percent > 100 {
+        return Err("Battery percentage must be between 0 and 100".into());
+    }
+    if !matches!(profile.camera_configuration.as_str(), "none" | "front" | "rear" | "front+rear") {
+        return Err("Camera configuration must be none, front, rear, or front+rear".into());
     }
     if !matches!(profile.form_factor.as_str(), "phone" | "tablet" | "foldable") {
         return Err("Form factor must be phone, tablet, or foldable".into());
