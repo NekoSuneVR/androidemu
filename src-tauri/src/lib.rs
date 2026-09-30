@@ -765,6 +765,10 @@ fn get_graphics_capabilities()->GraphicsCapabilities{graphics::detect()}
 fn run_graphics_benchmark()->Result<Vec<String>,String>{graphics::benchmark()}
 #[tauri::command]
 fn astc_transcode(input:String,output:String,decode:bool)->Result<String,String>{graphics::astc_transcode(input,output,decode)}
+#[tauri::command]
+fn astc_cache_transcode(state:State<'_,RuntimeState>,input:String,decode:bool)->Result<String,String>{graphics::astc_cache_transcode(&state.data_dir,input,decode)}
+#[tauri::command]
+fn run_performance_benchmark(state:State<'_,RuntimeState>)->Result<Vec<String>,String>{performance::benchmark_builtin(&state.data_dir)}
 
 #[tauri::command]
 fn get_performance_telemetry()->PerformanceTelemetry{performance::telemetry()}
@@ -1200,6 +1204,8 @@ pub fn run() {
             get_graphics_capabilities,
             run_graphics_benchmark,
             astc_transcode,
+            astc_cache_transcode,
+            run_performance_benchmark,
             get_performance_telemetry,
             get_performance_settings,
             save_performance_settings,
