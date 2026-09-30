@@ -147,15 +147,21 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </form>
 
               <div className="tool-group">
-                <h4>Root tools</h4>
+                <h4>Root tools · {selected.rootMode}</h4>
+                <small className="muted">
+                  {selected.rootMode === "standard" ? "Standard mode: root controls are disabled." :
+                   selected.rootMode === "developer" ? "Developer mode: ADB/developer tools are available without automatic root." :
+                   selected.rootMode === "adb-root" ? "ADB Root mode: adbd root controls are available on compatible images." :
+                   "Full Root mode: adbd root and su controls are available on compatible images."}
+                </small>
                 <div className="button-row">
-                  <button className="ghost compact" disabled={busy} onClick={() => {
+                  <button className="ghost compact" disabled={busy || !["adb-root","full-root"].includes(selected.rootMode)} onClick={() => {
                     if (window.confirm("Enable ADB root for this instance? Root can weaken isolation and break app compatibility.")) run("adb_root", {});
                   }}>ADB Root</button>
-                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_unroot", {})}>ADB Unroot</button>
+                  <button className="ghost compact" disabled={busy || !["adb-root","full-root"].includes(selected.rootMode)} onClick={() => run("adb_unroot", {})}>ADB Unroot</button>
                 </div>
                 <label>Root shell command<input value={rootCommand} onChange={e => setRootCommand(e.target.value)} /></label>
-                <button className="ghost compact" disabled={busy || !rootCommand} onClick={() => run("adb_root_shell", { command: rootCommand })}>Run with su</button>
+                <button className="ghost compact" disabled={busy || !rootCommand || selected.rootMode !== "full-root"} onClick={() => run("adb_root_shell", { command: rootCommand })}>Run with su</button>
                 <div className="warning-box">
                   Root only works when the selected Android image supports root or su. Root can break app compatibility and may cause Play Integrity checks to fail.
                 </div>
