@@ -10,6 +10,7 @@ type Props = {
 export default function DeveloperTools({ instances, adbInfo }: Props) {
   const [selectedId, setSelectedId] = useState(instances[0]?.id ?? "");
   const [command, setCommand] = useState("getprop ro.build.version.release");
+  const [rootCommand, setRootCommand] = useState("id");
   const [apkPath, setApkPath] = useState("");
   const [packageName, setPackageName] = useState("");
   const [screenshotPath, setScreenshotPath] = useState("nekodroid-screenshot.png");
@@ -117,6 +118,19 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <label>ADB shell command<input value={command} onChange={e => setCommand(e.target.value)} /></label>
                 <button className="primary compact" disabled={busy}>Run shell</button>
               </form>
+
+              <div className="tool-group">
+                <h4>Root tools</h4>
+                <div className="button-row">
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_root", {})}>ADB Root</button>
+                  <button className="ghost compact" disabled={busy} onClick={() => run("adb_unroot", {})}>ADB Unroot</button>
+                </div>
+                <label>Root shell command<input value={rootCommand} onChange={e => setRootCommand(e.target.value)} /></label>
+                <button className="ghost compact" disabled={busy || !rootCommand} onClick={() => run("adb_root_shell", { command: rootCommand })}>Run with su</button>
+                <div className="warning-box">
+                  Root only works when the selected Android image supports root or su. Root can break app compatibility and may cause Play Integrity checks to fail.
+                </div>
+              </div>
 
               <div className="tool-group">
                 <label>APK path<input placeholder="C:\\Downloads\\game.apk" value={apkPath} onChange={e => setApkPath(e.target.value)} /></label>
