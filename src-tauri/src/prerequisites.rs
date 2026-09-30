@@ -21,7 +21,7 @@ pub fn install_missing_windows_runtime() -> Result<PrerequisiteInstallResult, St
     }
 
     let mut messages = Vec::new();
-    let mut reboot_required = false;
+    let reboot_required = false;
 
     if runtime::find_runtime_tool("pacman").is_none() {
         messages.push("MSYS2 was not detected; installing MSYS2...".into());
@@ -74,12 +74,9 @@ pub fn install_missing_windows_runtime() -> Result<PrerequisiteInstallResult, St
     }
 
     if !windows_feature_enabled("HypervisorPlatform") {
-        messages.push("Windows Hypervisor Platform is disabled. Requesting administrator approval to enable it...".into());
-        enable_windows_feature_elevated("HypervisorPlatform")?;
-        reboot_required = true;
-        messages.push("Windows Hypervisor Platform enable command completed. A Windows restart may be required.".into());
+        messages.push("Windows Hypervisor Platform is disabled. NekoDroid will use software CPU emulation; WHPX can be enabled later for faster performance.".into());
     } else {
-        messages.push("Windows Hypervisor Platform is already enabled.".into());
+        messages.push("Windows Hypervisor Platform is enabled; NekoDroid can use hardware acceleration.".into());
     }
 
     let firmware = powershell_output(
@@ -200,22 +197,6 @@ fn windows_feature_enabled(feature: &str) -> bool {
     powershell_output(&script)
         .map(|value| value.trim().eq_ignore_ascii_case("Enabled"))
         .unwrap_or(false)
-}
-
-fn enable_windows_feature_elevated(feature: &str) -> Result<(), String> {
-    let script = format!(
-        "$p=Start-Process -FilePath dism.exe -Verb RunAs -Wait -PassThru -ArgumentList @('/Online','/Enable-Feature','/FeatureName:{}','/All','/NoRestart'); exit $p.ExitCode",
-        feature
-    );
-    let status = Command::new("powershell.exe")
-        .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", &script])
-        .status()
-        .map_err(|e| format!("Unable to request Windows administrator approval: {e}"))?;
-
-    if !status.success() {
-        return Err("Windows Hypervisor Platform was not enabled. The UAC prompt may have been cancelled.".into());
-    }
-    Ok(())
 }
 
 fn powershell_output(script: &str) -> Option<String> {
