@@ -62,7 +62,7 @@ pub fn save(data_dir: &Path, settings: AiSettings) -> Result<AiSettings, String>
     validate(&settings)?;
     fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
     let encoded = serde_json::to_vec_pretty(&settings).map_err(|e| e.to_string())?;
-    fs::write(settings_path(data_dir), encoded).map_err(|e| e.to_string())?;
+    write_private(settings_path(data_dir), &encoded)?;
     Ok(settings)
 }
 
@@ -168,6 +168,17 @@ pub fn save_app(data_dir: &Path, settings: AppSettings) -> Result<AppSettings, S
 
     fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
     let encoded = serde_json::to_vec_pretty(&settings).map_err(|e| e.to_string())?;
-    fs::write(app_settings_path(data_dir), encoded).map_err(|e| e.to_string())?;
+    write_private(app_settings_path(data_dir), &encoded)?;
     Ok(settings)
+}
+
+fn write_private(path: PathBuf, bytes: &[u8]) -> Result<(), String> {
+    fs::write(&path, bytes).map_err(|e| e.to_string())?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
+            .map_err(|e| format!("Unable to secure {}: {e}", path.display()))?;
+    }
+    Ok(())
 }
