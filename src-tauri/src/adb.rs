@@ -364,6 +364,33 @@ pub fn screen_record(
     })
 }
 
+
+pub fn screen_record_advanced(
+    port:u16,
+    destination:String,
+    seconds:u32,
+    codec:String,
+    bitrate_mbps:u32,
+    fps:Option<u32>,
+    audio:bool,
+)->Result<AdbResult,String>{
+    if destination.trim().is_empty(){return Err("Recording destination cannot be empty".into());}
+    let codec=codec.to_ascii_lowercase();
+    if !matches!(codec.as_str(),"h264"|"hevc"){return Err("Recording codec must be h264 or hevc".into());}
+    if let Some(fps)=fps{let _=set_refresh_rate(port,Some(fps));}
+    let seconds=seconds.clamp(1,180);
+    let bitrate=bitrate_mbps.clamp(1,100)*1_000_000;
+    let remote="/sdcard/Download/nekodroid-recording.mp4";
+    let mut args=vec!["shell".into(),"screenrecord".into(),"--time-limit".into(),seconds.to_string(),"--bit-rate".into(),bitrate.to_string(),"--codec".into(),codec,];
+    if audio{args.push("--audio".into());}
+    args.push(remote.into());
+    let record=run_for_device(port,&args)?;
+    if !record.success{return Ok(record);}
+    let pulled=pull(port,remote.into(),destination.clone())?;
+    let _=run_for_device(port,&["shell".into(),"rm".into(),"-f".into(),remote.into()]);
+    Ok(AdbResult{success:pulled.success,exit_code:pulled.exit_code,stdout:if pulled.success{format!("Advanced recording saved to {destination}")}else{pulled.stdout},stderr:pulled.stderr})
+}
+
 pub fn push(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
     if !std::path::Path::new(&source).exists() {
         return Err(format!("Source does not exist: {source}"));
