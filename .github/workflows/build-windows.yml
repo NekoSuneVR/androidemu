@@ -48,6 +48,13 @@ jobs:
           $config.version = "${{ inputs.version }}"
           $config | ConvertTo-Json -Depth 20 | Set-Content $path -Encoding UTF8
 
+      - name: Create Windows app icon
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "src-tauri/icons" | Out-Null
+          $iconBase64 = "AAABAAEAICAAAAEAIABoAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAC9JREFUeNrtziEBAAAIAzBCEJGI9IMYNxPzq965pBIQEBAQEBAQEBAQEBAQEEgHHgbWrHkRCwCWAAAAAElFTkSuQmCC"
+          [IO.File]::WriteAllBytes("src-tauri/icons/icon.ico", [Convert]::FromBase64String($iconBase64))
+
       - name: Build NekoDroid Windows bundles
         run: npm run tauri build
 
