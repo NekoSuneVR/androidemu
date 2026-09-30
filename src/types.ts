@@ -82,3 +82,16 @@ export interface InstalledImage {
   valid: boolean;
   validationError?: string | null;
 }
+
+export interface AdbInfo {
+  found: boolean;
+  executable?: string | null;
+  version?: string | null;
+}
+
+export interface AdbResult {
+  success: boolean;
+  exitCode?: number | null;
+  stdout: string;
+  stderr: string;
+}
