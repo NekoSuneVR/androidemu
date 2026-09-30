@@ -33,7 +33,7 @@ pub struct GameSettings {
 fn dir(data_dir:&Path)->PathBuf{data_dir.join("game-settings")}
 fn safe_name(pkg:&str)->Result<String,String>{
     if pkg.is_empty() || !pkg.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c,'.'|'_'|'-')){return Err("Invalid package name".into());}
-    Ok(pkg.replace('.','_'))
+    Ok(pkg.replace('.',"_"))
 }
 pub fn list(data_dir:&Path)->Result<Vec<GameSettings>,String>{
     let d=dir(data_dir);fs::create_dir_all(&d).map_err(|e|e.to_string())?;
