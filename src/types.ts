@@ -315,10 +315,15 @@ export interface KeymapProfile {
 
 export interface GameSettings {
   packageName: string;
+  renderer?: "auto"|"vulkan"|"opengl"|"directx"|"software"|null;
+  androidVersion?: "9"|"10"|"11"|"12"|"12L"|"13"|"14"|"15"|"16"|null;
   orientation?: "portrait"|"landscape"|"reverse-portrait"|"reverse-landscape"|"automatic"|null;
   dpi?: number|null;
   fps?: number|null;
   keymapId?: string|null;
   aiSkillId?: string|null;
+  compatibilityRating?: "unknown"|"good"|"partial"|"broken"|null;
+  knownIssues: string[];
+  crashDiagnostics: boolean;
   notes: string;
 }
