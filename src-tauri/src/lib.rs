@@ -17,7 +17,7 @@ use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use settings::{AiSettings, AppSettings};
 use snapshots::SnapshotInfo;
-use media::{FfmpegInfo, MediaResult};
+use media::{FfmpegInfo, MediaJobRequest, MediaResult};
 use first_run::SystemReadiness;
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
@@ -476,6 +476,11 @@ fn save_app_settings(
 }
 
 #[tauri::command]
+fn run_media_batch(jobs: Vec<MediaJobRequest>) -> Result<Vec<MediaResult>, String> {
+    media::run_media_batch(jobs)
+}
+
+#[tauri::command]
 fn get_ai_settings(state: State<'_, RuntimeState>) -> Result<AiSettings, String> {
     settings::load(&state.data_dir)
 }
@@ -641,6 +646,7 @@ pub fn run() {
             get_system_readiness,
             get_ffmpeg_info,
             run_media_job,
+            run_media_batch,
             get_app_settings,
             save_app_settings,
             get_ai_settings,
