@@ -272,8 +272,8 @@ fn validate_profile(profile: &DeviceProfile) -> Result<(), String> {
     if !matches!(profile.camera_configuration.as_str(), "none" | "front" | "rear" | "front+rear") {
         return Err("Camera configuration must be none, front, rear, or front+rear".into());
     }
-    if !matches!(profile.form_factor.as_str(), "phone" | "tablet" | "foldable") {
-        return Err("Form factor must be phone, tablet, or foldable".into());
+    if !matches!(profile.form_factor.as_str(), "phone" | "tablet" | "foldable" | "tv" | "automotive") {
+        return Err("Form factor must be phone, tablet, foldable, tv, or automotive".into());
     }
     Ok(())
 }
