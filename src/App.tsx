@@ -314,7 +314,7 @@ export default function App() {
               <div>
                 <span className="pill">Runtime foundation</span>
                 <h2>Native Android runtime management, ready for the first bootable image.</h2>
-                <p>NekoDroid persists instances, uses MSYS2-managed virtualization on Windows and QEMU/KVM on Linux, exposes localhost ADB tooling, and defines realistic Android device profiles.</p>
+                <p>NekoDroid persists instances, automatically selects WHPX or software CPU emulation on Windows, uses KVM on Linux, exposes localhost ADB tooling, and defines realistic Android device profiles.</p>
               </div>
               <div className="host-card">
                 <span>Detected host</span>
@@ -328,7 +328,7 @@ export default function App() {
 
             <section className="stats">
               <article><span>Instances</span><strong>{instances.length}</strong><small>Persistent Android environments</small></article>
-              <article><span>{host?.os === "windows" ? "MSYS2 Runtime" : "QEMU"}</span><strong>{host?.qemu.found ? "Ready" : "Missing"}</strong><small>{host?.qemu.executable ?? (host?.os === "windows" ? "MSYS2 is auto-detected from standard installs; custom paths can use MSYS2_ROOT" : "Install qemu-system-x86_64")}</small></article>
+              <article><span>{host?.os === "windows" ? "Windows Runtime" : "QEMU"}</span><strong>{host?.qemu.found ? "Ready" : "Missing"}</strong><small>{host?.qemu.executable ?? (host?.os === "windows" ? "Install / repair the Windows emulator runtime" : "Install qemu-system-x86_64")}</small></article>
               <article><span>Acceleration</span><strong>{host?.accelerator ?? "Unknown"}</strong><small>{host?.virtualizationNote ?? "Capability scan pending"}</small></article>
               <article><span>ADB</span><strong>{adbInfo?.found ? "Ready" : "Missing"}</strong><small>{adbInfo?.version ?? "Android platform-tools not detected"}</small></article>
             </section>
