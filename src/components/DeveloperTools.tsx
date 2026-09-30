@@ -315,6 +315,10 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               <div className="tool-group">
                 <h4>Desktop / secondary displays</h4>
                 <div className="button-row">
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_device_state",{state:null})}>List foldable states</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_device_state",{state:0})}>Device state 0</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_device_state",{state:1})}>Device state 1</button>
+                  <button className="ghost compact" disabled={busy} onClick={()=>run("adb_device_state",{state:2})}>Device state 2</button>
                   <button className="ghost compact" disabled={busy} onClick={()=>run("adb_desktop_mode",{enabled:true})}>Enable desktop mode</button>
                   <button className="ghost compact" disabled={busy} onClick={()=>run("adb_desktop_mode",{enabled:false})}>Disable desktop mode</button>
                   <button className="ghost compact" disabled={busy} onClick={()=>run("adb_overlay_display",{spec:"1280x720/240"})}>Add 1280×720 display</button>
