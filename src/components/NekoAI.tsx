@@ -9,6 +9,10 @@ const defaults: AiSettings = {
   model: "qwen2.5:3b",
   visionModel: "qwen2.5vl:3b",
   detectorModel: "yolov8n.onnx",
+  controlMode: "manual",
+  helperMode: "ui",
+  enforcePackageAllowlist: false,
+  allowedPackages: [],
   maxActionsPerMinute: 60,
   maxCaptureFps: 10
 };
@@ -190,6 +194,36 @@ export default function NekoAI({ instances }: { instances: AndroidInstance[] }) 
               <option value="ollama">Remote Ollama</option>
               <option value="openai-compatible">OpenAI-compatible endpoint</option>
             </select>
+          </label>
+
+          <label>Control mode
+            <select value={settings.controlMode} onChange={e => setSettings({...settings, controlMode:e.target.value as AiSettings["controlMode"]})}>
+              <option value="manual">Manual (chat only)</option>
+              <option value="assistant">Assistant (short action queues)</option>
+              <option value="accessibility">Accessibility</option>
+              <option value="full-automation">Full automation</option>
+            </select>
+          </label>
+
+          <label>Helper mode
+            <select value={settings.helperMode} onChange={e => setSettings({...settings, helperMode:e.target.value as AiSettings["helperMode"]})}>
+              <option value="inventory">Inventory helper</option>
+              <option value="quest">Quest helper</option>
+              <option value="ui">UI helper</option>
+              <option value="repetitive-task">Repetitive-task helper</option>
+            </select>
+          </label>
+
+          <label className="checkbox-line">
+            <input type="checkbox" checked={settings.enforcePackageAllowlist} onChange={e => setSettings({...settings,enforcePackageAllowlist:e.target.checked})} />
+            Restrict AI controls to approved Android packages
+          </label>
+          <label>Allowed packages, one per line
+            <textarea
+              value={settings.allowedPackages.join("\n")}
+              placeholder={"com.example.game\ncom.example.accessibilityapp"}
+              onChange={e => setSettings({...settings,allowedPackages:e.target.value.split(/\r?\n/).map(v => v.trim()).filter(Boolean)})}
+            />
           </label>
 
           <label>Endpoint
