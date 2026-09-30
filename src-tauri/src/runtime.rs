@@ -186,9 +186,17 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     let runtime_disk = ensure_runtime_overlay(state, id, &image_path, base_disk_format)?;
     let cpu_model = if accelerator == "kvm" { "host" } else { "max" };
 
+    let mut qemu_args = build_qemu_args(&instance, &runtime_disk, "qcow2", accelerator, cpu_model);
+    if let Some(audio_backend) = detect_virtio_audio_backend(&qemu_path) {
+        qemu_args.push("-audiodev".into());
+        qemu_args.push(format!("{audio_backend},id=nekodroid_audio"));
+        qemu_args.push("-device".into());
+        qemu_args.push("virtio-sound-pci,audiodev=nekodroid_audio".into());
+    }
+
     let mut command = Command::new(qemu_path);
     command
-        .args(build_qemu_args(&instance, &runtime_disk, "qcow2", accelerator, cpu_model))
+        .args(qemu_args)
         .stdout(Stdio::from(stdout))
         .stderr(Stdio::from(stderr));
 
@@ -391,6 +399,47 @@ pub fn runtime_status(state: &RuntimeState, id: &str) -> Result<AndroidInstance,
         storage::save_instance(&state.data_dir, &instance)?;
     }
     Ok(instance)
+}
+
+fn detect_virtio_audio_backend(qemu_path: &str) -> Option<String> {
+    let devices = Command::new(qemu_path)
+        .args(["-device", "help"])
+        .output()
+        .ok()
+        .map(|output| {
+            let mut text = String::from_utf8_lossy(&output.stdout).to_string();
+            text.push_str(&String::from_utf8_lossy(&output.stderr));
+            text
+        })?;
+
+    if !devices.contains("virtio-sound-pci") {
+        return None;
+    }
+
+    let drivers = Command::new(qemu_path)
+        .args(["-audio", "driver=help"])
+        .output()
+        .ok()
+        .map(|output| {
+            let mut text = String::from_utf8_lossy(&output.stdout).to_ascii_lowercase();
+            text.push_str(&String::from_utf8_lossy(&output.stderr).to_ascii_lowercase());
+            text
+        })?;
+
+    let preferred: &[&str] = if cfg!(windows) {
+        &["dsound", "sdl"]
+    } else if cfg!(target_os = "linux") {
+        &["pipewire", "pa", "alsa", "sdl"]
+    } else if cfg!(target_os = "macos") {
+        &["coreaudio", "sdl"]
+    } else {
+        &["sdl"]
+    };
+
+    preferred
+        .iter()
+        .find(|driver| drivers.lines().any(|line| line.trim() == **driver || line.contains(&format!(" {driver}"))))
+        .map(|driver| (*driver).to_string())
 }
 
 fn ensure_runtime_overlay(
