@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **117/643 tasks complete (18.2%)**
+> Progress: **125/643 tasks complete (19.4%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -153,15 +153,15 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 6 - Screen Rotation
 
-- [ ] Automatic orientation
-- [ ] Portrait
-- [ ] Reverse portrait
-- [ ] Landscape
-- [ ] Reverse landscape
-- [ ] Rotate-left button
-- [ ] Rotate-right button
+- [x] Automatic orientation
+- [x] Portrait
+- [x] Reverse portrait
+- [x] Landscape
+- [x] Reverse landscape
+- [x] Rotate-left button
+- [x] Rotate-right button
 - [ ] Rotation hotkey
-- [ ] Update Android orientation at runtime
+- [x] Update Android orientation at runtime
 - [ ] Resize emulator window after rotation
 - [ ] Update touch coordinate transforms
 - [ ] Update AI coordinate transforms
