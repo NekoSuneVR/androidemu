@@ -35,6 +35,14 @@ pub struct AndroidImageManifest {
     pub security_state: String,
     #[serde(default)]
     pub missing_hardware_features: Vec<String>,
+    #[serde(default)]
+    pub boot_kernel: Option<String>,
+    #[serde(default)]
+    pub boot_initrd: Option<String>,
+    #[serde(default)]
+    pub vendor_disk: Option<String>,
+    #[serde(default)]
+    pub root_capable: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -226,6 +234,10 @@ pub fn import_gsi(data_dir:&Path, source:String, android_version:String, archite
         verified_boot_state:"unknown".into(),
         security_state:"custom GSI".into(),
         missing_hardware_features:Vec::new(),
+        boot_kernel:None,
+        boot_initrd:None,
+        vendor_disk:None,
+        root_capable:false,
     };
     register_image(data_dir,manifest,&source)
 }
@@ -234,6 +246,86 @@ pub fn supported_android_versions()->Vec<String>{
     ["9","10","11","12","12L","13","14","15","16"].into_iter().map(str::to_string).collect()
 }
 
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
+pub struct DefaultImageSettings {
+    pub url:String,
+    pub sha256:Option<String>,
+    pub root_developer_url:Option<String>,
+    pub root_developer_sha256:Option<String>,
+}
+fn default_image_settings_path(data_dir:&Path)->PathBuf{data_dir.join("default-image-settings.json")}
+pub fn load_default_image_settings(data_dir:&Path)->Result<DefaultImageSettings,String>{
+    let p=default_image_settings_path(data_dir);
+    if !p.exists(){return Ok(DefaultImageSettings{url:String::new(),sha256:None,root_developer_url:None,root_developer_sha256:None});}
+    serde_json::from_slice(&fs::read(p).map_err(|e|e.to_string())?).map_err(|e|e.to_string())
+}
+pub fn save_default_image_settings(data_dir:&Path,s:DefaultImageSettings)->Result<DefaultImageSettings,String>{
+    for url in [&s.url,s.root_developer_url.as_deref().unwrap_or("")] {
+        if !url.is_empty() && !(url.starts_with("https://")||url.starts_with("http://127.0.0.1")||url.starts_with("http://localhost")){return Err("Default image URLs must use HTTPS (localhost HTTP allowed)".into());}
+    }
+    fs::write(default_image_settings_path(data_dir),serde_json::to_vec_pretty(&s).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;Ok(s)
+}
+fn default_manifest(root:bool,sha256:Option<String>)->AndroidImageManifest{
+    AndroidImageManifest{
+        id:if root{"android-16-x86_64-developer".into()}else{"android-16-x86_64-default".into()},
+        name:if root{"Android 16 x86_64 Developer".into()}else{"Android 16 x86_64 Default".into()},
+        android_version:"16".into(),api:36,architecture:"x86_64".into(),
+        image_type:if root{"developer".into()}else{"aosp".into()},
+        disk:if root{"android16-developer.qcow2".into()}else{"android16.qcow2".into()},
+        disk_format:"qcow2".into(),recommended:!root,
+        notes:Some(if root{"Root-capable developer image supplied by the owner/configured source.".into()}else{"Default Android image supplied by the owner/configured source.".into()}),
+        sha256,source_url:None,gms_provider:"none".into(),certification_status:"unknown".into(),play_store_package:None,
+        secure_image:false,verified_boot_state:"unknown".into(),security_state:if root{"developer/root-capable".into()}else{"virtualized".into()},
+        missing_hardware_features:vec!["hardware-backed attestation".into()],
+        boot_kernel:None,boot_initrd:None,vendor_disk:None,root_capable:root,
+    }
+}
+pub fn download_default(data_dir:&Path,root:bool)->Result<InstalledImage,String>{
+    let settings=load_default_image_settings(data_dir)?;
+    let (url,sha)=if root{(settings.root_developer_url.ok_or("Root developer image URL is not configured")?,settings.root_developer_sha256)}else{
+        if settings.url.trim().is_empty(){return Err("Default Android image URL is not configured".into());}
+        (settings.url,settings.sha256)
+    };
+    download_image(data_dir,default_manifest(root,sha),url)
+}
+
+pub fn register_gsi_bundle(data_dir:&Path,android_version:String,system:String,kernel:String,initrd:String,vendor:Option<String>,root_capable:bool)->Result<InstalledImage,String>{
+    ensure_layout(data_dir)?;
+    for required in [&system,&kernel,&initrd]{if !Path::new(required).is_file(){return Err(format!("GSI bundle component missing: {required}"));}}
+    if let Some(v)=vendor.as_deref(){if !Path::new(v).is_file(){return Err(format!("Vendor disk missing: {v}"));}}
+    let stamp=SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e|e.to_string())?.as_secs();
+    let id=format!("gsi-bundle-{}-{stamp}",android_version.replace('.','-'));
+    let target=images_dir(data_dir).join(&id);fs::create_dir_all(&target).map_err(|e|e.to_string())?;
+    let system_name="system.img";let kernel_name="kernel";let initrd_name="ramdisk.img";
+    fs::copy(&system,target.join(system_name)).map_err(|e|e.to_string())?;
+    fs::copy(&kernel,target.join(kernel_name)).map_err(|e|e.to_string())?;
+    fs::copy(&initrd,target.join(initrd_name)).map_err(|e|e.to_string())?;
+    let vendor_name=if let Some(v)=vendor{fs::copy(v,target.join("vendor.img")).map_err(|e|e.to_string())?;Some("vendor.img".to_string())}else{None};
+    let manifest=AndroidImageManifest{
+        id:id.clone(),name:format!("Android {android_version} Custom GSI Boot Bundle"),android_version,api:0,architecture:"x86_64".into(),
+        image_type:"gsi-bundle".into(),disk:system_name.into(),disk_format:"raw".into(),recommended:false,
+        notes:Some("GSI boot bundle with explicit kernel, ramdisk and optional vendor disk.".into()),sha256:None,source_url:None,
+        gms_provider:"none".into(),certification_status:"unknown".into(),play_store_package:None,secure_image:false,
+        verified_boot_state:"unknown".into(),security_state:"custom GSI".into(),missing_hardware_features:Vec::new(),
+        boot_kernel:Some(kernel_name.into()),boot_initrd:Some(initrd_name.into()),vendor_disk:vendor_name,root_capable,
+    };
+    fs::write(target.join("manifest.json"),serde_json::to_vec_pretty(&manifest).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+    Ok(InstalledImage{manifest,directory:target.to_string_lossy().to_string(),disk_path:target.join(system_name).to_string_lossy().to_string(),valid:true,validation_error:None})
+}
+pub fn boot_component_args(data_dir:&Path,image_path:&str)->Result<Vec<String>,String>{
+    let Some(image)=list_images(data_dir)?.into_iter().find(|i|i.disk_path==image_path) else{return Ok(Vec::new());};
+    if image.manifest.image_type!="gsi-bundle"{return Ok(Vec::new());}
+    let base=PathBuf::from(&image.directory);
+    let kernel=image.manifest.boot_kernel.as_ref().ok_or("GSI bundle kernel missing from manifest")?;
+    let initrd=image.manifest.boot_initrd.as_ref().ok_or("GSI bundle initrd missing from manifest")?;
+    let mut args=vec!["-kernel".into(),base.join(kernel).to_string_lossy().to_string(),"-initrd".into(),base.join(initrd).to_string_lossy().to_string(),
+        "-append".into(),"console=ttyS0 androidboot.hardware=goldfish androidboot.selinux=permissive".into(),
+        "-drive".into(),format!("file={},if=virtio,format=raw,readonly=on",image.disk_path)];
+    if let Some(vendor)=image.manifest.vendor_disk.as_ref(){args.extend(["-drive".into(),format!("file={},if=virtio,format=raw,readonly=on",base.join(vendor).to_string_lossy())]);}
+    Ok(args)
+}
 pub fn update_image(data_dir: &Path, id: &str) -> Result<InstalledImage, String> {
     // Image updates use the saved source URL and current manifest/checksum.
     // The replacement happens through the same temporary-file + verification
