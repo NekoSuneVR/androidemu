@@ -328,6 +328,96 @@ fn validate_coord(value: i32) -> Result<(), String> {
     Ok(())
 }
 
+pub fn set_orientation(port: u16, orientation: String) -> Result<AdbResult, String> {
+    let orientation = orientation.trim().to_ascii_lowercase();
+
+    if orientation == "auto" {
+        return run_for_device(port, &[
+            "shell".into(),
+            "settings".into(),
+            "put".into(),
+            "system".into(),
+            "accelerometer_rotation".into(),
+            "1".into(),
+        ]);
+    }
+
+    let rotation = match orientation.as_str() {
+        "portrait" => "0",
+        "landscape" => "1",
+        "reverse-portrait" => "2",
+        "reverse-landscape" => "3",
+        _ => return Err("Orientation must be auto, portrait, landscape, reverse-portrait, or reverse-landscape".into()),
+    };
+
+    let disable_auto = run_for_device(port, &[
+        "shell".into(),
+        "settings".into(),
+        "put".into(),
+        "system".into(),
+        "accelerometer_rotation".into(),
+        "0".into(),
+    ])?;
+    if !disable_auto.success {
+        return Ok(disable_auto);
+    }
+
+    run_for_device(port, &[
+        "shell".into(),
+        "settings".into(),
+        "put".into(),
+        "system".into(),
+        "user_rotation".into(),
+        rotation.into(),
+    ])
+}
+
+pub fn rotate_orientation(port: u16, direction: String) -> Result<AdbResult, String> {
+    let direction = direction.trim().to_ascii_lowercase();
+    if !matches!(direction.as_str(), "left" | "right") {
+        return Err("Rotation direction must be left or right".into());
+    }
+
+    let current = run_for_device(port, &[
+        "shell".into(),
+        "settings".into(),
+        "get".into(),
+        "system".into(),
+        "user_rotation".into(),
+    ])?;
+    if !current.success {
+        return Ok(current);
+    }
+
+    let current_value = current.stdout.trim().parse::<i32>().unwrap_or(0).rem_euclid(4);
+    let next = if direction == "left" {
+        (current_value + 3).rem_euclid(4)
+    } else {
+        (current_value + 1).rem_euclid(4)
+    };
+
+    let disable_auto = run_for_device(port, &[
+        "shell".into(),
+        "settings".into(),
+        "put".into(),
+        "system".into(),
+        "accelerometer_rotation".into(),
+        "0".into(),
+    ])?;
+    if !disable_auto.success {
+        return Ok(disable_auto);
+    }
+
+    run_for_device(port, &[
+        "shell".into(),
+        "settings".into(),
+        "put".into(),
+        "system".into(),
+        "user_rotation".into(),
+        next.to_string(),
+    ])
+}
+
 fn validate_socket_spec(value: &str, label: &str) -> Result<(), String> {
     let value = value.trim();
     if value.is_empty() {
