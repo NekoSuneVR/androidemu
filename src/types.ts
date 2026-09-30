@@ -99,6 +99,13 @@ export interface AndroidImageManifest {
   notes?: string | null;
   sha256?: string | null;
   sourceUrl?: string | null;
+  gmsProvider: "none" | "google-compatible" | "microg" | "custom-gapps";
+  certificationStatus: string;
+  playStorePackage?: string | null;
+  secureImage: boolean;
+  verifiedBootState: string;
+  securityState: string;
+  missingHardwareFeatures: string[];
 }
 
 export interface InstalledImage {
