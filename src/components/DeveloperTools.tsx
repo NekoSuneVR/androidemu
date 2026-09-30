@@ -18,6 +18,7 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
   const [recordingPath, setRecordingPath] = useState("nekodroid-recording.mp4");
   const [recordingSeconds, setRecordingSeconds] = useState(15);
   const [pushSource, setPushSource] = useState("");
+  const [pushSources, setPushSources] = useState("");
   const [pushDestination, setPushDestination] = useState("/sdcard/Download/");
   const [pullSource, setPullSource] = useState("/sdcard/Download/");
   const [pullDestination, setPullDestination] = useState("");
@@ -201,6 +202,20 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
                 <label>Host file or folder<input value={pushSource} onChange={e => setPushSource(e.target.value)} /></label>
                 <label>Android destination<input value={pushDestination} onChange={e => setPushDestination(e.target.value)} /></label>
                 <button className="ghost compact" disabled={busy || !pushSource} onClick={() => run("adb_push", { source: pushSource, destination: pushDestination })}>Push file</button>
+
+                <label>Multiple host files/folders, one per line
+                  <textarea value={pushSources} onChange={e => setPushSources(e.target.value)} />
+                </label>
+                <button
+                  className="ghost compact"
+                  disabled={busy || !pushSources.trim()}
+                  onClick={() => run("adb_push_multiple", {
+                    sources: pushSources.split(/\r?\n/).map(v => v.trim()).filter(Boolean),
+                    destination: pushDestination
+                  })}
+                >
+                  Push multiple
+                </button>
               </div>
 
               <div className="tool-group">
