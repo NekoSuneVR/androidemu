@@ -1,6 +1,7 @@
 use crate::{
     models::{AndroidInstance, HostCapabilities, QemuInfo, RuntimeActionResult, RuntimeLogs},
     storage,
+    performance,
 };
 use std::{
     collections::HashMap,
@@ -186,7 +187,19 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     let runtime_disk = ensure_runtime_overlay(state, id, &image_path, base_disk_format)?;
     let cpu_model = if accelerator == "kvm" { "host" } else { "max" };
 
+    let performance = performance::load(&state.data_dir).unwrap_or_default();
     let mut qemu_args = build_qemu_args(&instance, &runtime_disk, "qcow2", accelerator, cpu_model);
+    if let Some(index) = qemu_args.iter().position(|arg| arg == "-drive").and_then(|i| qemu_args.get(i + 1).map(|_| i + 1)) {
+        qemu_args[index] = format!("file={runtime_disk},if=virtio,format=qcow2,{}", performance::qemu_drive_options(&performance));
+    }
+    if performance.huge_pages && cfg!(target_os = "linux") && Path::new("/dev/hugepages").exists() {
+        qemu_args.extend([
+            "-object".into(),
+            format!("memory-backend-file,id=nekoram,size={}M,mem-path=/dev/hugepages,share=on", instance.ram_mb),
+            "-numa".into(),
+            "node,memdev=nekoram".into(),
+        ]);
+    }
     if let Some(audio_backend) = detect_virtio_audio_backend(&qemu_path) {
         qemu_args.push("-audiodev".into());
         qemu_args.push(format!("{audio_backend},id=nekodroid_audio"));
@@ -197,11 +210,17 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     let mut command = Command::new(qemu_path);
     command
         .args(qemu_args)
+        .envs(performance::launch_env(&performance))
         .stdout(Stdio::from(stdout))
         .stderr(Stdio::from(stderr));
 
     let child = command.spawn().map_err(|e| format!("Failed to start QEMU: {e}"))?;
     let pid = child.id();
+    if cfg!(target_os = "linux") && !performance.cpu_affinity.trim().is_empty() {
+        let _ = Command::new("taskset")
+            .args(["-pc", performance.cpu_affinity.trim(), &pid.to_string()])
+            .output();
+    }
 
     state
         .processes
