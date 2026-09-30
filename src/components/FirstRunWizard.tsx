@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, SystemReadiness } from "../types";
+import type { AndroidInstance, AppSettings, SystemReadiness } from "../types";
 
 export default function FirstRunWizard() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -26,6 +26,24 @@ export default function FirstRunWizard() {
     if (!readiness) return;
     setBusy(true);
     try {
+      const existing = await invoke<AndroidInstance[]>("list_instances");
+      if (existing.length === 0) {
+        await invoke<AndroidInstance>("create_instance", {
+          request: {
+            name: "Gaming",
+            androidVersion: readiness.recommendedAndroidVersion,
+            profile: settings.defaultProfile || "Gaming Phone",
+            cpuCores: readiness.recommendedCpuCores,
+            ramMb: readiness.recommendedRamMb,
+            adbPort: 5555,
+            adbEnabled: settings.defaultAdbEnabled,
+            headless: settings.defaultHeadless,
+            rootMode: "standard",
+            imagePath: ""
+          }
+        });
+      }
+
       const saved = await invoke<AppSettings>("save_app_settings", {
         settings: {
           ...settings,
@@ -34,7 +52,7 @@ export default function FirstRunWizard() {
         }
       });
       setSettings(saved);
-      setStatus("First-run setup completed.");
+      setStatus(existing.length === 0 ? "First-run setup completed and the first Android instance was created." : "First-run setup completed.");
     } catch (error) {
       setStatus(String(error));
     } finally {
