@@ -394,6 +394,22 @@ pub fn refresh_processes(state: &RuntimeState) -> Result<(), String> {
     Ok(())
 }
 
+
+pub fn capture_framebuffer(state:&RuntimeState,id:&str,destination:String)->Result<String,String>{
+    refresh_processes(state)?;
+    if !state.processes.lock().map_err(|_|"Runtime process lock poisoned")?.contains_key(id){return Err("Instance must be running for framebuffer capture".into());}
+    if destination.trim().is_empty(){return Err("Destination path is required".into());}
+    let instance=storage::load_instance(&state.data_dir,id)?;
+    let path=PathBuf::from(&destination);
+    if let Some(parent)=path.parent(){if !parent.as_os_str().is_empty(){fs::create_dir_all(parent).map_err(|e|e.to_string())?;}}
+    let args=serde_json::json!({"filename":destination,"format":"png"});
+    if let Err(first)=qmp_execute_with_arguments(qmp_port(&instance),"screendump",Some(args)){
+        let fallback=serde_json::json!({"filename":path.to_string_lossy().to_string()});
+        qmp_execute_with_arguments(qmp_port(&instance),"screendump",Some(fallback)).map_err(|second|format!("{first}; fallback failed: {second}"))?;
+    }
+    Ok(path.to_string_lossy().to_string())
+}
+
 pub fn read_logs(state: &RuntimeState, id: &str) -> Result<RuntimeLogs, String> {
     let logs_dir = storage::instance_dir(&state.data_dir, id).join("logs");
     Ok(RuntimeLogs {
@@ -547,6 +563,26 @@ fn ensure_runtime_overlay(
 
 fn qmp_port(instance: &AndroidInstance) -> u16 {
     20_000 + (instance.adb_port % 20_000)
+}
+
+fn qmp_execute_with_arguments(port:u16,command:&str,arguments:Option<serde_json::Value>)->Result<(),String>{
+    let address=format!("127.0.0.1:{port}");
+    let mut stream=None;
+    for _ in 0..20{
+        match TcpStream::connect(&address){Ok(candidate)=>{stream=Some(candidate);break;},Err(_)=>thread::sleep(Duration::from_millis(100))}
+    }
+    let mut stream=stream.ok_or_else(||format!("Unable to connect to QMP at {address}"))?;
+    stream.set_read_timeout(Some(Duration::from_secs(2))).map_err(|e|e.to_string())?;
+    stream.set_write_timeout(Some(Duration::from_secs(2))).map_err(|e|e.to_string())?;
+    let reader_stream=stream.try_clone().map_err(|e|e.to_string())?;
+    let mut reader=BufReader::new(reader_stream);
+    let mut line=String::new();reader.read_line(&mut line).map_err(|e|format!("Failed to read QMP greeting: {e}"))?;
+    if !line.contains("\"QMP\""){return Err("Invalid QMP greeting".into());}
+    stream.write_all(b"{\"execute\":\"qmp_capabilities\"}\r\n").map_err(|e|e.to_string())?;read_qmp_response(&mut reader)?;
+    let request=if let Some(arguments)=arguments{serde_json::json!({"execute":command,"arguments":arguments})}else{serde_json::json!({"execute":command})};
+    let mut encoded=serde_json::to_vec(&request).map_err(|e|e.to_string())?;encoded.extend_from_slice(b"\r\n");
+    stream.write_all(&encoded).map_err(|e|format!("Failed to send QMP command: {e}"))?;
+    read_qmp_response(&mut reader)
 }
 
 fn qmp_execute(port: u16, command: &str) -> Result<(), String> {
