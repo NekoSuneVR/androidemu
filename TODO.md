@@ -808,6 +808,46 @@ skills/
 
 ---
 
+# Phase 41 - Remote Access
+
+- [x] Self-hosted remote signalling node
+- [x] Docker deployment
+- [x] Expiring invite codes
+- [x] Remote node shared-secret authentication
+- [x] Per-session host tokens
+- [x] Browser/mobile viewer
+- [x] Host viewer approval
+- [x] Deny viewer
+- [x] Revoke viewer
+- [x] View-only permission
+- [x] Android control permission
+- [x] WebRTC signalling
+- [x] STUN support
+- [x] Optional TURN relay deployment
+- [x] Touch/tap forwarding
+- [x] Swipe forwarding
+- [x] Android navigation key forwarding
+- [x] Keyboard forwarding
+- [x] ADB-backed remote Android input
+- [x] Explicit host screen/window sharing
+- [ ] Direct emulator framebuffer WebRTC capture
+- [ ] Direct Android audio capture
+- [ ] Adaptive bitrate
+- [ ] 30/60/90/120 FPS remote presets
+- [ ] Clipboard synchronization
+- [ ] Encrypted remote file transfer
+- [ ] Gamepad forwarding
+- [ ] Remote microphone
+- [ ] Remote virtual camera
+- [ ] Persistent trusted-device pairing
+- [ ] Optional owner-configured unattended access
+- [ ] Multi-region signalling nodes
+- [ ] Connection quality statistics
+- [ ] Native Android viewer app
+- [ ] PWA install support
+
+---
+
 # Long-Term Ideas
 
 - [ ] Cloud Android nodes
