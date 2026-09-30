@@ -134,6 +134,43 @@ pub fn screenshot(port: u16, destination: String) -> Result<AdbResult, String> {
     })
 }
 
+pub fn screen_record(
+    port: u16,
+    destination: String,
+    seconds: u32,
+) -> Result<AdbResult, String> {
+    if destination.trim().is_empty() {
+        return Err("Recording destination cannot be empty".into());
+    }
+    let seconds = seconds.clamp(1, 180);
+    let remote_path = "/sdcard/Download/nekodroid-recording.mp4";
+
+    let record = run_for_device(port, &[
+        "shell".into(),
+        "screenrecord".into(),
+        "--time-limit".into(),
+        seconds.to_string(),
+        remote_path.into(),
+    ])?;
+    if !record.success {
+        return Ok(record);
+    }
+
+    let pulled = pull(port, remote_path.into(), destination.clone())?;
+    let _ = run_for_device(port, &["shell".into(), "rm".into(), "-f".into(), remote_path.into()]);
+
+    Ok(AdbResult {
+        success: pulled.success,
+        exit_code: pulled.exit_code,
+        stdout: if pulled.success {
+            format!("Screen recording saved to {destination}")
+        } else {
+            pulled.stdout
+        },
+        stderr: pulled.stderr,
+    })
+}
+
 pub fn push(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
     if !std::path::Path::new(&source).exists() {
         return Err(format!("Source does not exist: {source}"));
