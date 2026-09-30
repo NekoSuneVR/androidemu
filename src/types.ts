@@ -370,3 +370,12 @@ export interface TransferJob {
   message:string;
   pid?:number|null;
 }
+
+export interface ApkPackageInfo {
+  path:string;
+  packageName?:string|null;
+  versionName?:string|null;
+  versionCode?:string|null;
+  abis:string[];
+  sizeBytes:number;
+}
