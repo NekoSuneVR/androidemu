@@ -738,6 +738,26 @@ pub fn set_refresh_rate(port: u16, fps: Option<u32>) -> Result<AdbResult, String
     }
 }
 
+
+fn current_wm_size(port:u16)->Result<(i32,i32),String>{
+    let result=shell(port,"wm size".into())?;
+    let line=result.stdout.lines().find(|l|l.contains("Physical size")).or_else(||result.stdout.lines().find(|l|l.contains('x'))).ok_or("Unable to read display size")?;
+    let dims=line.split(':').last().unwrap_or(line).trim();
+    let (w,h)=dims.split_once('x').ok_or("Unexpected display size")?;
+    Ok((w.trim().parse().map_err(|_|"Invalid width")?,h.trim().parse().map_err(|_|"Invalid height")?))
+}
+pub fn resize_for_orientation(port:u16,landscape:bool)->Result<AdbResult,String>{
+    let (w,h)=current_wm_size(port)?;
+    let (target_w,target_h)=if landscape{(w.max(h),w.min(h))}else{(w.min(h),w.max(h))};
+    shell(port,format!("wm size {target_w}x{target_h}; wm size"))
+}
+pub fn dynamic_resolution(port:u16,scale:f64)->Result<AdbResult,String>{
+    if !(0.5..=1.5).contains(&scale){return Err("Dynamic resolution scale must be 0.5..1.5".into());}
+    let (w,h)=current_wm_size(port)?;
+    let tw=((w as f64)*scale).round().max(320.0) as i32;
+    let th=((h as f64)*scale).round().max(320.0) as i32;
+    shell(port,format!("wm size {tw}x{th}; wm size"))
+}
 pub fn set_orientation(port: u16, orientation: String) -> Result<AdbResult, String> {
     let orientation = orientation.trim().to_ascii_lowercase();
 
@@ -772,14 +792,16 @@ pub fn set_orientation(port: u16, orientation: String) -> Result<AdbResult, Stri
         return Ok(disable_auto);
     }
 
-    run_for_device(port, &[
+    let result=run_for_device(port, &[
         "shell".into(),
         "settings".into(),
         "put".into(),
         "system".into(),
         "user_rotation".into(),
         rotation.into(),
-    ])
+    ])?;
+    if !result.success{return Ok(result);}
+    resize_for_orientation(port,matches!(orientation.as_str(),"landscape"|"reverse-landscape"))
 }
 
 pub fn rotate_orientation(port: u16, direction: String) -> Result<AdbResult, String> {
@@ -818,14 +840,16 @@ pub fn rotate_orientation(port: u16, direction: String) -> Result<AdbResult, Str
         return Ok(disable_auto);
     }
 
-    run_for_device(port, &[
+    let result=run_for_device(port, &[
         "shell".into(),
         "settings".into(),
         "put".into(),
         "system".into(),
         "user_rotation".into(),
         next.to_string(),
-    ])
+    ])?;
+    if !result.success{return Ok(result);}
+    resize_for_orientation(port,next%2==1)
 }
 
 
