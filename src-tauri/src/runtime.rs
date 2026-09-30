@@ -285,6 +285,9 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
                         if minimize {
                             let _=adb::shell(port,"settings put global activity_manager_constants max_cached_processes=16; cmd deviceidle enable 2>/dev/null || true".into());
                         }
+                        if performance.ram_compression {
+                            let _=adb::root_shell(port,"swapoff /dev/block/zram0 2>/dev/null || true; echo 1 > /sys/block/zram0/reset 2>/dev/null || true; echo lz4 > /sys/block/zram0/comp_algorithm 2>/dev/null || true; echo 1073741824 > /sys/block/zram0/disksize 2>/dev/null || true; mkswap /dev/block/zram0 2>/dev/null || true; swapon /dev/block/zram0 2>/dev/null || true; cat /proc/swaps".into());
+                        }
                         break;
                     }
                 }
