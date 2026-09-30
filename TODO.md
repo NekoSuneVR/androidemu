@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **236/643 tasks complete (36.7%)**
+> Progress: **244/643 tasks complete (37.9%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -306,7 +306,7 @@ This file tracks the planned implementation of NekoDroid.
 
 ## APK Installation
 
-- [ ] Drag-and-drop APK install
+- [x] Drag-and-drop APK install
 - [ ] Select APK from PC
 - [x] Batch APK installation
 - [x] Split APK support
@@ -687,12 +687,12 @@ skills/
 # Phase 34 - Developer Tools
 
 - [x] ADB terminal
-- [ ] Root terminal
+- [x] Root terminal
 - [x] Logcat
 - [x] Kernel log
 - [x] Package viewer
 - [x] Activity viewer
-- [ ] Process viewer
+- [x] Process viewer
 - [x] Service viewer
 - [x] Network connections
 - [x] Port forwarding
@@ -736,7 +736,7 @@ skills/
 - [x] LAN ADB off by default
 - [x] API localhost-only by default
 - [ ] Require user approval for dangerous actions
-- [ ] Root warning
+- [x] Root warning
 - [ ] Network exposure warning
 - [ ] Instance isolation
 - [ ] Secure ADB keys
@@ -892,14 +892,14 @@ The first usable release should include:
 - [ ] Mouse/touch
 - [ ] Keyboard
 - [ ] Portrait/landscape rotation
-- [ ] ADB
+- [x] ADB
 - [x] ADB file push/pull
 - [ ] Drag-and-drop APK installation
-- [ ] PC-to-Android file transfer
-- [ ] Android-to-PC file transfer
+- [x] PC-to-Android file transfer
+- [x] Android-to-PC file transfer
 - [x] Basic device profiles
 - [x] Basic multi-instance support
-- [ ] Snapshots
+- [x] Snapshots
 - [ ] 60 FPS mode
 - [ ] Root-capable developer image
 - [ ] Basic framebuffer capture
