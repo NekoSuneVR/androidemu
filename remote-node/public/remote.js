@@ -69,7 +69,6 @@ async function onMessage(message) {
     permissionText.textContent = permissions.control ? "View + control" : "View only";
     waiting.textContent = "Approved. Waiting for video…";
     createPeer();
-    ws.send(JSON.stringify({ type: "webrtc-offer-request" }));
     return;
   }
 
