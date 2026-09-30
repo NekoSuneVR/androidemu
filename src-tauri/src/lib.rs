@@ -22,7 +22,7 @@ use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use settings::{AiSettings, AppSettings};
 use snapshots::SnapshotInfo;
-use media::{FfmpegInfo, MediaJobRequest, MediaResult};
+use media::{FfmpegInfo, MediaJobRequest, MediaResult, MediaCodecCapabilityReport};
 use first_run::SystemReadiness;
 use ai::{AiAction, AiChatResult};
 use skills::{AiGameState, SkillManifest};
@@ -209,6 +209,9 @@ fn adb_reboot(port: u16, mode: Option<String>) -> Result<AdbResult, String> {
 fn adb_device_info(port: u16) -> Result<AdbResult, String> {
     adb::device_info(port)
 }
+
+#[tauri::command]
+fn adb_media_codec_requests(port: u16) -> Result<AdbResult, String> { adb::media_codec_requests(port) }
 
 #[tauri::command]
 fn adb_security_state(port: u16) -> Result<AdbResult, String> {
@@ -539,6 +542,9 @@ fn get_system_readiness() -> SystemReadiness {
 }
 
 #[tauri::command]
+fn get_media_codec_report() -> MediaCodecCapabilityReport { media::media_codec_report() }
+
+#[tauri::command]
 fn get_ffmpeg_info() -> FfmpegInfo {
     media::detect_ffmpeg()
 }
@@ -854,6 +860,7 @@ pub fn run() {
             adb_crash_diagnostics,
             adb_reboot,
             adb_device_info,
+            adb_media_codec_requests,
             adb_security_state,
             adb_screenshot,
             adb_screen_record,
@@ -910,6 +917,7 @@ pub fn run() {
             restore_snapshot,
             delete_snapshot,
             get_system_readiness,
+            get_media_codec_report,
             get_ffmpeg_info,
             run_media_job,
             run_media_batch,
