@@ -8,12 +8,13 @@ use std::{
     fs::{self, File},
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
-    sync::Mutex,
+    sync::{Arc, Mutex},
 };
 
+#[derive(Clone)]
 pub struct RuntimeState {
     pub data_dir: PathBuf,
-    pub processes: Mutex<HashMap<String, Child>>,
+    pub processes: Arc<Mutex<HashMap<String, Child>>>,
 }
 
 impl RuntimeState {
@@ -21,7 +22,7 @@ impl RuntimeState {
         storage::ensure_layout(&data_dir).map_err(|e| e.to_string())?;
         Ok(Self {
             data_dir,
-            processes: Mutex::new(HashMap::new()),
+            processes: Arc::new(Mutex::new(HashMap::new())),
         })
     }
 }
