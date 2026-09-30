@@ -31,7 +31,7 @@ joinForm.addEventListener("submit", async event => {
   }
 
   const info = await response.json();
-  const configResponse = await fetch("/api/config");
+  const configResponse = await fetch(`/api/config?invite=${encodeURIComponent(inviteCode)}`);
   if (configResponse.ok) {
     const config = await configResponse.json();
     if (Array.isArray(config.iceServers)) iceServers = config.iceServers;
