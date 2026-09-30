@@ -221,6 +221,16 @@ pub fn uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
     run_for_device(port, &["uninstall".into(), package_name.into()])
 }
 
+pub fn timezone(port:u16,timezone:Option<String>)->Result<AdbResult,String>{
+    match timezone {
+        Some(tz)=>{
+            if tz.len()>80||!tz.chars().all(|c|c.is_ascii_alphanumeric()||matches!(c,'/'|'_'|'-'|'+')){return Err("Invalid timezone".into());}
+            shell(port,format!("setprop persist.sys.timezone {tz}; settings put global time_zone {tz}; date; getprop persist.sys.timezone"))
+        }
+        None=>shell(port,"date; getprop persist.sys.timezone; settings get global auto_time; settings get global auto_time_zone".into())
+    }
+}
+
 pub fn shutdown(port: u16) -> Result<AdbResult, String> {
     run_for_device(port, &["shell".into(), "reboot".into(), "-p".into()])
 }
