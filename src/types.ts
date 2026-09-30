@@ -124,3 +124,11 @@ export interface RuntimeLogs {
   stderr: string;
   crashReport: string;
 }
+
+
+export interface SnapshotInfo {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: number;
+}
