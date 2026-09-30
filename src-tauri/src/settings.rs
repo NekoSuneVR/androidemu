@@ -90,6 +90,9 @@ pub struct AppSettings {
     pub default_adb_enabled: bool,
     pub default_headless: bool,
     pub confirm_dangerous_actions: bool,
+    pub api_enabled: bool,
+    pub api_port: u16,
+    pub api_token: String,
 }
 
 impl Default for AppSettings {
@@ -100,6 +103,9 @@ impl Default for AppSettings {
             default_adb_enabled: false,
             default_headless: false,
             confirm_dangerous_actions: true,
+            api_enabled: false,
+            api_port: 37891,
+            api_token: String::new(),
         }
     }
 }
@@ -126,6 +132,12 @@ pub fn save_app(data_dir: &Path, settings: AppSettings) -> Result<AppSettings, S
     }
     if settings.default_profile.trim().is_empty() {
         return Err("Default profile cannot be empty".into());
+    }
+    if settings.api_port == 0 {
+        return Err("Automation API port must be between 1 and 65535".into());
+    }
+    if settings.api_enabled && settings.api_token.len() < 16 {
+        return Err("Automation API token must be at least 16 characters when the API is enabled".into());
     }
 
     fs::create_dir_all(data_dir).map_err(|e| e.to_string())?;
