@@ -341,7 +341,7 @@ export default function App() {
         {active === "File Manager" && <FileManager instances={instances} />}
         {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
         {active === "Developer Tools" && <DeveloperTools instances={instances} adbInfo={adbInfo} />}
-        {active === "NekoAI" && <NekoAI />}
+        {active === "NekoAI" && <NekoAI instances={instances} />}
         {active === "Media Tools" && <MediaTools />}
         {active === "Settings" && <SettingsPage profiles={profiles} />}
       </main>
