@@ -59,13 +59,18 @@ pub fn detect_host() -> HostCapabilities {
         }
         "windows" => {
             let whpx = qemu.accelerators.iter().any(|a| a == "whpx");
+            let msys2_path = qemu.executable.as_deref().map(|p| p.to_ascii_lowercase().contains("\\msys64\\")).unwrap_or(false);
             (
-                "WHPX".to_string(),
+                "MSYS2 + WHPX".to_string(),
                 whpx,
-                if whpx {
-                    "QEMU advertises Windows Hypervisor Platform acceleration.".to_string()
+                if !qemu.found {
+                    "MSYS2 runtime was not found. Install MSYS2 under C:\\msys64 (or set MSYS2_ROOT) and install the UCRT64/MINGW64 QEMU runtime package.".to_string()
+                } else if whpx && msys2_path {
+                    "MSYS2 Android VM runtime detected with Windows Hypervisor Platform acceleration.".to_string()
+                } else if whpx {
+                    "Windows VM runtime detected with Windows Hypervisor Platform acceleration.".to_string()
                 } else {
-                    "WHPX is not advertised by the detected QEMU build. Enable Windows Hypervisor Platform and use a compatible QEMU build.".to_string()
+                    "MSYS2 runtime was found, but WHPX is unavailable. Enable Windows Hypervisor Platform in Windows Features.".to_string()
                 },
             )
         }
@@ -86,14 +91,46 @@ pub fn detect_host() -> HostCapabilities {
     }
 }
 
-pub fn detect_qemu() -> QemuInfo {
-    let candidates: &[&str] = if cfg!(windows) {
-        &["qemu-system-x86_64.exe", "qemu-system-x86_64"]
+fn find_windows_msys2_tool(name: &str) -> Option<PathBuf> {
+    if !cfg!(windows) {
+        return find_in_path(name);
+    }
+
+    let mut roots = Vec::<PathBuf>::new();
+    for key in ["MSYS2_ROOT", "MSYS2_PATH"] {
+        if let Some(value) = env::var_os(key) {
+            let value = PathBuf::from(value);
+            if !value.as_os_str().is_empty() {
+                roots.push(value);
+            }
+        }
+    }
+    roots.push(PathBuf::from(r"C:\msys64"));
+
+    let exe_name = if name.to_ascii_lowercase().ends_with(".exe") {
+        name.to_string()
     } else {
-        &["qemu-system-x86_64"]
+        format!("{name}.exe")
     };
 
-    let executable = candidates.iter().find_map(|name| find_in_path(name));
+    for root in roots {
+        for prefix in ["ucrt64", "mingw64", "clang64", "mingw32", "usr"] {
+            let candidate = root.join(prefix).join("bin").join(&exe_name);
+            if candidate.is_file() {
+                return Some(candidate);
+            }
+        }
+    }
+
+    find_in_path(&exe_name).or_else(|| find_in_path(name))
+}
+
+pub fn detect_qemu() -> QemuInfo {
+    let executable = if cfg!(windows) {
+        find_windows_msys2_tool("qemu-system-x86_64")
+    } else {
+        find_in_path("qemu-system-x86_64")
+    };
 
     let Some(path) = executable else {
         return QemuInfo {
@@ -164,7 +201,11 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     let qemu_path = host
         .qemu
         .executable
-        .ok_or_else(|| "QEMU qemu-system-x86_64 was not found in PATH".to_string())?;
+        .ok_or_else(|| if cfg!(windows) {
+            "MSYS2 runtime was not found. Install MSYS2 and its QEMU runtime, or set MSYS2_ROOT.".to_string()
+        } else {
+            "QEMU qemu-system-x86_64 was not found in PATH".to_string()
+        })?;
 
     if !host.accelerator_available {
         return Err(host.virtualization_note);
@@ -598,11 +639,15 @@ fn ensure_runtime_overlay(
     }
 
     let qemu_img = if cfg!(windows) {
-        find_in_path("qemu-img.exe").or_else(|| find_in_path("qemu-img"))
+        find_windows_msys2_tool("qemu-img")
     } else {
         find_in_path("qemu-img")
     }
-    .ok_or_else(|| "qemu-img was not found in PATH; it is required to create per-instance writable disks".to_string())?;
+    .ok_or_else(|| if cfg!(windows) {
+        "MSYS2 qemu-img was not found; install the MSYS2 QEMU runtime or set MSYS2_ROOT".to_string()
+    } else {
+        "qemu-img was not found in PATH; it is required to create per-instance writable disks".to_string()
+    })?;
 
     let overlay_path = overlay.to_string_lossy().to_string();
     let output = Command::new(qemu_img)
