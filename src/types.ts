@@ -102,3 +102,15 @@ export interface AdbResult {
   stdout: string;
   stderr: string;
 }
+
+
+export interface AiSettings {
+  enabled: boolean;
+  mode: "local" | "ollama" | "openai-compatible";
+  endpoint: string;
+  model: string;
+  visionModel: string;
+  detectorModel: string;
+  maxActionsPerMinute: number;
+  maxCaptureFps: number;
+}
