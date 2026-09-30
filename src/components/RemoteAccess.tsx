@@ -157,6 +157,9 @@ export default function RemoteAccess({ instances, profiles }: Props) {
       setViewers(current => current.some(v => v.viewerId === message.viewerId)
         ? current
         : [...current, { viewerId: message.viewerId, userAgent: message.userAgent, trusted:Boolean(message.trusted), approved:Boolean(message.approved) }]);
+      if (message.approved && message.trusted && settings.unattendedTrusted) {
+        window.setTimeout(() => approveViewer(message.viewerId), 0);
+      }
       return;
     }
 
