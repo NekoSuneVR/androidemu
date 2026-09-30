@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { FfmpegInfo, MediaResult } from "../types";
+import type { FfmpegInfo, MediaJobRequest, MediaResult } from "../types";
 
 export default function MediaTools() {
   const [info, setInfo] = useState<FfmpegInfo | null>(null);
@@ -16,6 +16,7 @@ export default function MediaTools() {
   const [useFps, setUseFps] = useState(false);
   const [hardwareDecode, setHardwareDecode] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [batchLines, setBatchLines] = useState("");
   const [result, setResult] = useState("FFmpeg job output will appear here.");
 
   useEffect(() => {
@@ -46,6 +47,50 @@ export default function MediaTools() {
         response.stdout,
         response.stderr
       ].filter(Boolean).join("\n\n"));
+    } catch (error) {
+      setResult(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runBatch = async () => {
+    const rows = batchLines
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    if (!rows.length) {
+      setResult("Add at least one batch row using: input path | output path");
+      return;
+    }
+
+    const jobs: MediaJobRequest[] = rows.map(row => {
+      const [batchInput, batchOutput] = row.split("|").map(value => value?.trim());
+      if (!batchInput || !batchOutput) {
+        throw new Error(`Invalid batch row: ${row}`);
+      }
+      return {
+        input: batchInput,
+        output: batchOutput,
+        operation,
+        videoCodec,
+        audioCodec,
+        width: useResize && operation === "video" ? width : null,
+        height: useResize && operation === "video" ? height : null,
+        fps: useFps && operation === "video" ? fps : null,
+        hardwareDecode
+      };
+    });
+
+    setBusy(true);
+    try {
+      const responses = await invoke<MediaResult[]>("run_media_batch", { jobs });
+      setResult(responses.map((response, index) => [
+        `Job ${index + 1}: ${response.success ? "SUCCESS" : "FAILED"}`,
+        response.outputPath,
+        response.stderr || response.stdout
+      ].filter(Boolean).join("\n")).join("\n\n"));
     } catch (error) {
       setResult(String(error));
     } finally {
@@ -124,6 +169,20 @@ export default function MediaTools() {
           <button className="primary" disabled={busy || !info?.found || !input || !output}>
             {busy ? "Processing..." : "Run FFmpeg Job"}
           </button>
+
+          <div className="tool-group">
+            <h4>Batch queue</h4>
+            <label>Jobs, one per line: input path | output path
+              <textarea
+                placeholder={"C:\\Videos\\a.mp4 | C:\\Videos\\a-out.mp4\nC:\\Videos\\b.mp4 | C:\\Videos\\b-out.mp4"}
+                value={batchLines}
+                onChange={e => setBatchLines(e.target.value)}
+              />
+            </label>
+            <button type="button" className="ghost compact" disabled={busy || !batchLines.trim() || !info?.found} onClick={runBatch}>
+              Run Batch Queue
+            </button>
+          </div>
 
           <div className="warning-box">
             This page uses your installed FFmpeg build. Available codecs and hardware acceleration depend on that FFmpeg package and host GPU drivers.
