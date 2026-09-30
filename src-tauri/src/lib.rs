@@ -823,6 +823,12 @@ fn get_host_capabilities() -> HostCapabilities {
 }
 
 #[tauri::command]
+fn set_root_on_next_boot(state:State<'_,RuntimeState>,id:String,enabled:bool)->Result<(),String>{
+    if state.processes.lock().map_err(|_|"Runtime process lock poisoned")?.contains_key(&id){return Err("Stop the instance before changing root-on-next-boot".into());}
+    runtime::set_root_on_next_boot(&state,&id,enabled)
+}
+
+#[tauri::command]
 fn start_instance(
     state: State<'_, RuntimeState>,
     id: String,
@@ -1046,6 +1052,7 @@ pub fn run() {
             save_ai_settings,
             ai_emergency_stop,
             get_host_capabilities,
+            set_root_on_next_boot,
             start_instance,
             pause_instance,
             resume_instance,
