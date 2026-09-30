@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **106/643 tasks complete (16.5%)**
+> Progress: **111/643 tasks complete (17.3%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -360,10 +360,10 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 16 - Virtual Touch
 
-- [ ] Tap
+- [x] Tap
 - [ ] Double tap
 - [ ] Hold
-- [ ] Swipe
+- [x] Swipe
 - [ ] Drag
 - [ ] Multi-touch
 - [ ] Pinch
@@ -458,15 +458,15 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 22 - AI Virtual Controls
 
-- [ ] AI tap
+- [x] AI tap
 - [ ] AI hold
-- [ ] AI swipe
+- [x] AI swipe
 - [ ] AI drag
 - [ ] AI multi-touch
 - [ ] AI virtual joystick
 - [ ] AI virtual gamepad
 - [ ] AI keyboard input
-- [ ] AI text input
+- [x] AI text input
 - [ ] AI gyro input
 - [ ] AI accelerometer input
 - [ ] AI action queue
