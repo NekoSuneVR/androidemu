@@ -358,3 +358,15 @@ export interface MediaCodecCapabilityReport {
   capabilities: MediaCodecCapability[];
   hardwareFamilies: string[];
 }
+
+export interface TransferJob {
+  id:string;
+  direction:"push"|"pull";
+  source:string;
+  destination:string;
+  port:number;
+  status:"queued"|"running"|"completed"|"failed"|"cancelled";
+  progress:number;
+  message:string;
+  pid?:number|null;
+}
