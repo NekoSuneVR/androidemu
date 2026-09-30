@@ -206,7 +206,9 @@ export default function App() {
     }
   };
 
-  const qemuStatus = host?.qemu.found ? host.qemu.version ?? "QEMU detected" : "QEMU not found";
+  const runtimeStatus = host?.os === "windows"
+    ? (host.qemu.found ? host.qemu.version ?? "MSYS2 runtime detected" : "MSYS2 runtime not found")
+    : (host?.qemu.found ? host.qemu.version ?? "QEMU detected" : "QEMU not found");
 
   const instancesPanel = (
     <section className="panel">
@@ -312,13 +314,13 @@ export default function App() {
               <div>
                 <span className="pill">Runtime foundation</span>
                 <h2>Native Android runtime management, ready for the first bootable image.</h2>
-                <p>NekoDroid now persists instances, probes QEMU/KVM/WHPX, manages QEMU processes, exposes localhost ADB tooling, and defines realistic Android device profiles.</p>
+                <p>NekoDroid persists instances, uses MSYS2-managed virtualization on Windows and QEMU/KVM on Linux, exposes localhost ADB tooling, and defines realistic Android device profiles.</p>
               </div>
               <div className="host-card">
                 <span>Detected host</span>
                 <strong>{host ? `${host.os} / ${host.arch}` : "Detecting..."}</strong>
                 <small>{host?.accelerator ?? "Waiting for backend"} · {host?.acceleratorAvailable ? "available" : "unavailable"}</small>
-                <small className="runtime-detail">{qemuStatus}</small>
+                <small className="runtime-detail">{runtimeStatus}</small>
               </div>
             </section>
 
@@ -326,7 +328,7 @@ export default function App() {
 
             <section className="stats">
               <article><span>Instances</span><strong>{instances.length}</strong><small>Persistent Android environments</small></article>
-              <article><span>QEMU</span><strong>{host?.qemu.found ? "Ready" : "Missing"}</strong><small>{host?.qemu.executable ?? "Install qemu-system-x86_64"}</small></article>
+              <article><span>{host?.os === "windows" ? "MSYS2 Runtime" : "QEMU"}</span><strong>{host?.qemu.found ? "Ready" : "Missing"}</strong><small>{host?.qemu.executable ?? (host?.os === "windows" ? "Install MSYS2 runtime under C:\\msys64 or set MSYS2_ROOT" : "Install qemu-system-x86_64")}</small></article>
               <article><span>Acceleration</span><strong>{host?.accelerator ?? "Unknown"}</strong><small>{host?.virtualizationNote ?? "Capability scan pending"}</small></article>
               <article><span>ADB</span><strong>{adbInfo?.found ? "Ready" : "Missing"}</strong><small>{adbInfo?.version ?? "Android platform-tools not detected"}</small></article>
             </section>
