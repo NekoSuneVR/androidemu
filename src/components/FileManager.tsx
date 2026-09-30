@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AdbResult, AndroidFileEntry, AndroidInstance } from "../types";
+import type { AdbResult, AndroidFileEntry, AndroidInstance, TransferJob } from "../types";
 
 export default function FileManager({ instances }: { instances: AndroidInstance[] }) {
   const [instanceId, setInstanceId] = useState(instances[0]?.id ?? "");
@@ -13,6 +13,7 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
   const [hostDownload, setHostDownload] = useState("");
   const [output, setOutput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [transfers,setTransfers]=useState<TransferJob[]>([]);
 
   const selected = useMemo(
     () => instances.find(instance => instance.id === instanceId) ?? instances[0],
@@ -138,17 +139,16 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
     }
   };
 
+  const refreshTransfers=async()=>{try{setTransfers(await invoke<TransferJob[]>("list_transfers"));}catch{}};
+  useEffect(()=>{const timer=window.setInterval(refreshTransfers,1000);return()=>window.clearInterval(timer);},[]);
+
   const upload = async () => {
-    if (!hostUpload) return;
-    setBusy(true);
+    if (!hostUpload || !selected) return;
     try {
-      await run("adb_push", { source: hostUpload, destination: path });
-      await refresh();
-    } catch (error) {
-      setOutput(String(error));
-    } finally {
-      setBusy(false);
-    }
+      const job=await invoke<TransferJob>("start_transfer",{port:selected.adbPort,direction:"push",source:hostUpload,destination:path});
+      setOutput(`Started transfer ${job.id}`);
+      await refreshTransfers();
+    } catch (error) { setOutput(String(error)); }
   };
 
   const uploadMultiple = async () => {
@@ -168,15 +168,12 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
   };
 
   const download = async () => {
-    if (!androidDownload || !hostDownload) return;
-    setBusy(true);
+    if (!androidDownload || !hostDownload || !selected) return;
     try {
-      await run("adb_pull", { source: androidDownload, destination: hostDownload });
-    } catch (error) {
-      setOutput(String(error));
-    } finally {
-      setBusy(false);
-    }
+      const job=await invoke<TransferJob>("start_transfer",{port:selected.adbPort,direction:"pull",source:androidDownload,destination:hostDownload});
+      setOutput(`Started transfer ${job.id}`);
+      await refreshTransfers();
+    } catch (error) { setOutput(String(error)); }
   };
 
   return (
@@ -249,6 +246,25 @@ export default function FileManager({ instances }: { instances: AndroidInstance[
               <textarea value={hostUploads} onChange={e => setHostUploads(e.target.value)} />
             </label>
             <button className="ghost compact" disabled={busy || !hostUploads.trim()} onClick={uploadMultiple}>Upload multiple</button>
+          </div>
+
+          <div className="tool-group">
+            <h4>Shared folder alternative</h4>
+            <label>Host folder to sync<input value={hostUpload} onChange={e=>setHostUpload(e.target.value)}/></label>
+            <button className="ghost compact" disabled={!selected||!hostUpload} onClick={async()=>{if(!selected)return;try{await invoke("sync_shared_folder",{port:selected.adbPort,hostPath:hostUpload});await refreshTransfers();setOutput("Started sync to /sdcard/NekoDroidShared/.");}catch(error){setOutput(String(error));}}}>Sync to NekoDroidShared</button>
+          </div>
+
+          <div className="tool-group">
+            <h4>Transfer jobs</h4>
+            {transfers.map(job=><article className="instance-card" key={job.id}>
+              <strong>{job.direction} · {job.status}</strong>
+              <small>{job.source} → {job.destination}</small>
+              <small>{job.progress}% · {job.message}</small>
+              <div className="button-row">
+                {job.status==="running"&&<button className="danger compact" onClick={async()=>{await invoke("cancel_transfer",{id:job.id});await refreshTransfers();}}>Cancel</button>}
+                {["failed","cancelled"].includes(job.status)&&<button className="ghost compact" onClick={async()=>{await invoke("retry_transfer",{id:job.id});await refreshTransfers();}}>Retry</button>}
+              </div>
+            </article>)}
           </div>
 
           <div className="tool-group">
