@@ -12,6 +12,7 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
   const [command, setCommand] = useState("getprop ro.build.version.release");
   const [rootCommand, setRootCommand] = useState("id");
   const [apkPath, setApkPath] = useState("");
+  const [apkBatch, setApkBatch] = useState("");
   const [packageName, setPackageName] = useState("");
   const [screenshotPath, setScreenshotPath] = useState("nekodroid-screenshot.png");
   const [recordingPath, setRecordingPath] = useState("nekodroid-recording.mp4");
@@ -138,6 +139,27 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="tool-group">
+                <h4>Batch / split APK install</h4>
+                <label>APK paths, one per line<textarea placeholder={"C:\\Downloads\\base.apk\nC:\\Downloads\\config.en.apk"} value={apkBatch} onChange={e => setApkBatch(e.target.value)} /></label>
+                <div className="button-row">
+                  <button
+                    className="ghost compact"
+                    disabled={busy || !apkBatch.trim()}
+                    onClick={() => run("adb_install_batch", { apkPaths: apkBatch.split(/\r?\n/).map(v => v.trim()).filter(Boolean) })}
+                  >
+                    Install each APK
+                  </button>
+                  <button
+                    className="ghost compact"
+                    disabled={busy || apkBatch.split(/\r?\n/).filter(v => v.trim()).length < 2}
+                    onClick={() => run("adb_install_multiple", { apkPaths: apkBatch.split(/\r?\n/).map(v => v.trim()).filter(Boolean) })}
+                  >
+                    Install split APK set
+                  </button>
+                </div>
+              </div>
+
+              <div className="tool-group">
                 <label>Package name<input placeholder="com.example.game" value={packageName} onChange={e => setPackageName(e.target.value)} /></label>
                 <button className="ghost compact" disabled={busy || !packageName} onClick={() => run("adb_uninstall", { packageName })}>Uninstall package</button>
               </div>
@@ -166,13 +188,13 @@ export default function DeveloperTools({ instances, adbInfo }: Props) {
               </div>
 
               <div className="tool-group">
-                <label>Host file<input value={pushSource} onChange={e => setPushSource(e.target.value)} /></label>
+                <label>Host file or folder<input value={pushSource} onChange={e => setPushSource(e.target.value)} /></label>
                 <label>Android destination<input value={pushDestination} onChange={e => setPushDestination(e.target.value)} /></label>
                 <button className="ghost compact" disabled={busy || !pushSource} onClick={() => run("adb_push", { source: pushSource, destination: pushDestination })}>Push file</button>
               </div>
 
               <div className="tool-group">
-                <label>Android source<input value={pullSource} onChange={e => setPullSource(e.target.value)} /></label>
+                <label>Android file or folder<input value={pullSource} onChange={e => setPullSource(e.target.value)} /></label>
                 <label>Host destination<input value={pullDestination} onChange={e => setPullDestination(e.target.value)} /></label>
                 <button className="ghost compact" disabled={busy || !pullDestination} onClick={() => run("adb_pull", { source: pullSource, destination: pullDestination })}>Pull file</button>
               </div>
