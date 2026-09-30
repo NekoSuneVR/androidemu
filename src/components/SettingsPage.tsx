@@ -178,6 +178,7 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
             <div className="button-row">
               <button type="button" className="ghost compact" onClick={async()=>{try{setGraphics(await invoke<GraphicsSettings>("save_graphics_settings",{settings:graphics}));setStatus("Graphics settings saved; renderer changes apply to new emulator starts.");}catch(error){setStatus(String(error));}}}>Save graphics settings</button>
               <button type="button" className="ghost compact" onClick={async()=>{try{const out=await invoke<string[]>("run_graphics_benchmark");setStatus(out.join("\n")||"No external graphics benchmark tool returned data.");}catch(error){setStatus(String(error));}}}>Graphics benchmark</button>
+              <button type="button" className="ghost compact" onClick={async()=>{try{const out=await invoke<string[]>("run_performance_benchmark");setStatus(out.join("\n"));}catch(error){setStatus(String(error));}}}>Built-in performance benchmark</button>
             </div>
           </div>}
 
