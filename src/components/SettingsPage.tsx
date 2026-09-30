@@ -126,6 +126,11 @@ export default function SettingsPage({ profiles }: { profiles: DeviceProfile[] }
           <button className="primary" disabled={busy}>{busy ? "Saving..." : "Save Settings"}</button>
 
           <div className="tool-group">
+            <h4>Installation repair</h4>
+            <button type="button" className="ghost compact" disabled={busy} onClick={async()=>{try{setBusy(true);const actions=await invoke<string[]>("repair_installation");setStatus(["Installation repair completed.",...actions].join("\n"));}catch(error){setStatus(String(error));}finally{setBusy(false);}}}>Check & Repair Installation</button>
+          </div>
+
+          <div className="tool-group">
             <h4>Updates</h4>
             <button type="button" className="ghost compact" disabled={busy} onClick={async () => {
               setBusy(true);
