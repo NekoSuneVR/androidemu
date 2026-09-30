@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **254/643 tasks complete (39.5%)**
+> Progress: **258/643 tasks complete (40.1%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -427,16 +427,16 @@ This file tracks the planned implementation of NekoDroid.
 
 - [x] AI subsystem interface
 - [x] AI enable/disable toggle
-- [ ] Local AI mode
-- [ ] Remote Ollama mode
-- [ ] OpenAI-compatible endpoint mode
+- [x] Local AI mode
+- [x] Remote Ollama mode
+- [x] OpenAI-compatible endpoint mode
 - [x] Model selection
 - [x] Vision model selection
 - [x] Object detector selection
 - [ ] OCR engine
 - [ ] Speech recognition
 - [ ] TTS
-- [ ] AI logs
+- [x] AI logs
 - [x] AI performance limits
 - [x] AI emergency stop
 
