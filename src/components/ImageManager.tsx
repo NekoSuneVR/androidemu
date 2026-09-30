@@ -28,6 +28,20 @@ export default function ImageManager({ images, onChanged }: Props) {
   const [output, setOutput] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const repairImage = async (id: string, name: string) => {
+    if (!window.confirm(`Re-download and repair ${name} from its saved source URL?`)) return;
+    setBusy(true);
+    try {
+      const repaired = await invoke<InstalledImage>("repair_android_image", { id });
+      setOutput(`Repaired ${repaired.manifest.name} at ${repaired.diskPath}`);
+      await onChanged();
+    } catch (error) {
+      setOutput(String(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const removeImage = async (id: string, name: string) => {
     if (!window.confirm(`Remove ${name} from NekoDroid? This deletes its copied image files.`)) return;
     setBusy(true);
@@ -102,6 +116,15 @@ export default function ImageManager({ images, onChanged }: Props) {
                   <small className="image-path">{image.diskPath}</small>
                   {image.validationError && <small>{image.validationError}</small>}
                   <div className="button-row">
+                    {image.manifest.sourceUrl && (
+                      <button
+                        className="ghost compact"
+                        disabled={busy}
+                        onClick={() => repairImage(image.manifest.id, image.manifest.name)}
+                      >
+                        Repair / Re-download
+                      </button>
+                    )}
                     <button
                       className="danger compact"
                       disabled={busy}
