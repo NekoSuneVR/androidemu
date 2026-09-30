@@ -14,7 +14,7 @@ mod skills;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
-use adb::AndroidFileEntry;
+use adb::{AndroidFileEntry, ApkCompatibility};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
 use settings::{AiSettings, AppSettings};
@@ -158,6 +158,11 @@ fn adb_get_state(port: u16) -> Result<AdbResult, String> {
 #[tauri::command]
 fn adb_shell(port: u16, command: String) -> Result<AdbResult, String> {
     adb::shell(port, command)
+}
+
+#[tauri::command]
+fn inspect_apk(apk_path: String) -> Result<ApkCompatibility, String> {
+    adb::inspect_apk(apk_path)
 }
 
 #[tauri::command]
@@ -751,6 +756,7 @@ pub fn run() {
             adb_root_shell,
             adb_get_state,
             adb_shell,
+            inspect_apk,
             adb_install,
             adb_install_batch,
             adb_install_multiple,
