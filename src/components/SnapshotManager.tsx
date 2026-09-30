@@ -147,6 +147,11 @@ export default function SnapshotManager({ instances }: { instances: AndroidInsta
           <button className="primary" disabled={busy || !selected || selected.status === "running"}>
             {busy ? "Working..." : "Create Snapshot"}
           </button>
+          <div className="button-row">
+            <button type="button" className="ghost compact" disabled={busy || !selected || selected.status === "running"} onClick={async()=>{if(!selected)return;try{setBusy(true);await invoke("create_clean_snapshot",{instanceId:selected.id});await refresh();setOutput("Created clean snapshot.");}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Clean snapshot</button>
+            <button type="button" className="ghost compact" disabled={busy || !selected || selected.status === "running"} onClick={async()=>{if(!selected)return;try{setBusy(true);await invoke("create_rooted_snapshot",{instanceId:selected.id});await refresh();setOutput("Created rooted snapshot.");}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Rooted snapshot</button>
+            <button type="button" className="danger compact" disabled={busy || !selected || selected.status === "running"} onClick={async()=>{if(!selected||!confirm("Keep the newest 10 snapshots and delete older ones?"))return;try{setBusy(true);const removed=await invoke<number>("cleanup_snapshots",{instanceId:selected.id,keep:10});await refresh();setOutput(`Removed ${removed} old snapshot(s).`);}catch(error){setOutput(String(error));}finally{setBusy(false);}}}>Cleanup old snapshots</button>
+          </div>
           <small className="muted">Snapshots require the instance to be stopped and its runtime QCOW2 disk to exist.</small>
           {output && <pre className="inline-output">{output}</pre>}
         </form>
