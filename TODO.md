@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **125/643 tasks complete (19.4%)**
+> Progress: **134/643 tasks complete (20.8%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -41,7 +41,7 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Create Device Profiles page
 - [ ] Create Media Tools page
 - [x] Create Developer Tools page
-- [ ] Create AI page
+- [x] Create AI page
 - [ ] Create Settings page
 - [ ] Add update system
 - [ ] Add logs viewer
@@ -425,20 +425,20 @@ This file tracks the planned implementation of NekoDroid.
 
 # Phase 20 - NekoAI Core
 
-- [ ] AI subsystem interface
-- [ ] AI enable/disable toggle
+- [x] AI subsystem interface
+- [x] AI enable/disable toggle
 - [ ] Local AI mode
 - [ ] Remote Ollama mode
 - [ ] OpenAI-compatible endpoint mode
-- [ ] Model selection
-- [ ] Vision model selection
-- [ ] Object detector selection
+- [x] Model selection
+- [x] Vision model selection
+- [x] Object detector selection
 - [ ] OCR engine
 - [ ] Speech recognition
 - [ ] TTS
 - [ ] AI logs
-- [ ] AI performance limits
-- [ ] AI emergency stop
+- [x] AI performance limits
+- [x] AI emergency stop
 
 ---
 
@@ -732,7 +732,7 @@ skills/
 
 - [x] ADB off by default
 - [x] Root off by default
-- [ ] AI control off by default
+- [x] AI control off by default
 - [x] LAN ADB off by default
 - [ ] API localhost-only by default
 - [ ] Require user approval for dangerous actions
