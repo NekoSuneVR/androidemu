@@ -11,7 +11,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Add open-source license
 - [x] Add `README.md`
 - [x] Add `TODO.md`
-- [ ] Add contributing guide
+- [x] Add contributing guide
 - [ ] Add code of conduct
 - [x] Set up CI
 - [ ] Set up release builds
