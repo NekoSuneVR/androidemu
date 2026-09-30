@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AndroidInstance, AppSettings, SystemReadiness } from "../types";
+import type { AndroidInstance, AppSettings, PrerequisiteInstallResult, SystemReadiness } from "../types";
 
 export default function FirstRunWizard() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [readiness, setReadiness] = useState<SystemReadiness | null>(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [installing, setInstalling] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -21,6 +22,21 @@ export default function FirstRunWizard() {
   }, []);
 
   if (!settings || settings.firstRunCompleted) return null;
+
+  const installWindowsRuntime = async () => {
+    setInstalling(true);
+    setStatus("");
+    try {
+      const result = await invoke<PrerequisiteInstallResult>("install_missing_windows_runtime");
+      setStatus(result.messages.join("\n"));
+      const updated = await invoke<SystemReadiness>("get_system_readiness");
+      setReadiness(updated);
+    } catch (error) {
+      setStatus(String(error));
+    } finally {
+      setInstalling(false);
+    }
+  };
 
   const finish = async () => {
     if (!readiness) return;
@@ -82,15 +98,13 @@ export default function FirstRunWizard() {
           <div className="stats">
             {check(
               readiness.virtualizationAvailable,
-              "CPU virtualization acceleration is available.",
+              readiness.virtualizationDetail,
               readiness.virtualizationDetail
             )}
             {check(
               readiness.qemuFound,
               `${readiness.runtimeName} is available.`,
-              readiness.runtimeName === "MSYS2 Runtime"
-                ? "MSYS2 runtime is missing. Install it under C:\\msys64 or set MSYS2_ROOT."
-                : "QEMU is missing from PATH."
+              "Windows/Linux emulator runtime is missing."
             )}
             {check(
               readiness.adbFound,
@@ -127,8 +141,13 @@ export default function FirstRunWizard() {
 
             <div className="tool-column">
               <div className="warning-box">
-                The wizard does not bypass missing host virtualization or GPU support. Fix any host requirement shown above before expecting high-performance Android virtualization.
+                On Windows, NekoDroid can run without WHPX by using software CPU emulation. Hardware virtualization is optional but much faster.
               </div>
+              {navigator.userAgent.toLowerCase().includes("windows") && (
+                <button className="ghost" disabled={installing} onClick={installWindowsRuntime}>
+                  {installing ? "Installing / repairing runtime…" : "Install / Repair Missing Windows Runtime"}
+                </button>
+              )}
               <button className="primary" disabled={busy || !readiness.virtualizationAvailable} onClick={finish}>
                 {busy ? "Saving…" : "Use Recommendations & Finish"}
               </button>
