@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **150/643 tasks complete (23.3%)**
+> Progress: **156/643 tasks complete (24.3%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -62,7 +62,7 @@ This file tracks the planned implementation of NekoDroid.
 - [ ] Add VirtIO audio
 - [x] Add QCOW2 storage
 - [ ] Add dynamically expanding userdata disks
-- [ ] Add snapshot support
+- [x] Add snapshot support
 - [ ] Add clone support
 - [ ] Add VM pause/resume
 - [x] Add headless mode
@@ -664,18 +664,18 @@ skills/
 - [ ] Separate AI settings
 - [ ] Separate keymaps
 - [x] Separate storage
-- [ ] Separate snapshots
+- [x] Separate snapshots
 - [x] CPU/RAM resource limits
 
 ---
 
 # Phase 33 - Snapshot Manager
 
-- [ ] Create snapshot
-- [ ] Restore snapshot
-- [ ] Delete snapshot
+- [x] Create snapshot
+- [x] Restore snapshot
+- [x] Delete snapshot
 - [ ] Rename snapshot
-- [ ] Snapshot description
+- [x] Snapshot description
 - [ ] Auto snapshot before root
 - [ ] Auto snapshot before Android update
 - [ ] Clean snapshot
