@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **168/643 tasks complete (26.1%)**
+> Progress: **174/643 tasks complete (27.1%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -323,19 +323,19 @@ This file tracks the planned implementation of NekoDroid.
 
 - [ ] Standard mode
 - [ ] Developer mode
-- [ ] ADB root mode
+- [x] ADB root mode
 - [ ] Full root mode
-- [ ] Root warning UI
-- [ ] Root shell
-- [ ] `su` support for compatible images
+- [x] Root warning UI
+- [x] Root shell
+- [x] `su` support for compatible images
 - [ ] Writable system overlay
 - [ ] Root filesystem browser
 - [ ] Root-on-next-boot
 - [ ] Separate rooted snapshot
 - [ ] Separate clean snapshot
 - [ ] Factory reset
-- [ ] Explain app compatibility risks
-- [ ] Explain Play Integrity impact
+- [x] Explain app compatibility risks
+- [x] Explain Play Integrity impact
 
 ---
 
