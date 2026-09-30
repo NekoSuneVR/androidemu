@@ -166,3 +166,7 @@ document.querySelector("#disconnect").addEventListener("click", () => {
   ws?.close();
   location.reload();
 });
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/service-worker.js").catch(() => {}));
+}
