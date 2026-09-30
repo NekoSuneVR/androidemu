@@ -157,3 +157,22 @@ export interface AppSettings {
   defaultHeadless: boolean;
   confirmDangerousActions: boolean;
 }
+
+
+export interface SystemReadiness {
+  cpuModel: string;
+  logicalCores: number;
+  totalMemoryMb?: number | null;
+  virtualizationAvailable: boolean;
+  virtualizationDetail: string;
+  gpuNames: string[];
+  vulkanAvailable: boolean;
+  vulkanDetail: string;
+  hardwareEncoders: string[];
+  qemuFound: boolean;
+  adbFound: boolean;
+  ffmpegFound: boolean;
+  recommendedCpuCores: number;
+  recommendedRamMb: number;
+  recommendedAndroidVersion: string;
+}
