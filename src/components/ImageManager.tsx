@@ -189,7 +189,7 @@ export default function ImageManager({ images, onChanged }: Props) {
           <label>Missing hardware-backed features
             <textarea value={manifest.missingHardwareFeatures.join("\n")} onChange={e => setManifest({...manifest,missingHardwareFeatures:e.target.value.split(/\r?\n/).map(v => v.trim()).filter(Boolean)})} />
           </label>
-          <div className="warning-box">Image metadata is descriptive only. NekoDroid does not claim genuine Pixel identity, hardware-backed attestation, certification, or secure-element features that the VM does not actually have.</div>
+          <div className="warning-box">Image metadata is descriptive only. NekoDroid does not claim genuine Pixel identity, hardware-backed attestation, Play Integrity certification, or secure-element features that the VM does not actually have.</div>
           <label>Stored disk filename<input value={manifest.disk} onChange={e => setManifest({...manifest,disk:e.target.value})} /></label>
           <label>Source disk path<input placeholder="C:\\Android\\android16.qcow2" value={sourceDisk} onChange={e => setSourceDisk(e.target.value)} /></label>
           <label>Image download URL
