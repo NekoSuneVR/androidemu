@@ -6,6 +6,71 @@ use std::{
     process::Command,
 };
 
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaCodecCapability {
+    pub codec: String,
+    pub decode: bool,
+    pub encode: bool,
+    pub preferred_decoder: Option<String>,
+    pub preferred_encoder: Option<String>,
+    pub software_fallback: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaCodecCapabilityReport {
+    pub ffmpeg_found: bool,
+    pub capabilities: Vec<MediaCodecCapability>,
+    pub hardware_families: Vec<String>,
+}
+
+pub fn media_codec_report() -> MediaCodecCapabilityReport {
+    let info = detect_ffmpeg();
+    let enc = info.executable.as_deref().map(Path::new).map(|p| command_text(p, "-encoders")).unwrap_or_default();
+    let dec = info.executable.as_deref().map(Path::new).map(|p| command_text(p, "-decoders")).unwrap_or_default();
+    let definitions: &[(&str, &[&str], &[&str])] = &[
+        ("h264", &["h264","h264_cuvid","h264_qsv"], &["libx264","h264_nvenc","h264_qsv","h264_amf","h264_vaapi"]),
+        ("hevc", &["hevc","hevc_cuvid","hevc_qsv"], &["libx265","hevc_nvenc","hevc_qsv","hevc_amf","hevc_vaapi"]),
+        ("vp8", &["vp8","libvpx"], &["libvpx","vp8_vaapi"]),
+        ("vp9", &["vp9","libvpx-vp9"], &["libvpx-vp9","vp9_qsv","vp9_vaapi"]),
+        ("av1", &["av1","dav1d","libdav1d"], &["libaom-av1","libsvtav1","av1_nvenc","av1_qsv","av1_amf"]),
+        ("aac", &["aac"], &["aac"]),
+        ("mp3", &["mp3"], &["libmp3lame","mp3"]),
+        ("opus", &["opus","libopus"], &["libopus","opus"]),
+        ("flac", &["flac"], &["flac"]),
+    ];
+    let capabilities = definitions.iter().map(|(codec,decs,encs)| {
+        let preferred_decoder = decs.iter().find(|name| dec.contains(**name)).map(|s|(*s).to_string());
+        let preferred_encoder = encs.iter().find(|name| enc.contains(**name)).map(|s|(*s).to_string());
+        MediaCodecCapability {
+            codec:(*codec).into(),
+            decode:preferred_decoder.is_some(),
+            encode:preferred_encoder.is_some(),
+            preferred_decoder,
+            preferred_encoder,
+            software_fallback: match *codec {
+                "h264" => dec.contains("h264") && enc.contains("libx264"),
+                "hevc" => dec.contains("hevc") && enc.contains("libx265"),
+                "vp8" => dec.contains("vp8") && enc.contains("libvpx"),
+                "vp9" => dec.contains("vp9") && enc.contains("libvpx-vp9"),
+                "av1" => dec.contains("av1") && (enc.contains("libaom-av1") || enc.contains("libsvtav1")),
+                _ => true,
+            },
+        }
+    }).collect();
+
+    let mut hardware_families=Vec::new();
+    let all=format!("{} {}",info.hardware_encoders.join(" "),info.hardware_decoders.join(" ")).to_ascii_lowercase();
+    if all.contains("nvenc") || all.contains("cuvid"){hardware_families.push("NVIDIA NVENC/NVDEC".into());}
+    if all.contains("_qsv"){hardware_families.push("Intel Quick Sync".into());}
+    if all.contains("_amf"){hardware_families.push("AMD AMF/VCN".into());}
+    if all.contains("vaapi"){hardware_families.push("VA-API".into());}
+
+    MediaCodecCapabilityReport { ffmpeg_found:info.found, capabilities, hardware_families }
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FfmpegInfo {
