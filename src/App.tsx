@@ -25,6 +25,7 @@ const defaultRequest: CreateInstanceRequest = {
   ramMb: 4096,
   adbPort: 5555,
   adbEnabled: false,
+  headless: false,
   rootMode: "standard",
   imagePath: ""
 };
@@ -113,14 +114,15 @@ export default function App() {
     }
   };
 
-  const updateInstance = async (instance: AndroidInstance, patch: { name?: string; adbEnabled?: boolean }) => {
+  const updateInstance = async (instance: AndroidInstance, patch: { name?: string; adbEnabled?: boolean; headless?: boolean }) => {
     setBusyId(instance.id);
     try {
       const updated = await invoke<AndroidInstance>("update_instance", {
         id: instance.id,
         request: {
           name: patch.name ?? instance.name,
-          adbEnabled: patch.adbEnabled ?? instance.adbEnabled
+          adbEnabled: patch.adbEnabled ?? instance.adbEnabled,
+          headless: patch.headless ?? instance.headless
         }
       });
       setInstances(current => current.map(item => item.id === updated.id ? updated : item));
@@ -176,7 +178,7 @@ export default function App() {
                 <span className={`status status-${instance.status}`}>{instance.status}</span>
               </div>
               <p>Android {instance.androidVersion} · {instance.profile}</p>
-              <small>{instance.cpuCores} vCPU · {Math.round(instance.ramMb / 1024)} GB RAM · {instance.adbEnabled ? `ADB localhost:${instance.adbPort}` : "ADB disabled"}</small>
+              <small>{instance.cpuCores} vCPU · {Math.round(instance.ramMb / 1024)} GB RAM · {instance.adbEnabled ? `ADB localhost:${instance.adbPort}` : "ADB disabled"} · {instance.headless ? "Headless" : "Windowed"}</small>
               <small className="image-path">{instance.imagePath || "No boot image configured"}</small>
               {instance.processId && <small>PID {instance.processId}</small>}
               <div className="instance-actions">
@@ -187,6 +189,13 @@ export default function App() {
                   onClick={() => updateInstance(instance, { adbEnabled: !instance.adbEnabled })}
                 >
                   {instance.adbEnabled ? "Disable ADB" : "Enable ADB"}
+                </button>
+                <button
+                  className="ghost compact"
+                  disabled={busyId === instance.id || instance.status === "running"}
+                  onClick={() => updateInstance(instance, { headless: !instance.headless })}
+                >
+                  {instance.headless ? "Use Window" : "Use Headless"}
                 </button>
                 {instance.status === "running" ? (
                   <button className="danger" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "stop_instance")}>Stop</button>
@@ -302,6 +311,10 @@ export default function App() {
               <label className="checkbox-line">
                 <input type="checkbox" checked={request.adbEnabled} onChange={e => setRequest({...request, adbEnabled:e.target.checked})} />
                 Enable localhost ADB for this instance
+              </label>
+              <label className="checkbox-line">
+                <input type="checkbox" checked={request.headless} onChange={e => setRequest({...request, headless:e.target.checked})} />
+                Start without a QEMU display window
               </label>
               <label>Privilege mode
                 <select value={request.rootMode} onChange={e => setRequest({...request, rootMode:e.target.value as CreateInstanceRequest["rootMode"]})}>
