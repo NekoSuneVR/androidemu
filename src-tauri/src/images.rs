@@ -321,8 +321,7 @@ pub fn boot_component_args(data_dir:&Path,image_path:&str)->Result<Vec<String>,S
     let kernel=image.manifest.boot_kernel.as_ref().ok_or("GSI bundle kernel missing from manifest")?;
     let initrd=image.manifest.boot_initrd.as_ref().ok_or("GSI bundle initrd missing from manifest")?;
     let mut args=vec!["-kernel".into(),base.join(kernel).to_string_lossy().to_string(),"-initrd".into(),base.join(initrd).to_string_lossy().to_string(),
-        "-append".into(),"console=ttyS0 androidboot.hardware=goldfish androidboot.selinux=permissive".into(),
-        "-drive".into(),format!("file={},if=virtio,format=raw,readonly=on",image.disk_path)];
+        "-append".into(),"console=ttyS0 androidboot.hardware=goldfish androidboot.selinux=permissive".into()];
     if let Some(vendor)=image.manifest.vendor_disk.as_ref(){args.extend(["-drive".into(),format!("file={},if=virtio,format=raw,readonly=on",base.join(vendor).to_string_lossy())]);}
     Ok(args)
 }
