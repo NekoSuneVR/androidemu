@@ -15,6 +15,7 @@ import FirstRunWizard from "./components/FirstRunWizard";
 import KeymapManager from "./components/KeymapManager";
 import ControllerPanel from "./components/ControllerPanel";
 import SensorPanel from "./components/SensorPanel";
+import PerformanceOverlay from "./components/PerformanceOverlay";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -274,7 +275,7 @@ export default function App() {
   );
 
   return (
-    <div className="app-shell">
+    <><PerformanceOverlay/><div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">N</div>
@@ -413,6 +414,6 @@ export default function App() {
           </form>
         </div>
       )}
-    </div>
+    </div></>
   );
 }
