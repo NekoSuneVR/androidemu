@@ -8,6 +8,7 @@ import NekoAI from "./components/NekoAI";
 import SnapshotManager from "./components/SnapshotManager";
 import MediaTools from "./components/MediaTools";
 import SettingsPage from "./components/SettingsPage";
+import SystemReadinessPanel from "./components/SystemReadinessPanel";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -285,6 +286,8 @@ export default function App() {
                 <small className="runtime-detail">{qemuStatus}</small>
               </div>
             </section>
+
+            <SystemReadinessPanel />
 
             <section className="stats">
               <article><span>Instances</span><strong>{instances.length}</strong><small>Persistent Android environments</small></article>
