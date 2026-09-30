@@ -13,6 +13,8 @@ pub struct FfmpegInfo {
     pub executable: Option<String>,
     pub version: Option<String>,
     pub hwaccels: Vec<String>,
+    pub hardware_encoders: Vec<String>,
+    pub hardware_decoders: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -39,6 +41,8 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
             executable: None,
             version: None,
             hwaccels: Vec::new(),
+            hardware_encoders: Vec::new(),
+            hardware_decoders: Vec::new(),
         };
     };
 
@@ -67,11 +71,16 @@ pub fn detect_ffmpeg() -> FfmpegInfo {
         })
         .unwrap_or_default();
 
+    let hardware_encoders = detect_codec_names(&path, "-encoders", &["nvenc", "_qsv", "_amf", "vaapi", "videotoolbox"]);
+    let hardware_decoders = detect_codec_names(&path, "-decoders", &["cuvid", "_qsv", "vaapi", "videotoolbox", "v4l2m2m"]);
+
     FfmpegInfo {
         found: true,
         executable: Some(path.to_string_lossy().to_string()),
         version,
         hwaccels,
+        hardware_encoders,
+        hardware_decoders,
     }
 }
 
@@ -84,6 +93,7 @@ pub fn run_media_job(
     width: Option<u32>,
     height: Option<u32>,
     fps: Option<u32>,
+    hardware_decode: bool,
 ) -> Result<MediaResult, String> {
     let input_path = Path::new(&input);
     if !input_path.is_file() {
@@ -114,9 +124,13 @@ pub fn run_media_job(
     let mut args = vec![
         "-hide_banner".to_string(),
         "-y".to_string(),
-        "-i".to_string(),
-        input,
     ];
+
+    if hardware_decode {
+        args.extend(["-hwaccel".into(), "auto".into()]);
+    }
+
+    args.extend(["-i".into(), input]);
 
     match operation.as_str() {
         "remux" => {
@@ -168,6 +182,26 @@ pub fn run_media_job(
         stderr: String::from_utf8_lossy(&result.stderr).trim().to_string(),
         output_path: output,
     })
+}
+
+fn detect_codec_names(path: &Path, switch: &str, needles: &[&str]) -> Vec<String> {
+    Command::new(path)
+        .args(["-hide_banner", switch])
+        .output()
+        .ok()
+        .map(|output| {
+            String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .map(str::trim)
+                .filter_map(|line| {
+                    if !needles.iter().any(|needle| line.contains(needle)) {
+                        return None;
+                    }
+                    line.split_whitespace().nth(1).map(str::to_string)
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
 }
 
 fn validate_codec(codec: &str) -> Result<(), String> {
