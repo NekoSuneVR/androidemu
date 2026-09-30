@@ -72,7 +72,7 @@ pub fn chat(data_dir: &Path, prompt: String) -> Result<AiChatResult, String> {
         "messages": [
             {
                 "role": "system",
-                "content": "You are NekoAI inside NekoDroid. Respond concisely and do not claim to have controlled Android unless a separate validated control action was executed."
+                "content": format!("You are NekoAI inside NekoDroid. Respond concisely and do not claim to have controlled Android unless a separate validated control action was executed. Current helper mode: {}. Inventory mode focuses on inventory information, quest mode on objectives, ui mode on interface assistance, and repetitive-task mode on clearly user-authorized repeated UI tasks.", settings.helper_mode)
             },
             {
                 "role": "user",
@@ -206,6 +206,10 @@ pub fn execute_action(
     if !settings.enabled {
         return Err("NekoAI is disabled".into());
     }
+    if settings.control_mode == "manual" {
+        return Err("AI control mode is manual; Android control actions are disabled".into());
+    }
+    enforce_package_permission(port, &settings)?;
     enforce_action_rate(settings.max_actions_per_minute)?;
 
     let result = match action {
@@ -257,6 +261,26 @@ fn append_control_log(data_dir: &Path, port: u16, success: bool) -> Result<(), S
 }
 
 
+fn enforce_package_permission(port: u16, settings: &AiSettings) -> Result<(), String> {
+    if !settings.enforce_package_allowlist {
+        return Ok(());
+    }
+    if settings.allowed_packages.is_empty() {
+        return Err("Per-game AI permissions are enabled but the allowlist is empty".into());
+    }
+    let result = adb::shell(port, "dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp' | head -n 1".into())?;
+    let foreground = result.stdout
+        .split_whitespace()
+        .find_map(|token| token.split_once('/').map(|(pkg, _)| pkg.trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '.' && c != '_').to_string()))
+        .filter(|pkg| !pkg.is_empty())
+        .ok_or_else(|| "Unable to determine the foreground Android package".to_string())?;
+    if settings.allowed_packages.iter().any(|pkg| pkg == &foreground) {
+        Ok(())
+    } else {
+        Err(format!("AI control is not permitted for foreground package {foreground}"))
+    }
+}
+
 pub fn execute_actions(
     data_dir: &Path,
     port: u16,
@@ -267,6 +291,13 @@ pub fn execute_actions(
     }
     if actions.len() > 100 {
         return Err("AI action queue is limited to 100 actions".into());
+    }
+    let settings = settings::load(data_dir)?;
+    if settings.control_mode == "manual" {
+        return Err("AI control mode is manual; action queues are disabled".into());
+    }
+    if settings.control_mode == "assistant" && actions.len() > 5 {
+        return Err("Assistant mode limits a queue to 5 actions; use full-automation for longer user-authorized queues".into());
     }
 
     CANCEL_ACTIONS.store(false, Ordering::SeqCst);
