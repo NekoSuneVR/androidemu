@@ -176,6 +176,36 @@ pub fn logcat(port: u16, lines: u32) -> Result<AdbResult, String> {
     ])
 }
 
+pub fn packages(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &["shell".into(), "pm".into(), "list".into(), "packages".into(), "-f".into()])
+}
+
+pub fn processes(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &["shell".into(), "ps".into(), "-A".into()])
+}
+
+pub fn properties(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &["shell".into(), "getprop".into()])
+}
+
+pub fn build_properties(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(),
+        "sh".into(),
+        "-c".into(),
+        "getprop | grep -E 'ro\\.(build|product|system|vendor|bootimage|hardware|soc|cpu)'".into(),
+    ])
+}
+
+pub fn storage_info(port: u16) -> Result<AdbResult, String> {
+    run_for_device(port, &[
+        "shell".into(),
+        "sh".into(),
+        "-c".into(),
+        "df -h /data /sdcard /storage/emulated/0 2>/dev/null; echo; du -sh /sdcard 2>/dev/null || true".into(),
+    ])
+}
+
 fn validate_socket_spec(value: &str, label: &str) -> Result<(), String> {
     let value = value.trim();
     if value.is_empty() {
