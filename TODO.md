@@ -1,6 +1,6 @@
 # NekoDroid TODO
 
-> Progress: **134/643 tasks complete (20.8%)**
+> Progress: **136/643 tasks complete (21.2%)**
 >
 > This checklist is updated conservatively: an item is checked only when the current repository contains an implementation/foundation for it.
 
@@ -44,8 +44,8 @@ This file tracks the planned implementation of NekoDroid.
 - [x] Create AI page
 - [ ] Create Settings page
 - [ ] Add update system
-- [ ] Add logs viewer
-- [ ] Add crash reports stored locally
+- [x] Add logs viewer
+- [x] Add crash reports stored locally
 - [ ] Add portable mode
 
 ---
