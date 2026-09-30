@@ -1,4 +1,4 @@
-use crate::{adb, models::AdbResult};
+use crate::{adb, display, models::AdbResult};
 use serde::{Deserialize, Serialize};
 use std::{fs, path::{Path, PathBuf}};
 
@@ -100,10 +100,10 @@ pub fn export_file(data_dir:&Path,id:String,destination:String)->Result<String,S
 
 pub fn execute(port:u16,binding:KeyBinding)->Result<AdbResult,String>{
     match binding.action.as_str(){
-        "tap"|"mouse-left"=>adb::input_tap(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?),
-        "mouse-right"=>adb::input_hold(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?,binding.duration_ms.unwrap_or(500)),
-        "hold"=>adb::input_hold(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?,binding.duration_ms.unwrap_or(500)),
-        "swipe"=>adb::input_swipe(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?,binding.x2.ok_or("x2 required")?,binding.y2.ok_or("y2 required")?,binding.duration_ms.unwrap_or(300)),
+        "tap"|"mouse-left"=>{let (x,y)=display::transform(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?)?;adb::input_tap(port,x,y)},
+        "mouse-right"=>{let (x,y)=display::transform(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?)?;adb::input_hold(port,x,y,binding.duration_ms.unwrap_or(500))},
+        "hold"=>{let (x,y)=display::transform(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?)?;adb::input_hold(port,x,y,binding.duration_ms.unwrap_or(500))},
+        "swipe"=>{let (x1,y1,x2,y2)=display::transform_swipe(port,binding.x.ok_or("x required")?,binding.y.ok_or("y required")?,binding.x2.ok_or("x2 required")?,binding.y2.ok_or("y2 required")?)?;adb::input_swipe(port,x1,y1,x2,y2,binding.duration_ms.unwrap_or(300))},
         "key"=>adb::input_keyevent(port,binding.keycode.ok_or("keycode required")?),
         "text"=>adb::input_text(port,binding.text.ok_or("text required")?),
         "scroll-up"=>adb::input_swipe(port,binding.x.unwrap_or(540),binding.y.unwrap_or(1500),binding.x2.unwrap_or(540),binding.y2.unwrap_or(700),binding.duration_ms.unwrap_or(250)),
