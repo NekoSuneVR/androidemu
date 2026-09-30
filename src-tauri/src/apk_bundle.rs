@@ -33,7 +33,8 @@ pub fn inspect(path:String)->Result<ApkPackageInfo,String>{
             }
         }
     }
-    Ok(ApkPackageInfo{path,package_name,version_name,version_code,abis:abi.abis,size_bytes:fs::metadata(p).map_err(|e|e.to_string())?.len()})
+    let size_bytes=fs::metadata(p).map_err(|e|e.to_string())?.len();
+    Ok(ApkPackageInfo{path,package_name,version_name,version_code,abis:abi.abis,size_bytes})
 }
 
 pub fn install_bundle(port:u16,bundle_path:String)->Result<Vec<AdbResult>,String>{
