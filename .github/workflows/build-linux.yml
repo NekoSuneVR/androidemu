@@ -1,0 +1,108 @@
+name: Build Linux App
+
+concurrency:
+  group: build-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example 0.1.0
+        required: true
+        default: 0.1.0
+      prerelease:
+        description: Mark GitHub Release as prerelease
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build Linux App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Set app version
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("fs");
+            const path = "src-tauri/tauri.conf.json";
+            const config = JSON.parse(fs.readFileSync(path, "utf8"));
+            config.version = "${{ inputs.version }}";
+            fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
+          '
+
+      - name: Build NekoDroid Linux bundles
+        run: npm run tauri build -- --bundles deb,appimage
+
+      - name: Collect Linux release files
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          find src-tauri/target/release/bundle -type f \( -name '*.deb' -o -name '*.AppImage' \) -print0 |
+            while IFS= read -r -d '' file; do
+              name="NekoDroid-Linux-${{ inputs.version }}-$(basename "$file")"
+              cp "$file" "release-assets/$name"
+            done
+
+          if ! find release-assets -type f -mindepth 1 -print -quit | grep -q .; then
+            echo "No Linux bundle files were produced." >&2
+            exit 1
+          fi
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NekoDroid-Linux-${{ inputs.version }}
+          path: release-assets/*
+          if-no-files-found: error
+
+      - name: Create or update GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${{ inputs.version }}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            args=(
+              release create "$tag"
+              --title "NekoDroid v${{ inputs.version }}"
+              --notes "Manual NekoDroid release build."
+            )
+            if [ "${{ inputs.prerelease }}" = "true" ]; then
+              args+=(--prerelease)
+            fi
+            gh "${args[@]}"
+          fi
+
+          for file in release-assets/*; do
+            gh release upload "$tag" "$file" --clobber
+          done
