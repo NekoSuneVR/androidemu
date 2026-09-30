@@ -17,6 +17,7 @@ mod performance;
 mod transfer;
 mod apk_bundle;
 mod display;
+mod graphics;
 
 use images::{AndroidImageManifest, InstalledImage};
 use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
@@ -35,6 +36,7 @@ use performance::PerformanceSettings;
 use transfer::TransferJob;
 use apk_bundle::ApkPackageInfo;
 use display::DisplayState;
+use graphics::{GraphicsSettings,GraphicsCapabilities};
 use tauri::{Manager, State};
 use std::{env, path::PathBuf};
 use serde::Serialize;
@@ -692,6 +694,16 @@ fn stream_media(input:String,url:String,video_codec:String,rotate:Option<String>
     media::stream_media(input,url,video_codec,rotate)
 }
 
+
+#[tauri::command]
+fn get_graphics_settings(state:State<'_,RuntimeState>)->Result<GraphicsSettings,String>{graphics::load(&state.data_dir)}
+#[tauri::command]
+fn save_graphics_settings(state:State<'_,RuntimeState>,settings:GraphicsSettings)->Result<GraphicsSettings,String>{graphics::save(&state.data_dir,settings)}
+#[tauri::command]
+fn get_graphics_capabilities()->GraphicsCapabilities{graphics::detect()}
+#[tauri::command]
+fn run_graphics_benchmark()->Result<Vec<String>,String>{graphics::benchmark()}
+
 #[tauri::command]
 fn get_performance_settings(state: State<'_, RuntimeState>) -> Result<PerformanceSettings, String> {
     performance::load(&state.data_dir)
@@ -1067,6 +1079,10 @@ pub fn run() {
             run_media_job,
             run_media_batch,
             stream_media,
+            get_graphics_settings,
+            save_graphics_settings,
+            get_graphics_capabilities,
+            run_graphics_benchmark,
             get_performance_settings,
             save_performance_settings,
             get_app_settings,
