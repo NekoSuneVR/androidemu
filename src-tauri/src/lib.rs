@@ -34,7 +34,7 @@ mod sdl_gamepad;
 mod prerequisites;
 
 use images::{AndroidImageManifest, DefaultImageSettings, InstalledImage};
-use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, UpdateInstanceRequest};
+use models::{AdbInfo, AdbResult, AndroidInstance, CreateInstanceRequest, HostCapabilities, RuntimeActionResult, RuntimeLogs, StorageLocations, UpdateInstanceRequest};
 use adb::{AndroidFileEntry, ApkCompatibility};
 use profiles::DeviceProfile;
 use runtime::RuntimeState;
@@ -1066,6 +1066,19 @@ fn ai_emergency_stop(state: State<'_, RuntimeState>) -> Result<AiSettings, Strin
 }
 
 #[tauri::command]
+fn get_storage_locations(state: State<'_, RuntimeState>) -> StorageLocations {
+    StorageLocations {
+        data_dir: state.data_dir.to_string_lossy().to_string(),
+        images_dir: images::images_dir(&state.data_dir).to_string_lossy().to_string(),
+        instances_dir: storage::instances_dir(&state.data_dir).to_string_lossy().to_string(),
+        custom_data_dir: env::var_os("NEKODROID_DATA_DIR").map(|v| !v.is_empty()).unwrap_or(false),
+        portable: env::var("NEKODROID_PORTABLE")
+            .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
+            .unwrap_or(false),
+    }
+}
+
+#[tauri::command]
 fn get_host_capabilities() -> HostCapabilities {
     runtime::detect_host()
 }
@@ -1148,6 +1161,14 @@ fn get_instance_status(
 }
 
 fn resolve_data_dir(app: &tauri::App) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    if let Some(custom) = env::var_os("NEKODROID_DATA_DIR") {
+        let custom = PathBuf::from(custom);
+        if !custom.as_os_str().is_empty() {
+            std::fs::create_dir_all(&custom)?;
+            return Ok(custom);
+        }
+    }
+
     let portable = env::var("NEKODROID_PORTABLE")
         .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
         .unwrap_or(false);
@@ -1390,6 +1411,7 @@ pub fn run() {
             get_ai_settings,
             save_ai_settings,
             ai_emergency_stop,
+            get_storage_locations,
             get_host_capabilities,
             set_root_on_next_boot,
             start_instance,
