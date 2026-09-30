@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application android:label="NekoDroid Guest Bridge" android:allowBackup="false">
+    <service
+      android:name=".NekoBridgeAccessibilityService"
+      android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.accessibilityservice.AccessibilityService"/>
+      </intent-filter>
+      <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service"/>
+    </service>
+  </application>
+</manifest>
