@@ -258,6 +258,43 @@ pub fn push(port: u16, source: String, destination: String) -> Result<AdbResult,
     run_for_device(port, &["push".into(), source, destination])
 }
 
+pub fn push_multiple(port: u16, sources: Vec<String>, destination: String) -> Result<AdbResult, String> {
+    if sources.is_empty() {
+        return Err("Provide at least one host source path".into());
+    }
+    if sources.len() > 100 {
+        return Err("Multiple-file transfer is limited to 100 sources".into());
+    }
+    if destination.trim().is_empty() {
+        return Err("Android destination cannot be empty".into());
+    }
+
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let mut success = true;
+    let mut exit_code = Some(0);
+
+    for source in sources {
+        let result = push(port, source.clone(), destination.clone())?;
+        stdout.push(format!("{source}: {}", result.stdout));
+        if !result.stderr.is_empty() {
+            stderr.push(format!("{source}: {}", result.stderr));
+        }
+        if !result.success {
+            success = false;
+            exit_code = result.exit_code;
+            break;
+        }
+    }
+
+    Ok(AdbResult {
+        success,
+        exit_code,
+        stdout: stdout.join("\n"),
+        stderr: stderr.join("\n"),
+    })
+}
+
 pub fn pull(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
     if source.trim().is_empty() {
         return Err("Android source cannot be empty".into());
