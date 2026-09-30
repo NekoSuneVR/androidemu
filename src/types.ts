@@ -83,6 +83,7 @@ export interface AndroidImageManifest {
   diskFormat: "qcow2" | "raw";
   recommended: boolean;
   notes?: string | null;
+  sha256?: string | null;
 }
 
 export interface InstalledImage {
