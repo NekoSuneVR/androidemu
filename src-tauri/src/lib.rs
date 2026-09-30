@@ -36,7 +36,7 @@ use ai::{AiAction, AiChatResult};
 use skills::{AiGameState, SkillManifest};
 use keymaps::{KeyBinding, KeymapProfile};
 use game_settings::GameSettings;
-use performance::PerformanceSettings;
+use performance::{PerformanceSettings,PerformanceTelemetry};
 use transfer::TransferJob;
 use apk_bundle::ApkPackageInfo;
 use display::DisplayState;
@@ -749,6 +749,9 @@ fn get_graphics_capabilities()->GraphicsCapabilities{graphics::detect()}
 fn run_graphics_benchmark()->Result<Vec<String>,String>{graphics::benchmark()}
 
 #[tauri::command]
+fn get_performance_telemetry()->PerformanceTelemetry{performance::telemetry()}
+
+#[tauri::command]
 fn get_performance_settings(state: State<'_, RuntimeState>) -> Result<PerformanceSettings, String> {
     performance::load(&state.data_dir)
 }
@@ -1165,6 +1168,7 @@ pub fn run() {
             save_graphics_settings,
             get_graphics_capabilities,
             run_graphics_benchmark,
+            get_performance_telemetry,
             get_performance_settings,
             save_performance_settings,
             get_app_settings,
