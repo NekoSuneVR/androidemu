@@ -2,6 +2,7 @@ use crate::{
     models::{AndroidInstance, HostCapabilities, QemuInfo, RuntimeActionResult, RuntimeLogs},
     storage,
     performance,
+    graphics,
     adb,
 };
 use std::{
@@ -198,7 +199,14 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     let cpu_model = if accelerator == "kvm" { "host" } else { "max" };
 
     let performance = performance::load(&state.data_dir).unwrap_or_default();
+    let graphics = graphics::load(&state.data_dir).unwrap_or_default();
     let mut qemu_args = build_qemu_args(&instance, &runtime_disk, "qcow2", accelerator, cpu_model);
+    let (video_device, use_gl)=graphics::qemu_video_device(&graphics);
+    if let Some(index)=qemu_args.iter().position(|arg|arg=="virtio-vga"){qemu_args[index]=video_device.into();}
+    if use_gl && !instance.headless {
+        qemu_args.push("-display".into());
+        qemu_args.push("gtk,gl=on".into());
+    }
     if let Some(index) = qemu_args.iter().position(|arg| arg == "-drive").and_then(|i| qemu_args.get(i + 1).map(|_| i + 1)) {
         qemu_args[index] = format!("file={runtime_disk},if=virtio,format=qcow2,{}", performance::qemu_drive_options(&performance));
     }
@@ -221,6 +229,7 @@ pub fn start_instance(state: &RuntimeState, id: &str) -> Result<RuntimeActionRes
     command
         .args(qemu_args)
         .envs(performance::launch_env(&performance))
+        .envs(graphics::launch_env(&graphics))
         .stdout(Stdio::from(stdout))
         .stderr(Stdio::from(stderr));
 
