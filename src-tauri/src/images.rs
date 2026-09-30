@@ -410,7 +410,7 @@ fn install_cached_image_package(data_dir: &Path, package: &Path, source_url: &st
     let result = (|| -> Result<InstalledImage, String> {
         for index in 0..archive.len() {
             let mut entry = archive.by_index(index).map_err(|e| e.to_string())?;
-            let Some(relative) = entry.enclosed_name().map(Path::to_path_buf) else { continue; };
+            let Some(relative) = entry.enclosed_name() else { continue; };
             if relative == Path::new("manifest.json") { continue; }
             let output = temp.join(relative);
             if entry.is_dir() {
