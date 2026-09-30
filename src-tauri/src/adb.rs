@@ -83,6 +83,51 @@ pub fn install(port: u16, apk_path: String) -> Result<AdbResult, String> {
     run_for_device(port, &["install".into(), "-r".into(), apk_path])
 }
 
+pub fn install_batch(port: u16, apk_paths: Vec<String>) -> Result<AdbResult, String> {
+    if apk_paths.is_empty() {
+        return Err("Provide at least one APK path".into());
+    }
+
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let mut success = true;
+    let mut exit_code = Some(0);
+
+    for apk_path in apk_paths {
+        let result = install(port, apk_path.clone())?;
+        stdout.push(format!("{apk_path}: {}", result.stdout));
+        if !result.stderr.is_empty() {
+            stderr.push(format!("{apk_path}: {}", result.stderr));
+        }
+        if !result.success {
+            success = false;
+            exit_code = result.exit_code;
+        }
+    }
+
+    Ok(AdbResult {
+        success,
+        exit_code,
+        stdout: stdout.join("\n"),
+        stderr: stderr.join("\n"),
+    })
+}
+
+pub fn install_multiple(port: u16, apk_paths: Vec<String>) -> Result<AdbResult, String> {
+    if apk_paths.len() < 2 {
+        return Err("Split APK installation requires at least two APK files".into());
+    }
+
+    let mut args = vec!["install-multiple".into(), "-r".into()];
+    for apk_path in apk_paths {
+        if !Path::new(&apk_path).is_file() {
+            return Err(format!("APK does not exist: {apk_path}"));
+        }
+        args.push(apk_path);
+    }
+    run_for_device(port, &args)
+}
+
 pub fn uninstall(port: u16, package_name: String) -> Result<AdbResult, String> {
     let package_name = package_name.trim();
     if package_name.is_empty() {
