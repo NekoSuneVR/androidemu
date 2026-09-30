@@ -360,7 +360,7 @@ export default function App() {
               </label>
             </div>
             <div className="warning-box">
-              NekoDroid does not falsify Play Integrity or hardware-backed attestation. Root and developer modes may change app compatibility.
+              NekoDroid does not falsify Play Integrity or hardware-backed attestation. Root/developer modes can break app compatibility and may cause Play Integrity checks to fail. Only use root with images that explicitly support it.
             </div>
             <div className="modal-actions">
               <button type="button" className="ghost" onClick={() => setShowCreate(false)}>Cancel</button>
