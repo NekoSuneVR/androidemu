@@ -425,3 +425,20 @@ export interface AiCaptureResult {
   sha256:string;
   capturedAt:number;
 }
+
+export interface FfmpegSettings {
+  customFfmpegPath:string;
+  customFfprobePath:string;
+  preferredHardwareEncoder:string;
+  recordingQuality:"low"|"medium"|"high"|"lossless";
+  obsFriendly:boolean;
+}
+export interface MediaJobStatus {
+  id:string;
+  input:string;
+  output:string;
+  status:"queued"|"running"|"completed"|"failed"|"cancelled";
+  progress:number;
+  message:string;
+  pid?:number|null;
+}
