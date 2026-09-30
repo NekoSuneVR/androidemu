@@ -254,6 +254,11 @@ fn adb_screen_record(
     adb::screen_record(port, destination, seconds)
 }
 
+#[tauri::command]
+fn adb_screen_record_advanced(port:u16,destination:String,seconds:u32,codec:String,bitrate_mbps:u32,fps:Option<u32>,audio:bool)->Result<AdbResult,String>{
+    adb::screen_record_advanced(port,destination,seconds,codec,bitrate_mbps,fps,audio)
+}
+
 
 #[tauri::command]
 fn start_transfer(port:u16,direction:String,source:String,destination:String)->Result<TransferJob,String>{transfer::start(port,direction,source,destination)}
@@ -640,6 +645,11 @@ fn run_media_job(
 }
 
 #[tauri::command]
+fn stream_media(input:String,url:String,video_codec:String,rotate:Option<String>)->Result<MediaResult,String>{
+    media::stream_media(input,url,video_codec,rotate)
+}
+
+#[tauri::command]
 fn get_performance_settings(state: State<'_, RuntimeState>) -> Result<PerformanceSettings, String> {
     performance::load(&state.data_dir)
 }
@@ -939,6 +949,7 @@ pub fn run() {
             cancel_transfer,
             retry_transfer,
             sync_shared_folder,
+            adb_screen_record_advanced,
             adb_push,
             adb_push_multiple,
             adb_pull,
@@ -1001,6 +1012,7 @@ pub fn run() {
             get_ffmpeg_info,
             run_media_job,
             run_media_batch,
+            stream_media,
             get_performance_settings,
             save_performance_settings,
             get_app_settings,
