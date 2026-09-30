@@ -327,3 +327,20 @@ export interface GameSettings {
   crashDiagnostics: boolean;
   notes: string;
 }
+
+export interface PerformanceSettings {
+  cpuAffinity: string;
+  hugePages: boolean;
+  ioMode: "native"|"threads";
+  ramCompression: boolean;
+  diskCache: "none"|"writeback"|"writethrough"|"directsync";
+  shaderCache: boolean;
+  audioLatencyMs: number;
+  inputLatencyMode: "balanced"|"low-latency";
+  framePacing: "balanced"|"smooth"|"low-latency";
+  startupOptimization: boolean;
+  minimizeBackgroundServices: boolean;
+  cpuOverlay: boolean;
+  gpuOverlay: boolean;
+  ramOverlay: boolean;
+}
