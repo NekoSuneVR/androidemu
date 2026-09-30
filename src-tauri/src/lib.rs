@@ -166,6 +166,11 @@ fn adb_push(port: u16, source: String, destination: String) -> Result<AdbResult,
 }
 
 #[tauri::command]
+fn adb_push_multiple(port: u16, sources: Vec<String>, destination: String) -> Result<AdbResult, String> {
+    adb::push_multiple(port, sources, destination)
+}
+
+#[tauri::command]
 fn adb_pull(port: u16, source: String, destination: String) -> Result<AdbResult, String> {
     adb::pull(port, source, destination)
 }
@@ -673,6 +678,7 @@ pub fn run() {
             adb_screenshot,
             adb_screen_record,
             adb_push,
+            adb_push_multiple,
             adb_pull,
             adb_forward,
             adb_reverse,
