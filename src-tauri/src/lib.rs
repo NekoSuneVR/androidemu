@@ -188,6 +188,16 @@ fn adb_packages(port: u16) -> Result<AdbResult, String> {
 }
 
 #[tauri::command]
+fn adb_user_packages(port: u16) -> Result<Vec<String>, String> {
+    adb::user_packages(port)
+}
+
+#[tauri::command]
+fn adb_launch_package(port: u16, package_name: String) -> Result<AdbResult, String> {
+    adb::launch_package(port, package_name)
+}
+
+#[tauri::command]
 fn adb_processes(port: u16) -> Result<AdbResult, String> {
     adb::processes(port)
 }
@@ -544,6 +554,8 @@ pub fn run() {
             adb_reverse,
             adb_logcat,
             adb_packages,
+            adb_user_packages,
+            adb_launch_package,
             adb_processes,
             adb_properties,
             adb_build_properties,
