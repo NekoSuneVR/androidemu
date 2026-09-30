@@ -24,7 +24,8 @@ import type {
   HostCapabilities,
   InstalledImage,
   RuntimeActionResult,
-  AppSettings
+  AppSettings,
+  StorageLocations
 } from "./types";
 
 const nav = ["Home", "Game Library", "Instances", "Android Images", "Device Profiles", "File Manager", "Keymaps", "Remote Access", "Media Tools", "Developer Tools", "NekoAI", "Settings"];
@@ -54,27 +55,33 @@ export default function App() {
   const [request, setRequest] = useState<CreateInstanceRequest>(defaultRequest);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string>("");
+  const [storageLocations, setStorageLocations] = useState<StorageLocations | null>(null);
 
   const refresh = async () => {
-    const [instanceData, hostData, profileData, adbData, imageData, appSettings] = await Promise.all([
+    const [instanceData, hostData, profileData, adbData, imageData, appSettings, storageData] = await Promise.all([
       invoke<AndroidInstance[]>("list_instances"),
       invoke<HostCapabilities>("get_host_capabilities"),
       invoke<DeviceProfile[]>("list_device_profiles"),
       invoke<AdbInfo>("get_adb_info"),
       invoke<InstalledImage[]>("list_android_images"),
-      invoke<AppSettings>("get_app_settings")
+      invoke<AppSettings>("get_app_settings"),
+      invoke<StorageLocations>("get_storage_locations")
     ]);
     setInstances(instanceData);
     setHost(hostData);
     setProfiles(profileData);
     setAdbInfo(adbData);
     setImages(imageData);
+    setStorageLocations(storageData);
+    const managedImage = imageData.find(image => image.valid && image.manifest.recommended)
+      ?? imageData.find(image => image.valid);
     setRequest(current => ({
       ...current,
       androidVersion: appSettings.defaultAndroidVersion,
       profile: appSettings.defaultProfile,
       adbEnabled: appSettings.defaultAdbEnabled,
-      headless: appSettings.defaultHeadless
+      headless: appSettings.defaultHeadless,
+      imagePath: current.imagePath || managedImage?.diskPath || ""
     }));
     setBackendOnline(true);
   };
@@ -100,7 +107,9 @@ export default function App() {
       const created = await invoke<AndroidInstance>("create_instance", { request });
       setInstances(current => [...current, created]);
       setShowCreate(false);
-      setNotice(`${created.name} created. Add a bootable Android x86_64 QCOW2 or raw image before starting it.`);
+      setNotice(created.imagePath
+        ? `${created.name} created using the managed Android image.`
+        : `${created.name} created. Install an Android image in Android Images; NekoDroid stores managed images under ${storageLocations?.imagesDir ?? "the app data folder"}.`);
       setRequest({ ...defaultRequest, adbPort: defaultRequest.adbPort + instances.length + 1 });
     } catch (error) {
       setNotice(String(error));
@@ -397,13 +406,28 @@ export default function App() {
                   <option value="">Custom / none</option>
                   {images.filter(image => image.valid).map(image => (
                     <option key={image.manifest.id} value={image.diskPath}>
-                      {image.manifest.name} · Android {image.manifest.androidVersion}
+                      {image.manifest.name} · Android {image.manifest.androidVersion}{image.manifest.recommended ? " · Recommended" : ""}
                     </option>
                   ))}
                 </select>
               </label>
+              <div className="wide warning-box">
+                <strong>Managed Android data location</strong>
+                <div>{storageLocations?.imagesDir ?? "Detecting managed image folder…"}</div>
+                <small>
+                  {storageLocations?.customDataDir
+                    ? "Using custom NEKODROID_DATA_DIR."
+                    : storageLocations?.portable
+                      ? "Portable mode: Android data is stored beside NekoDroid."
+                      : "Default mode: Android images and instance data are stored in NekoDroid's app-data folder."}
+                </small>
+              </div>
               <label className="wide">Android boot disk path
-                <input placeholder="C:\\NekoDroid\\images\\android16.qcow2 or /opt/nekodroid/images/android16.img" value={request.imagePath ?? ""} onChange={e => setRequest({...request, imagePath:e.target.value})} />
+                <input
+                  placeholder={storageLocations ? `${storageLocations.imagesDir}\\<image-id>\\android.qcow2` : "Managed automatically, or choose a custom disk"}
+                  value={request.imagePath ?? ""}
+                  onChange={e => setRequest({...request, imagePath:e.target.value})}
+                />
               </label>
             </div>
             <div className="warning-box">
