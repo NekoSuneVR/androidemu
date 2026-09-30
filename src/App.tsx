@@ -5,6 +5,7 @@ import ImageManager from "./components/ImageManager";
 import RemoteAccess from "./components/RemoteAccess";
 import DeveloperTools from "./components/DeveloperTools";
 import NekoAI from "./components/NekoAI";
+import SnapshotManager from "./components/SnapshotManager";
 import type {
   AdbInfo,
   AndroidInstance,
@@ -268,7 +269,12 @@ export default function App() {
           </>
         )}
 
-        {active === "Instances" && instancesPanel}
+        {active === "Instances" && (
+          <>
+            {instancesPanel}
+            <SnapshotManager instances={instances} />
+          </>
+        )}
         {active === "Android Images" && <ImageManager images={images} onChanged={refresh} />}
         {active === "Device Profiles" && <DeviceProfiles profiles={profiles} onChanged={refresh} />}
         {active === "Remote Access" && <RemoteAccess instances={instances} profiles={profiles} />}
