@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { FfmpegInfo, MediaCodecCapabilityReport, MediaJobRequest, MediaResult } from "../types";
+import type { FfmpegInfo, FfmpegSettings, MediaCodecCapabilityReport, MediaJobRequest, MediaJobStatus, MediaResult } from "../types";
 
 export default function MediaTools() {
   const [info, setInfo] = useState<FfmpegInfo | null>(null);
@@ -22,15 +22,21 @@ export default function MediaTools() {
   const [streamUrl,setStreamUrl]=useState("");
   const [streamRotate,setStreamRotate]=useState<"none"|"left"|"right"|"flip">("none");
   const [codecReport, setCodecReport] = useState<MediaCodecCapabilityReport | null>(null);
+  const [ffmpegSettings,setFfmpegSettings]=useState<FfmpegSettings|null>(null);
+  const [managedJobs,setManagedJobs]=useState<MediaJobStatus[]>([]);
 
   useEffect(() => {
     invoke<FfmpegInfo>("get_ffmpeg_info")
       .then(setInfo)
       .catch(error => setResult(String(error)));
-    invoke<MediaCodecCapabilityReport>("get_media_codec_report")
-      .then(setCodecReport)
-      .catch(error => setResult(String(error)));
+    invoke<MediaCodecCapabilityReport>("get_media_codec_report").then(setCodecReport).catch(error => setResult(String(error)));
+    invoke<FfmpegSettings>("get_ffmpeg_settings").then(setFfmpegSettings).catch(error=>setResult(String(error)));
   }, []);
+
+  useEffect(()=>{
+    const refresh=()=>invoke<MediaJobStatus[]>("list_media_jobs").then(setManagedJobs).catch(()=>{});
+    refresh();const timer=window.setInterval(refresh,1000);return()=>window.clearInterval(timer);
+  },[]);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -204,6 +210,23 @@ export default function MediaTools() {
           <button className="primary" disabled={busy || !info?.found || !input || !output}>
             {busy ? "Processing..." : "Run FFmpeg Job"}
           </button>
+          <button type="button" className="ghost" disabled={!info?.found||!input||!output} onClick={async()=>{
+            try{
+              const request:MediaJobRequest={input,output,operation,videoCodec,audioCodec,width:useResize&&(operation==="video"||operation==="compress")?width:null,height:useResize&&(operation==="video"||operation==="compress")?height:null,fps:useFps&&(operation==="video"||operation==="compress")?fps:null,hardwareDecode};
+              const job=await invoke<MediaJobStatus>("start_media_job",{request});
+              setResult(`Started managed FFmpeg job ${job.id}`);
+            }catch(error){setResult(String(error));}
+          }}>Run with progress / cancel</button>
+
+          {ffmpegSettings && <div className="tool-group">
+            <h4>FFmpeg manager</h4>
+            <label>Custom FFmpeg path<input value={ffmpegSettings.customFfmpegPath} onChange={e=>setFfmpegSettings({...ffmpegSettings,customFfmpegPath:e.target.value})}/></label>
+            <label>Custom FFprobe path<input value={ffmpegSettings.customFfprobePath} onChange={e=>setFfmpegSettings({...ffmpegSettings,customFfprobePath:e.target.value})}/></label>
+            <label>Preferred hardware encoder<input list="managed-hwenc" value={ffmpegSettings.preferredHardwareEncoder} onChange={e=>setFfmpegSettings({...ffmpegSettings,preferredHardwareEncoder:e.target.value})}/><datalist id="managed-hwenc"><option value="auto"/>{info?.hardwareEncoders.map(v=><option key={v} value={v}/>)}</datalist></label>
+            <label>Recording quality<select value={ffmpegSettings.recordingQuality} onChange={e=>setFfmpegSettings({...ffmpegSettings,recordingQuality:e.target.value as FfmpegSettings["recordingQuality"]})}>{["low","medium","high","lossless"].map(v=><option key={v}>{v}</option>)}</select></label>
+            <label className="checkbox-line"><input type="checkbox" checked={ffmpegSettings.obsFriendly} onChange={e=>setFfmpegSettings({...ffmpegSettings,obsFriendly:e.target.checked})}/>OBS-friendly yuv420p + faststart output</label>
+            <button type="button" className="ghost compact" onClick={async()=>{try{setFfmpegSettings(await invoke<FfmpegSettings>("save_ffmpeg_settings",{settings:ffmpegSettings}));setResult("FFmpeg manager settings saved.");}catch(error){setResult(String(error));}}}>Save FFmpeg settings</button>
+          </div>}
 
           <div className="tool-group">
             <h4>RTMP / SRT streaming</h4>
@@ -265,6 +288,8 @@ export default function MediaTools() {
               ...codecReport.capabilities.map(c => `${c.codec}: decode=${c.decode} encode=${c.encode} decoder=${c.preferredDecoder ?? "-"} encoder=${c.preferredEncoder ?? "-"} softwareFallback=${c.softwareFallback}`)
             ].join("\n")}</pre>
           </>}
+          <div className="terminal-title">Managed jobs</div>
+          {managedJobs.map(job=><div key={job.id} className="instance-card"><strong>{job.status} · {job.progress.toFixed(1)}%</strong><small>{job.input} → {job.output}</small><small>{job.message}</small>{job.status==="running"&&<button className="danger compact" onClick={async()=>{await invoke("cancel_media_job",{id:job.id});setManagedJobs(await invoke<MediaJobStatus[]>("list_media_jobs"));}}>Cancel</button>}</div>)}
           <div className="terminal-title">Job output</div>
           <pre>{result}</pre>
         </div>
