@@ -301,6 +301,35 @@ fn read_log_tail(path: &Path) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&bytes[start..]).to_string())
 }
 
+pub fn factory_reset(state: &RuntimeState, id: &str) -> Result<RuntimeActionResult, String> {
+    refresh_processes(state)?;
+    if state.processes.lock().map_err(|_| "Runtime process lock poisoned")?.contains_key(id) {
+        return Err("Stop the instance before factory reset".into());
+    }
+
+    let instance = storage::load_instance(&state.data_dir, id)?;
+    let dir = storage::instance_dir(&state.data_dir, id);
+    let runtime_disk = dir.join("disks").join("runtime.qcow2");
+    let snapshots_dir = dir.join("snapshots");
+
+    if runtime_disk.exists() {
+        fs::remove_file(&runtime_disk)
+            .map_err(|e| format!("Unable to remove runtime disk: {e}"))?;
+    }
+    if snapshots_dir.exists() {
+        fs::remove_dir_all(&snapshots_dir)
+            .map_err(|e| format!("Unable to clear snapshots: {e}"))?;
+    }
+    fs::create_dir_all(&snapshots_dir).map_err(|e| e.to_string())?;
+
+    Ok(RuntimeActionResult {
+        instance_id: id.to_string(),
+        status: instance.status,
+        message: "Factory reset complete. A fresh writable disk will be created from the base image on next start.".into(),
+        process_id: None,
+    })
+}
+
 pub fn runtime_status(state: &RuntimeState, id: &str) -> Result<AndroidInstance, String> {
     refresh_processes(state)?;
     let mut instance = storage::load_instance(&state.data_dir, id)?;
