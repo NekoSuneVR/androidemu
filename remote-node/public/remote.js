@@ -14,6 +14,11 @@ let controlChannel;
 let permissions = {};
 let inviteCode = "";
 let iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+let deviceToken = localStorage.getItem("nekodroid-device-token");
+if (!deviceToken) {
+  deviceToken = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+  localStorage.setItem("nekodroid-device-token", deviceToken);
+}
 
 const params = new URLSearchParams(location.search);
 if (params.get("invite")) inviteInput.value = params.get("invite");
@@ -44,6 +49,7 @@ joinForm.addEventListener("submit", async event => {
     ws.send(JSON.stringify({
       type: "viewer-auth",
       inviteCode,
+      deviceToken,
       userAgent: navigator.userAgent
     }));
   });
@@ -83,6 +89,11 @@ async function onMessage(message) {
 
   if (message.type === "ice-candidate" && message.candidate) {
     await pc?.addIceCandidate(message.candidate);
+    return;
+  }
+
+  if (message.type === "device-trusted") {
+    permissionText.textContent = (permissions.control ? "View + control" : "View only") + " · trusted device";
     return;
   }
 
