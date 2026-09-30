@@ -407,3 +407,14 @@ export interface GraphicsCapabilities {
   software:boolean;
   astcTools:string[];
 }
+
+export interface PluginManifest {
+  schemaVersion:number;
+  id:string;
+  name:string;
+  version:string;
+  pluginType:"renderer"|"ai"|"device-profile"|"game-profile"|"ai-skill";
+  entry:string;
+  capabilities:string[];
+  sourceUrl?:string|null;
+}
