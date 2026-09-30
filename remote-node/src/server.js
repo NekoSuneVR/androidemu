@@ -1,6 +1,7 @@
 import http from "node:http";
 import crypto from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, normalize } from "node:path";
 import { WebSocketServer, WebSocket } from "ws";
@@ -18,12 +19,25 @@ const TURN_USERNAME = process.env.TURN_USERNAME || "";
 const TURN_PASSWORD = process.env.TURN_PASSWORD || "";
 const ALLOW_ORIGIN = process.env.ALLOW_ORIGIN || "*";
 const MAX_VIEWERS_PER_SESSION = Math.max(1, Math.min(Number(process.env.MAX_VIEWERS_PER_SESSION || 4), 32));
+const TRUST_STORE = process.env.TRUST_STORE || join(__dirname, "..", "data", "trusted-devices.json");
 
 if (!NODE_SECRET) {
   console.warn("WARNING: NODE_SECRET is not set. Session creation is disabled until it is configured.");
 }
 
 const sessions = new Map();
+let trustedDevices = new Set();
+try {
+  trustedDevices = new Set(JSON.parse(readFileSync(TRUST_STORE, "utf8")));
+} catch {}
+function saveTrustedDevices() {
+  try {
+    mkdirSync(dirname(TRUST_STORE), { recursive: true });
+    writeFileSync(TRUST_STORE, JSON.stringify([...trustedDevices], null, 2));
+  } catch (error) {
+    console.warn("Unable to persist trusted devices:", error.message);
+  }
+}
 
 function id(bytes = 18) {
   return crypto.randomBytes(bytes).toString("base64url");
@@ -155,6 +169,7 @@ const server = http.createServer(async (req, res) => {
         },
         adaptiveBitrate: body.adaptiveBitrate !== false,
         fpsPreset: [30,60,90,120].includes(Number(body.fpsPreset)) ? Number(body.fpsPreset) : 60,
+        unattendedTrusted: Boolean(body.unattendedTrusted),
         createdAt: Date.now(),
         expiresAt,
         hostTokenHash: sha256(hostToken),
@@ -186,7 +201,8 @@ const server = http.createServer(async (req, res) => {
         expiresAt: new Date(session.expiresAt).toISOString(),
         permissions: session.permissions,
         adaptiveBitrate: session.adaptiveBitrate,
-        fpsPreset: session.fpsPreset
+        fpsPreset: session.fpsPreset,
+        unattendedTrusted: session.unattendedTrusted
       });
     }
 
@@ -281,24 +297,42 @@ wss.on("connection", ws => {
           }
 
           const viewerId = id(10);
+          const deviceHash = sha256(String(message.deviceToken || "")).toString("hex");
+          const trusted = Boolean(message.deviceToken) && trustedDevices.has(deviceHash);
+          const approved = trusted && session.unattendedTrusted;
           identity = { role: "viewer", sessionId: session.id, viewerId };
           session.viewers.set(viewerId, {
             socket: ws,
-            approved: false,
+            approved,
+            trusted,
+            deviceHash,
             connectedAt: Date.now()
           });
 
-          send(ws, {
-            type: "viewer-waiting",
-            viewerId,
-            sessionId: session.id,
-            name: session.name,
-            permissions: session.permissions
-          });
+          if (approved) {
+            send(ws, {
+              type: "viewer-approved",
+              viewerId,
+              permissions: session.permissions,
+              trusted: true,
+              unattended: true
+            });
+          } else {
+            send(ws, {
+              type: "viewer-waiting",
+              viewerId,
+              sessionId: session.id,
+              name: session.name,
+              permissions: session.permissions,
+              trusted
+            });
+          }
 
           send(session.hostSocket, {
             type: "viewer-request",
             viewerId,
+            trusted,
+            approved,
             userAgent: String(message.userAgent || "").slice(0, 300)
           });
           return;
@@ -349,6 +383,23 @@ function handleHostMessage(session, message) {
       viewerId,
       permissions: session.permissions
     });
+    return;
+  }
+
+  if (message.type === "viewer-trust" && viewer && viewer.deviceHash) {
+    trustedDevices.add(viewer.deviceHash);
+    viewer.trusted = true;
+    saveTrustedDevices();
+    send(viewer.socket, { type: "device-trusted" });
+    send(session.hostSocket, { type: "viewer-trusted", viewerId });
+    return;
+  }
+
+  if (message.type === "viewer-untrust" && viewer?.deviceHash) {
+    trustedDevices.delete(viewer.deviceHash);
+    viewer.trusted = false;
+    saveTrustedDevices();
+    send(viewer.socket, { type: "device-untrusted" });
     return;
   }
 
