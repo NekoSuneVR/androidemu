@@ -25,6 +25,7 @@ pub struct SystemReadiness {
     pub hardware_encoders: Vec<String>,
     pub free_disk_mb: Option<u64>,
     pub qemu_found: bool,
+    pub runtime_name: String,
     pub adb_found: bool,
     pub ffmpeg_found: bool,
     pub recommended_cpu_cores: u16,
@@ -84,6 +85,7 @@ pub fn detect() -> SystemReadiness {
         hardware_encoders,
         free_disk_mb,
         qemu_found: qemu.found,
+        runtime_name: if cfg!(windows) { "MSYS2 Runtime".into() } else { "QEMU".into() },
         adb_found: adb_info.found,
         ffmpeg_found: ffmpeg.found,
         recommended_cpu_cores,
@@ -162,7 +164,7 @@ fn detect_virtualization() -> (bool, String) {
         return (
             available,
             format!(
-                "Firmware virtualization: {}; QEMU WHPX: {}.",
+                "Firmware virtualization: {}; MSYS2 runtime WHPX: {}.",
                 if firmware.trim().eq_ignore_ascii_case("true") { "enabled" } else { "not detected" },
                 if whpx { "available" } else { "not advertised" }
             ),
