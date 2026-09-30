@@ -171,6 +171,20 @@ export default function App() {
     }
   };
 
+  const factoryResetInstance = async (instance: AndroidInstance) => {
+    if (!window.confirm(`Factory reset ${instance.name}? This deletes its writable runtime disk and all snapshots. The registered base image is kept.`)) return;
+    setBusyId(instance.id);
+    try {
+      const result = await invoke<RuntimeActionResult>("factory_reset_instance", { id: instance.id });
+      setNotice(result.message);
+      await refresh();
+    } catch (error) {
+      setNotice(String(error));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const deleteInstance = async (instance: AndroidInstance) => {
     if (!window.confirm(`Delete ${instance.name}? Its instance configuration, logs and snapshots will be removed.`)) return;
     setBusyId(instance.id);
@@ -234,6 +248,7 @@ export default function App() {
                   <button className="primary compact" disabled={busyId === instance.id} onClick={() => runtimeAction(instance.id, "start_instance")}>Start</button>
                 )}
                 <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => cloneInstance(instance)}>Clone</button>
+                <button className="danger compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => factoryResetInstance(instance)}>Factory Reset</button>
                 <button className="ghost compact" disabled={busyId === instance.id || instance.status === "running"} onClick={() => deleteInstance(instance)}>Delete</button>
               </div>
             </article>
